@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:goalkeeper/src/features/user_profile/data/repositories/user_profile_repository.dart';
+import 'package:goalkeeper/src/features/user_profile/presentation/controllers/user_profile_controller.dart';
+import 'package:goalkeeper/src/features/user_profile/presentation/screens/profile_screen.dart';
+import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:goalkeeper/src/features/auth/presentation/screens/sign_in_screen.dart';
 import 'package:goalkeeper/src/features/auth/presentation/screens/sign_up_screen.dart';
@@ -6,12 +11,23 @@ import 'package:goalkeeper/src/features/auth/presentation/screens/sign_up_screen
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  await dotenv.load(fileName: ".env");
+
   await Supabase.initialize(
-    url: 'YOUR_SUPABASE_URL',
-    anonKey: 'YOUR_SUPABASE_ANON_KEY',
+    url: dotenv.env['SUPABASE_URL']!,
+    anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
 
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => UserProfileController(UserProfileRepository()),
+        ),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatefulWidget {
@@ -48,6 +64,7 @@ class _MyAppState extends State<MyApp> {
         '/signin': (context) => const SignInScreen(),
         '/signup': (context) => const SignUpScreen(),
         '/home': (context) => const MyHomePage(title: 'Goalkeeper'), // Placeholder for home screen
+        '/profile': (context) => const ProfileScreen(),
       },
     );
   }
@@ -77,6 +94,14 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.person),
+            onPressed: () {
+              Navigator.pushNamed(context, '/profile');
+            },
+          ),
+        ],
       ),
       body: Center(
         child: Column(
