@@ -5,6 +5,8 @@ import '../widgets/primary_button.dart';
 import '../theme/app_theme.dart';
 import '../../data/auth_repository.dart';
 
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 class SignInScreen extends StatefulWidget {
 
   const SignInScreen({super.key});
@@ -84,12 +86,32 @@ class _SignInScreenState extends State<SignInScreen> {
       if (mounted) {
         Navigator.of(context).pushReplacementNamed('/home');
       }
+    } on AuthException catch (e) {
+      if (mounted) {
+        debugPrint('Sign in error: ${e.message}');
+        String errorMessage = 'Ocorreu um erro ao fazer login. Tente novamente.';
+        if (e.message.contains('Invalid login credentials')) {
+          errorMessage = 'Credenciais inválidas. Verifique o seu email e palavra-passe.';
+        } else if (e.message.contains('Email not confirmed')) {
+          errorMessage = 'Email não confirmado. Verifique a sua caixa de entrada.';
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
+      }
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _emailError = 'Credenciais inválidas';
-          _passwordError = 'Credenciais inválidas';
-        });
+        debugPrint('Sign in error: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Ocorreu um erro inesperado. Tente novamente.'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
       }
     } finally {
       if (mounted) {
