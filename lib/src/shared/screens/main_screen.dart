@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../features/auth/presentation/theme/app_theme.dart';
+import '../../features/goalkeeper_search/presentation/screens/goalkeeper_search_screen.dart';
 import '../widgets/app_navbar.dart';
 
 class MainScreen extends StatefulWidget {
@@ -186,44 +187,66 @@ class _SearchContent extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Search',
+            'Busca',
             style: AppTheme.headingLarge,
           ),
           const SizedBox(height: 16),
           Text(
-            'Find goalkeepers by location, skill level, and more',
+            'Encontre guarda-redes por localização, nível e mais',
             style: AppTheme.bodyLarge.copyWith(
               color: AppTheme.secondaryText,
             ),
           ),
           const SizedBox(height: 32),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            decoration: BoxDecoration(
-              color: AppTheme.secondaryBackground.withOpacity(0.8),
-              borderRadius: BorderRadius.circular(AppTheme.borderRadius),
-              border: Border.all(
-                color: AppTheme.accentColor.withOpacity(0.3),
-                width: 1,
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.search,
-                  color: AppTheme.accentColor,
-                  size: 24,
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const GoalkeeperSearchScreen(),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Text(
-                    'Search for goalkeepers...',
-                    style: AppTheme.bodyLarge.copyWith(
-                      color: AppTheme.secondaryText,
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              decoration: BoxDecoration(
+                color: AppTheme.secondaryBackground.withOpacity(0.8),
+                borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+                border: Border.all(
+                  color: AppTheme.accentColor.withOpacity(0.3),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.search,
+                    color: AppTheme.accentColor,
+                    size: 24,
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Text(
+                      'Procurar guarda-redes...',
+                      style: AppTheme.bodyLarge.copyWith(
+                        color: AppTheme.secondaryText,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    color: AppTheme.secondaryText,
+                    size: 16,
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 24),
@@ -235,28 +258,41 @@ class _SearchContent extends StatelessWidget {
               children: [
                 _SearchFilterCard(
                   icon: Icons.location_on,
-                  title: 'Location',
-                  subtitle: 'Nearby',
+                  title: 'Localização',
+                  subtitle: 'Por cidade',
+                  onTap: () => _navigateToSearch(context),
                 ),
                 _SearchFilterCard(
-                  icon: Icons.star,
-                  title: 'Rating',
-                  subtitle: '4.5+',
+                  icon: Icons.euro,
+                  title: 'Preço',
+                  subtitle: 'Por valor',
+                  onTap: () => _navigateToSearch(context),
                 ),
                 _SearchFilterCard(
-                  icon: Icons.schedule,
-                  title: 'Availability',
-                  subtitle: 'Weekends',
+                  icon: Icons.sports_soccer,
+                  title: 'Experiência',
+                  subtitle: 'Por clube',
+                  onTap: () => _navigateToSearch(context),
                 ),
                 _SearchFilterCard(
-                  icon: Icons.trending_up,
-                  title: 'Experience',
-                  subtitle: '5+ years',
+                  icon: Icons.person,
+                  title: 'Perfil',
+                  subtitle: 'Detalhado',
+                  onTap: () => _navigateToSearch(context),
                 ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _navigateToSearch(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const GoalkeeperSearchScreen(),
       ),
     );
   }
@@ -266,17 +302,18 @@ class _SearchFilterCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
+  final VoidCallback? onTap;
 
   const _SearchFilterCard({
     required this.icon,
     required this.title,
     required this.subtitle,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -295,29 +332,39 @@ class _SearchFilterCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            size: 32,
-            color: AppTheme.accentColor,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            style: AppTheme.bodyLarge.copyWith(
-              fontWeight: FontWeight.w600,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  icon,
+                  size: 32,
+                  color: AppTheme.accentColor,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  title,
+                  style: AppTheme.bodyLarge.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: AppTheme.bodyMedium,
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
-            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: AppTheme.bodyMedium,
-            textAlign: TextAlign.center,
-          ),
-        ],
+        ),
       ),
     );
   }

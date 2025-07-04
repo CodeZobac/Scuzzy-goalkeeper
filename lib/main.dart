@@ -3,6 +3,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:goalkeeper/src/features/user_profile/data/repositories/user_profile_repository.dart';
 import 'package:goalkeeper/src/features/user_profile/presentation/controllers/user_profile_controller.dart';
 import 'package:goalkeeper/src/features/user_profile/presentation/screens/profile_screen.dart';
+import 'package:goalkeeper/src/features/goalkeeper_search/data/repositories/goalkeeper_search_repository.dart';
+import 'package:goalkeeper/src/features/goalkeeper_search/presentation/controllers/goalkeeper_search_controller.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:goalkeeper/src/features/auth/presentation/screens/sign_in_screen.dart';
@@ -25,6 +27,9 @@ Future<void> main() async {
       providers: [
         ChangeNotifierProvider(
           create: (_) => UserProfileController(UserProfileRepository()),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => GoalkeeperSearchController(GoalkeeperSearchRepository()),
         ),
       ],
       child: const MyApp(),
