@@ -413,6 +413,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                 _buildStatsCard(controller),
                 const SizedBox(height: AppTheme.spacing),
                 _buildLocationCard(controller),
+                const SizedBox(height: AppTheme.spacing),
+                _buildAvailabilityCard(controller),
               ],
             ),
           ),
@@ -608,6 +610,53 @@ class _ProfileScreenState extends State<ProfileScreen>
           ),
         );
       },
+    );
+  }
+
+  Widget _buildAvailabilityCard(UserProfileController controller) {
+    return _buildCard(
+      'Gestão de Disponibilidade',
+      Icons.schedule_outlined,
+      [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: Text(
+            'Gerir os seus horários disponíveis para jogos',
+            style: AppTheme.bodyMedium.copyWith(
+              color: AppTheme.secondaryText,
+            ),
+          ),
+        ),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pushNamed(context, '/availability');
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.accentColor,
+              foregroundColor: Colors.white,
+              elevation: 8,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 16,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              shadowColor: AppTheme.accentColor.withOpacity(0.4),
+            ),
+            icon: const Icon(Icons.calendar_today_outlined, size: 20),
+            label: Text(
+              'Gerir Disponibilidade',
+              style: AppTheme.buttonText.copyWith(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
   

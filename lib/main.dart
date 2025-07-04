@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:goalkeeper/src/features/user_profile/data/repositories/user_profile_repository.dart';
 import 'package:goalkeeper/src/features/user_profile/presentation/controllers/user_profile_controller.dart';
 import 'package:goalkeeper/src/features/user_profile/presentation/screens/profile_screen.dart';
+import 'package:goalkeeper/src/features/availability/data/repositories/availability_repository.dart';
+import 'package:goalkeeper/src/features/availability/presentation/controllers/availability_controller.dart';
+import 'package:goalkeeper/src/features/availability/presentation/screens/availability_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:goalkeeper/src/features/auth/presentation/screens/sign_in_screen.dart';
@@ -24,7 +26,7 @@ Future<void> main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (_) => UserProfileController(UserProfileRepository()),
+          create: (_) => AvailabilityController(AvailabilityRepository()),
         ),
       ],
       child: const MyApp(),
@@ -64,8 +66,8 @@ class _MyAppState extends State<MyApp> {
         '/signup': (context) => const SignUpScreen(),
         '/home': (context) => const MainScreen(),
         '/profile': (context) => const ProfileScreen(),
+        '/availability': (context) => const AvailabilityScreen(),
       },
     );
   }
 }
-

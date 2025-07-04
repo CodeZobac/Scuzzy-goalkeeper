@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:scuzzy_goalkeeper/src/features/user_profile/presentation/screens/profile_screen.dart';
 import '../../features/auth/presentation/theme/app_theme.dart';
 import '../widgets/app_navbar.dart';
 
@@ -68,7 +69,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       case NavbarItem.team:
         return _TeamContent();
       case NavbarItem.profile:
-        return _ProfileContent();
+        return const ProfileScreen();
     }
   }
 
@@ -459,172 +460,6 @@ class _TeamMemberCard extends StatelessWidget {
                 ),
               ),
             ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ProfileContent extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Profile',
-            style: AppTheme.headingLarge,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Manage your account and preferences',
-            style: AppTheme.bodyLarge.copyWith(
-              color: AppTheme.secondaryText,
-            ),
-          ),
-          const SizedBox(height: 32),
-          Center(
-            child: Column(
-              children: [
-                Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    gradient: AppTheme.buttonGradient,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppTheme.accentColor.withOpacity(0.3),
-                        blurRadius: 20,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.person,
-                    color: Colors.white,
-                    size: 50,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'User Name',
-                  style: AppTheme.headingMedium,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'user@example.com',
-                  style: AppTheme.bodyMedium,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 32),
-          Expanded(
-            child: ListView(
-              children: [
-                _ProfileOption(
-                  icon: Icons.settings,
-                  title: 'Settings',
-                  subtitle: 'App preferences and configurations',
-                ),
-                const SizedBox(height: 16),
-                _ProfileOption(
-                  icon: Icons.notifications,
-                  title: 'Notifications',
-                  subtitle: 'Manage your notifications',
-                ),
-                const SizedBox(height: 16),
-                _ProfileOption(
-                  icon: Icons.help,
-                  title: 'Help & Support',
-                  subtitle: 'Get help and contact support',
-                ),
-                const SizedBox(height: 16),
-                _ProfileOption(
-                  icon: Icons.logout,
-                  title: 'Sign Out',
-                  subtitle: 'Sign out of your account',
-                  isDestructive: true,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ProfileOption extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final bool isDestructive;
-
-  const _ProfileOption({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    this.isDestructive = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppTheme.secondaryBackground.withOpacity(0.8),
-            AppTheme.secondaryBackground.withOpacity(0.4),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(AppTheme.borderRadius),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            size: 24,
-            color: isDestructive ? AppTheme.errorColor : AppTheme.accentColor,
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: AppTheme.bodyLarge.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: isDestructive ? AppTheme.errorColor : null,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: AppTheme.bodyMedium,
-                ),
-              ],
-            ),
-          ),
-          Icon(
-            Icons.arrow_forward_ios,
-            size: 16,
-            color: AppTheme.secondaryText,
           ),
         ],
       ),
