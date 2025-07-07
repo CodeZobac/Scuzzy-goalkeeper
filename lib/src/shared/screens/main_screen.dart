@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:goalkeeper/src/shared/screens/main_screen_content.dart';
 import '../../features/auth/presentation/theme/app_theme.dart';
 import '../../features/user_profile/presentation/screens/profile_screen.dart';
+import '../../features/rating/services/rating_notification_service.dart';
+import '../../features/rating/data/repositories/rating_repository.dart';
+import '../../features/booking/data/repositories/booking_repository.dart';
+import '../../features/rating/presentation/widgets/rating_notification_widget.dart';
 import '../widgets/app_navbar.dart';
 
 class MainScreen extends StatefulWidget {
@@ -16,10 +22,18 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   late AnimationController _contentAnimationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+  late RatingNotificationService _ratingNotificationService;
 
   @override
   void initState() {
     super.initState();
+    
+    // Initialize rating notification service
+    _ratingNotificationService = RatingNotificationService(
+      ratingRepository: RatingRepository(),
+      bookingRepository: BookingRepository(),
+    );
+    
     _contentAnimationController = AnimationController(
       duration: AppTheme.mediumAnimation,
       vsync: this,
@@ -42,12 +56,25 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     ));
     
     _contentAnimationController.forward();
+    
+    // Check for completed bookings after a short delay
+    _checkForCompletedBookings();
   }
 
   @override
   void dispose() {
     _contentAnimationController.dispose();
+    _ratingNotificationService.dispose();
     super.dispose();
+  }
+
+  void _checkForCompletedBookings() {
+    Future.delayed(const Duration(milliseconds: 1000), () {
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user != null) {
+        _ratingNotificationService.checkForCompletedBookings(user.id);
+      }
+    });
   }
 
   void _onNavbarTap(NavbarItem item) {
@@ -64,7 +91,23 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   Widget _buildContent() {
     switch (_selectedItem) {
       case NavbarItem.home:
-        return HomeContent();
+        return Stack(
+          children: [
+            HomeContent(),
+            Consumer<RatingNotificationService>(
+              builder: (context, service, child) {
+                if (service.hasBookingsToRate) {
+                  return RatingNotificationWidget(
+                    completedBookings: service.completedBookingsToRate,
+                    goalkeeperNames: service.goalkeeperNames,
+                  );
+                } else {
+                  return const SizedBox.shrink();
+                }
+              },
+            ),
+          ],
+        );
       case NavbarItem.search:
         return SearchContent();
       case NavbarItem.team:
@@ -76,30 +119,33 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.primaryBackground,
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: AppTheme.primaryGradient,
-        ),
-        child: SafeArea(
-          child: AnimatedBuilder(
-            animation: _contentAnimationController,
-            builder: (context, child) {
-              return FadeTransition(
-                opacity: _fadeAnimation,
-                child: SlideTransition(
-                  position: _slideAnimation,
-                  child: _buildContent(),
-                ),
-              );
-            },
+    return ChangeNotifierProvider.value(
+      value: _ratingNotificationService,
+      child: Scaffold(
+        backgroundColor: AppTheme.primaryBackground,
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: AppTheme.primaryGradient,
+          ),
+          child: SafeArea(
+            child: AnimatedBuilder(
+              animation: _contentAnimationController,
+              builder: (context, child) {
+                return FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: SlideTransition(
+                    position: _slideAnimation,
+                    child: _buildContent(),
+                  ),
+                );
+              },
+            ),
           ),
         ),
-      ),
-      bottomNavigationBar: AppNavbar(
-        selectedItem: _selectedItem,
-        onItemSelected: _onNavbarTap,
+        bottomNavigationBar: AppNavbar(
+          selectedItem: _selectedItem,
+          onItemSelected: _onNavbarTap,
+        ),
       ),
     );
   }
