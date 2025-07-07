@@ -166,4 +166,34 @@ class BookingRepository {
       throw Exception('Erro ao carregar horários disponíveis: $e');
     }
   }
+
+  /// Gets completed bookings for a player (for rating purposes)
+  Future<List<Booking>> getCompletedBookingsForPlayer(String playerId) async {
+    try {
+      final response = await _supabase
+          .from('bookings')
+          .select('*')
+          .eq('player_id', playerId)
+          .eq('status', 'completed')
+          .order('game_datetime', ascending: false);
+
+      return response
+          .map<Booking>((data) => Booking.fromMap(data))
+          .toList();
+    } catch (e) {
+      throw Exception('Erro ao carregar jogos concluídos: $e');
+    }
+  }
+
+  /// Updates booking status
+  Future<void> updateBookingStatus(String bookingId, String status) async {
+    try {
+      await _supabase
+          .from('bookings')
+          .update({'status': status})
+          .eq('id', bookingId);
+    } catch (e) {
+      throw Exception('Erro ao atualizar estado do agendamento: $e');
+    }
+  }
 }
