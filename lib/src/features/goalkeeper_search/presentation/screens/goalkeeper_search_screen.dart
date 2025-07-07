@@ -6,6 +6,7 @@ import '../../../auth/presentation/widgets/custom_text_field.dart';
 import '../../../auth/presentation/widgets/primary_button.dart';
 import '../../../auth/presentation/theme/app_theme.dart';
 import 'goalkeeper_details_screen.dart';
+import '../widgets/fut_card.dart';
 
 class GoalkeeperSearchScreen extends StatefulWidget {
   const GoalkeeperSearchScreen({super.key});
@@ -456,128 +457,14 @@ class _GoalkeeperSearchScreenState extends State<GoalkeeperSearchScreen>
   }
 
   Widget _buildGoalkeeperCard(Goalkeeper goalkeeper, int index) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppTheme.spacing),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppTheme.secondaryBackground.withOpacity(0.8),
-            AppTheme.secondaryBackground.withOpacity(0.4),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(AppTheme.borderRadius),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+    return Align(
+      alignment: Alignment.center,
+      child: SizedBox(
+        height: 350,
+        width: 250,
+        child: GestureDetector(
           onTap: () => _showGoalkeeperDetails(goalkeeper),
-          child: Padding(
-            padding: const EdgeInsets.all(AppTheme.spacing),
-            child: Row(
-              children: [
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    gradient: AppTheme.buttonGradient,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppTheme.accentColor.withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.sports_soccer,
-                    color: Colors.white,
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(width: AppTheme.spacing),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        goalkeeper.name,
-                        style: AppTheme.bodyLarge.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.location_on,
-                            size: 16,
-                            color: AppTheme.accentColor,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            goalkeeper.displayLocation,
-                            style: AppTheme.bodyMedium,
-                          ),
-                        ],
-                      ),
-                      if (goalkeeper.club != null) ...<Widget>[
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.sports,
-                              size: 16,
-                              color: AppTheme.secondaryText,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              goalkeeper.displayClub,
-                              style: AppTheme.bodyMedium,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      goalkeeper.displayPrice,
-                      style: AppTheme.bodyLarge.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.accentColor,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    if (goalkeeper.age != null)
-                      Text(
-                        goalkeeper.displayAge,
-                        style: AppTheme.bodyMedium,
-                      ),
-                  ],
-                ),
-                const SizedBox(width: 8),
-                Icon(
-                  Icons.arrow_forward_ios,
-                  size: 16,
-                  color: AppTheme.secondaryText,
-                ),
-              ],
-            ),
-          ),
+          child: FutCarde(goalkeeper: goalkeeper),
         ),
       ),
     );
