@@ -5,6 +5,7 @@ import '../../data/models/goalkeeper.dart';
 import '../../../auth/presentation/widgets/custom_text_field.dart';
 import '../../../auth/presentation/widgets/primary_button.dart';
 import '../../../auth/presentation/theme/app_theme.dart';
+import 'goalkeeper_details_screen.dart';
 
 class GoalkeeperSearchScreen extends StatefulWidget {
   const GoalkeeperSearchScreen({super.key});
@@ -657,12 +658,9 @@ class _GoalkeeperSearchScreenState extends State<GoalkeeperSearchScreen>
   }
 
   void _showGoalkeeperDetails(Goalkeeper goalkeeper) {
-    // TODO: Navigate to goalkeeper details screen
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Ver detalhes de ${goalkeeper.name}'),
-        backgroundColor: AppTheme.accentColor,
-        behavior: SnackBarBehavior.floating,
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => GoalkeeperDetailsScreen(goalkeeper: goalkeeper),
       ),
     );
   }
