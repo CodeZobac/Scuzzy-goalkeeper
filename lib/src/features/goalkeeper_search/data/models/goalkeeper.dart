@@ -10,6 +10,10 @@ class Goalkeeper {
   final String? nationality;
   final String? country;
   final DateTime? birthDate;
+  final int? overallRating;
+  final double? marketValue;
+  final bool? inDemand;
+  final String? photoUrl;
 
   Goalkeeper({
     required this.id,
@@ -21,6 +25,10 @@ class Goalkeeper {
     this.nationality,
     this.country,
     this.birthDate,
+    this.overallRating,
+    this.marketValue,
+    this.inDemand,
+    this.photoUrl,
   });
 
   Map<String, dynamic> toMap() {
@@ -34,6 +42,10 @@ class Goalkeeper {
       'nationality': nationality,
       'country': country,
       'birth_date': birthDate?.toIso8601String(),
+      'overall_rating': overallRating,
+      'market_value': marketValue,
+      'in_demand': inDemand,
+      'photo_url': photoUrl,
     };
   }
 
@@ -50,6 +62,10 @@ class Goalkeeper {
       birthDate: map['birth_date'] != null
           ? DateTime.parse(map['birth_date'])
           : null,
+      overallRating: map['overall_rating'],
+      marketValue: map['market_value']?.toDouble(),
+      inDemand: map['in_demand'],
+      photoUrl: map['photo_url'],
     );
   }
 
@@ -61,7 +77,7 @@ class Goalkeeper {
   // Helper methods
   String get displayPrice {
     if (pricePerGame == null) return 'Preço não definido';
-    return '€${pricePerGame!.toStringAsFixed(2)}/jogo';
+    return '€${pricePerGame!.toStringAsFixed(2)}';
   }
 
   String get displayLocation {
