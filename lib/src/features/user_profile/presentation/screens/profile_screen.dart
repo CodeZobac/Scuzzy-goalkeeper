@@ -5,6 +5,7 @@ import 'dart:math' as math;
 import '../controllers/user_profile_controller.dart';
 import 'edit_profile_screen.dart';
 import '../../../auth/presentation/theme/app_theme.dart';
+import '../../../availability/presentation/screens/availability_management_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -413,6 +414,10 @@ class _ProfileScreenState extends State<ProfileScreen>
                 _buildStatsCard(controller),
                 const SizedBox(height: AppTheme.spacing),
                 _buildLocationCard(controller),
+                if (controller.userProfile!.isGoalkeeper) ...[
+                  const SizedBox(height: AppTheme.spacing),
+                  _buildAvailabilityCard(controller),
+                ],
               ],
             ),
           ),
@@ -468,6 +473,141 @@ class _ProfileScreenState extends State<ProfileScreen>
         _buildInfoRow('Cidade', controller.userProfile!.city ?? 'Não especificada', Icons.location_city_outlined),
         _buildInfoRow('País', controller.userProfile!.country ?? 'Não especificado', Icons.public_outlined),
       ],
+    );
+  }
+  
+  Widget _buildAvailabilityCard(UserProfileController controller) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: AppTheme.secondaryBackground,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+          BoxShadow(
+            color: AppTheme.successColor.withOpacity(0.05),
+            blurRadius: 40,
+            offset: const Offset(0, 20),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () {
+            Navigator.push(
+              context,
+              PageRouteBuilder(
+                pageBuilder: (context, animation, secondaryAnimation) =>
+                    const AvailabilityManagementScreen(),
+                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                  const begin = Offset(1.0, 0.0);
+                  const end = Offset.zero;
+                  const curve = Curves.easeInOut;
+                  
+                  var tween = Tween(begin: begin, end: end).chain(
+                    CurveTween(curve: curve),
+                  );
+                  
+                  return SlideTransition(
+                    position: animation.drive(tween),
+                    child: child,
+                  );
+                },
+              ),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [AppTheme.successColor, AppTheme.successColor.withOpacity(0.8)],
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.schedule,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Minha Disponibilidade',
+                            style: AppTheme.headingMedium.copyWith(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Gerencie seus horários disponíveis',
+                            style: AppTheme.bodyMedium.copyWith(
+                              color: AppTheme.secondaryText,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      color: AppTheme.successColor,
+                      size: 16,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.successColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppTheme.successColor.withOpacity(0.2),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.event_available,
+                        color: AppTheme.successColor,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Defina quando está disponível para jogos e permita que jogadores agendem sessões',
+                          style: AppTheme.bodyMedium.copyWith(
+                            color: AppTheme.successColor,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
   
