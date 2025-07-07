@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:math' as math;
 
 import '../controllers/user_profile_controller.dart';
@@ -247,6 +248,26 @@ class _ProfileScreenState extends State<ProfileScreen>
       pinned: true,
       backgroundColor: Colors.transparent,
       elevation: 0,
+      actions: [
+        IconButton(
+          onPressed: () {
+            Navigator.of(context).pushNamed('/notifications');
+          },
+          icon: const Icon(
+            Icons.notifications_outlined,
+            color: AppTheme.primaryText,
+          ),
+        ),
+        IconButton(
+          onPressed: () {
+            _showSettingsMenu(context);
+          },
+          icon: const Icon(
+            Icons.settings_outlined,
+            color: AppTheme.primaryText,
+          ),
+        ),
+      ],
       flexibleSpace: AnimatedBuilder(
         animation: _headerAnimationController,
         builder: (context, child) {
@@ -618,5 +639,142 @@ class _ProfileScreenState extends State<ProfileScreen>
     ];
     
     return '${date.day} de ${months[date.month - 1]} de ${date.year}';
+  }
+
+  void _showSettingsMenu(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: AppTheme.secondaryBackground,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(top: 12),
+              decoration: BoxDecoration(
+                color: AppTheme.secondaryText.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                children: [
+                  Text(
+                    'Configurações',
+                    style: AppTheme.headingMedium,
+                  ),
+                  const SizedBox(height: 20),
+                  _buildSettingsOption(
+                    icon: Icons.notifications_outlined,
+                    title: 'Notificações',
+                    subtitle: 'Gerir notificações push',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pushNamed('/notifications');
+                    },
+                  ),
+                  _buildSettingsOption(
+                    icon: Icons.logout_outlined,
+                    title: 'Terminar Sessão',
+                    subtitle: 'Sair da aplicação',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      _showLogoutConfirmation(context);
+                    },
+                    isDestructive: true,
+                  ),
+                  SizedBox(height: MediaQuery.of(context).padding.bottom),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSettingsOption({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+    bool isDestructive = false,
+  }) {
+    return ListTile(
+      leading: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: isDestructive
+              ? AppTheme.errorColor.withOpacity(0.1)
+              : AppTheme.accentColor.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Icon(
+          icon,
+          color: isDestructive ? AppTheme.errorColor : AppTheme.accentColor,
+          size: 20,
+        ),
+      ),
+      title: Text(
+        title,
+        style: AppTheme.bodyLarge.copyWith(
+          fontWeight: FontWeight.w600,
+          color: isDestructive ? AppTheme.errorColor : AppTheme.primaryText,
+        ),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: AppTheme.bodyMedium,
+      ),
+      onTap: onTap,
+    );
+  }
+
+  void _showLogoutConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppTheme.secondaryBackground,
+        title: Text(
+          'Terminar Sessão',
+          style: AppTheme.bodyLarge.copyWith(fontWeight: FontWeight.w600),
+        ),
+        content: Text(
+          'Tem a certeza que quer terminar a sessão?',
+          style: AppTheme.bodyMedium,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(
+              'Cancelar',
+              style: AppTheme.bodyMedium.copyWith(color: AppTheme.secondaryText),
+            ),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              // Sign out using Supabase auth
+              await Supabase.instance.client.auth.signOut();
+            },
+            child: Text(
+              'Terminar Sessão',
+              style: AppTheme.bodyMedium.copyWith(color: AppTheme.errorColor),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
