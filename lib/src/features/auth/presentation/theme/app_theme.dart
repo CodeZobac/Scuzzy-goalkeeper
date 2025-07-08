@@ -45,6 +45,13 @@ class AppTheme {
     height: 1.3,
   );
 
+  static TextStyle get headingSmall => GoogleFonts.poppins(
+    fontSize: 18,
+    fontWeight: FontWeight.w600,
+    color: primaryText,
+    height: 1.4,
+  );
+
   static TextStyle get bodyLarge => GoogleFonts.poppins(
     fontSize: 16,
     fontWeight: FontWeight.normal,
@@ -57,6 +64,13 @@ class AppTheme {
     fontWeight: FontWeight.normal,
     color: secondaryText,
     height: 1.4,
+  );
+
+  static TextStyle get bodySmall => GoogleFonts.poppins(
+    fontSize: 12,
+    fontWeight: FontWeight.normal,
+    color: secondaryText,
+    height: 1.3,
   );
 
   static TextStyle get buttonText => GoogleFonts.poppins(

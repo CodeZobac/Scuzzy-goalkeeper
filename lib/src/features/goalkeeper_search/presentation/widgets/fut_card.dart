@@ -1,17 +1,30 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../data/models/goalkeeper.dart';
 import '../../../auth/presentation/theme/app_theme.dart';
 import 'fifa_card_clipper.dart';
+import '../screens/goalkeeper_details_screen.dart';
 
 enum CardRarity { Bronze, Silver, Gold, Special }
 
-class FutCarde extends StatelessWidget {
+class ExpandableFutCard extends StatefulWidget {
   final Goalkeeper goalkeeper;
+  final bool isExpanded;
 
-  const FutCarde({super.key, required this.goalkeeper});
+  const ExpandableFutCard({
+    super.key,
+    required this.goalkeeper,
+    required this.isExpanded,
+  });
+
+  @override
+  State<ExpandableFutCard> createState() => _ExpandableFutCardState();
+}
+
+class _ExpandableFutCardState extends State<ExpandableFutCard> {
 
   CardRarity get _rarity {
-    final rating = goalkeeper.overallRating ?? 0;
+    final rating = widget.goalkeeper.overallRating ?? 0;
     if (rating >= 85) return CardRarity.Special;
     if (rating >= 75) return CardRarity.Gold;
     if (rating >= 65) return CardRarity.Silver;
@@ -57,27 +70,43 @@ class FutCarde extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipPath(
-      clipper: FifaCardClipper(),
-      child: Card(
-        elevation: 8.0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24.0),
-        ),
-        child: Container(
-          decoration: BoxDecoration(
+    return AnimatedContainer(
+      duration: AppTheme.mediumAnimation,
+      curve: Curves.easeInOut,
+      height: widget.isExpanded ? 600 : 350,
+      child: ClipPath(
+        clipper: FifaCardClipper(),
+        child: Card(
+          elevation: 8.0,
+          shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24.0),
-            gradient: LinearGradient(
-              colors: _rarityGradientColors,
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
           ),
-          child: Stack(
-            children: [
-              _buildPlayerImage(),
-              _buildCardDetails(),
-            ],
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24.0),
+              gradient: LinearGradient(
+                colors: _rarityGradientColors,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: Stack(
+              children: [
+                if (!widget.isExpanded) _buildPlayerImage(),
+                if (!widget.isExpanded) _buildCardDetails(),
+                if (widget.isExpanded)
+                  Positioned.fill(
+                    top: 20,
+                    child: AnimatedOpacity(
+                      duration: AppTheme.mediumAnimation,
+                      opacity: widget.isExpanded ? 1.0 : 0.0,
+                      child: SingleChildScrollView(
+                        child: GoalkeeperDetailsScreen(goalkeeper: widget.goalkeeper),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
@@ -92,10 +121,10 @@ class FutCarde extends StatelessWidget {
       child: Center(
         child: CircleAvatar(
           radius: 50,
-          backgroundImage: goalkeeper.photoUrl != null
-              ? NetworkImage(goalkeeper.photoUrl!)
+          backgroundImage: widget.goalkeeper.photoUrl != null
+              ? NetworkImage(widget.goalkeeper.photoUrl!)
               : null,
-          child: goalkeeper.photoUrl == null
+          child: widget.goalkeeper.photoUrl == null
               ? const Icon(Icons.person, size: 50)
               : null,
         ),
@@ -120,19 +149,19 @@ class FutCarde extends StatelessWidget {
         child: Column(
           children: [
             Text(
-              goalkeeper.name,
+              widget.goalkeeper.name,
               style: AppTheme.headingMedium.copyWith(color: Colors.white),
             ),
             const SizedBox(height: 8.0),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildStatColumn('Rating', goalkeeper.overallRating?.toString() ?? 'N/A'),
-                _buildStatColumn('Value', goalkeeper.displayPrice),
+                _buildStatColumn('Rating', widget.goalkeeper.overallRating?.toString() ?? 'N/A'),
+                _buildStatColumn('Value', widget.goalkeeper.displayPrice),
                 _buildStatColumn('Position', 'GK'),
               ],
             ),
-            if (goalkeeper.inDemand == true)
+            if (widget.goalkeeper.inDemand == true)
               Container(
                 margin: const EdgeInsets.only(top: 8.0),
                 padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),

@@ -22,6 +22,7 @@ class _GoalkeeperSearchScreenState extends State<GoalkeeperSearchScreen>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   late Animation<double> _listFadeAnimation;
+  String? _expandedGoalkeeperId;
   
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
@@ -457,14 +458,28 @@ class _GoalkeeperSearchScreenState extends State<GoalkeeperSearchScreen>
   }
 
   Widget _buildGoalkeeperCard(Goalkeeper goalkeeper, int index) {
+    final isExpanded = _expandedGoalkeeperId == goalkeeper.id;
     return Align(
       alignment: Alignment.center,
-      child: SizedBox(
-        height: 350,
-        width: 250,
+      child: AnimatedContainer(
+        duration: AppTheme.mediumAnimation,
+        curve: Curves.easeInOut,
+        height: isExpanded ? 475 : 350,
+        width: isExpanded ? 325 : 250,
         child: GestureDetector(
-          onTap: () => _showGoalkeeperDetails(goalkeeper),
-          child: FutCarde(goalkeeper: goalkeeper),
+          onTap: () {
+            setState(() {
+              if (isExpanded) {
+                _expandedGoalkeeperId = null;
+              } else {
+                _expandedGoalkeeperId = goalkeeper.id;
+              }
+            });
+          },
+          child: ExpandableFutCard(
+            goalkeeper: goalkeeper,
+            isExpanded: isExpanded,
+          ),
         ),
       ),
     );
