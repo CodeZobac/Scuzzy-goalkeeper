@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:goalkeeper/src/features/user_profile/data/repositories/user_profile_repository.dart';
 import 'package:goalkeeper/src/features/user_profile/presentation/controllers/user_profile_controller.dart';
 import 'package:goalkeeper/src/features/user_profile/presentation/screens/profile_screen.dart';
@@ -36,6 +37,15 @@ Future<void> main() async {
     url: dotenv.env['SUPABASE_URL']!,
     anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
+
+  // Initialize Mapbox
+  final mapboxAccessToken = dotenv.env['MAPBOX_ACCESS_TOKEN'];
+  if (mapboxAccessToken != null && mapboxAccessToken.isNotEmpty && mapboxAccessToken != 'your_mapbox_access_token_here') {
+    MapboxOptions.setAccessToken(mapboxAccessToken);
+    debugPrint('Mapbox initialized with access token');
+  } else {
+    debugPrint('Warning: Mapbox access token not found. Map functionality will be limited.');
+  }
 
   // Create and initialize the service before running the app
   final notificationService = NotificationService();

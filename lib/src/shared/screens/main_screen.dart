@@ -110,6 +110,8 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         );
       case NavbarItem.search:
         return SearchContent();
+      case NavbarItem.map:
+        return MapContent();
       case NavbarItem.team:
         return TeamContent();
       case NavbarItem.profile:

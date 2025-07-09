@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../features/auth/presentation/theme/app_theme.dart';
 
-enum NavbarItem { home, search, team, profile }
+enum NavbarItem { home, search, map, team, profile }
 
 class AppNavbar extends StatefulWidget {
   final NavbarItem selectedItem;
@@ -129,18 +129,25 @@ class _AppNavbarState extends State<AppNavbar>
                       index: 1,
                     ),
                     _NavbarIcon(
+                      icon: Icons.map_rounded,
+                      label: 'Map',
+                      isSelected: widget.selectedItem == NavbarItem.map,
+                      onTap: () => _onItemTap(NavbarItem.map),
+                      index: 2,
+                    ),
+                    _NavbarIcon(
                       icon: Icons.groups_rounded,
                       label: 'Team',
                       isSelected: widget.selectedItem == NavbarItem.team,
                       onTap: () => _onItemTap(NavbarItem.team),
-                      index: 2,
+                      index: 3,
                     ),
                     _NavbarIcon(
                       icon: Icons.person_rounded,
                       label: 'Profile',
                       isSelected: widget.selectedItem == NavbarItem.profile,
                       onTap: () => _onItemTap(NavbarItem.profile),
-                      index: 3,
+                      index: 4,
                     ),
                   ],
                 ),

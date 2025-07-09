@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../features/auth/presentation/theme/app_theme.dart';
 import '../../features/goalkeeper_search/presentation/screens/goalkeeper_search_screen.dart';
+import '../../features/map/presentation/screens/map_screen.dart';
 
 class HomeContent extends StatelessWidget {
   @override
@@ -408,5 +409,12 @@ class _TeamMemberCard extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class MapContent extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return const MapScreen();
   }
 }
