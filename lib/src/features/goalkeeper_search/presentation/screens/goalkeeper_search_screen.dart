@@ -466,7 +466,9 @@ class _GoalkeeperSearchScreenState extends State<GoalkeeperSearchScreen>
         curve: Curves.easeInOut,
         height: isExpanded ? 475 : 350,
         width: isExpanded ? 325 : 250,
-        child: GestureDetector(
+        child: ExpandableFutCard(
+          goalkeeper: goalkeeper,
+          isExpanded: isExpanded,
           onTap: () {
             setState(() {
               if (isExpanded) {
@@ -476,10 +478,6 @@ class _GoalkeeperSearchScreenState extends State<GoalkeeperSearchScreen>
               }
             });
           },
-          child: ExpandableFutCard(
-            goalkeeper: goalkeeper,
-            isExpanded: isExpanded,
-          ),
         ),
       ),
     );
