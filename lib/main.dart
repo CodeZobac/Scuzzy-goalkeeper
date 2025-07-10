@@ -4,6 +4,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:goalkeeper/src/features/user_profile/data/repositories/user_profile_repository.dart';
 import 'package:goalkeeper/src/features/user_profile/presentation/controllers/user_profile_controller.dart';
 import 'package:goalkeeper/src/features/user_profile/presentation/screens/profile_screen.dart';
+import 'package:goalkeeper/src/features/user_profile/presentation/screens/complete_profile_screen.dart';
+import 'package:goalkeeper/src/features/user_profile/data/models/user_profile.dart';
 import 'package:goalkeeper/src/features/goalkeeper_search/data/repositories/goalkeeper_search_repository.dart';
 import 'package:goalkeeper/src/features/goalkeeper_search/presentation/controllers/goalkeeper_search_controller.dart';
 import 'package:goalkeeper/src/features/notifications/services/notification_service.dart';
@@ -108,6 +110,10 @@ class _MyAppState extends State<MyApp> {
         '/home': (context) => const MainScreen(),
         '/profile': (context) => const ProfileScreen(),
         '/notifications': (context) => const NotificationsScreen(),
+        '/complete-profile': (context) {
+          final userProfile = ModalRoute.of(context)!.settings.arguments as UserProfile;
+          return CompleteProfileScreen(userProfile: userProfile);
+        },
       },
     );
   }

@@ -9,6 +9,8 @@ import '../../features/rating/data/repositories/rating_repository.dart';
 import '../../features/booking/data/repositories/booking_repository.dart';
 import '../../features/rating/presentation/widgets/rating_notification_widget.dart';
 import '../widgets/app_navbar.dart';
+import '../../features/user_profile/data/models/user_profile.dart';
+import '../../features/user_profile/data/repositories/user_profile_repository.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -59,6 +61,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
     
     // Check for completed bookings after a short delay
     _checkForCompletedBookings();
+    _checkUserProfile();
   }
 
   @override
@@ -75,6 +78,26 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         _ratingNotificationService.checkForCompletedBookings(user.id);
       }
     });
+  }
+
+  void _checkUserProfile() async {
+    try {
+      final userProfile = await UserProfileRepository().getUserProfile();
+      final isProfileComplete = userProfile.gender != null &&
+          userProfile.city != null &&
+          userProfile.birthDate != null &&
+          userProfile.club != null &&
+          userProfile.nationality != null &&
+          userProfile.country != null;
+
+      if (!isProfileComplete) {
+        if (mounted) {
+          Navigator.of(context).pushNamed('/complete-profile', arguments: userProfile);
+        }
+      }
+    } catch (e) {
+      // Handle error
+    }
   }
 
   void _onNavbarTap(NavbarItem item) {
