@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../features/auth/presentation/theme/app_theme.dart';
 import '../../features/goalkeeper_search/presentation/screens/goalkeeper_search_screen.dart';
 
 class HomeContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final user = Supabase.instance.client.auth.currentUser;
     return Padding(
       padding: const EdgeInsets.all(24.0),
       child: Column(
@@ -65,6 +67,28 @@ class HomeContent extends StatelessWidget {
                       style: AppTheme.bodyMedium,
                       textAlign: TextAlign.center,
                     ),
+                    if (user == null) ...[
+                      const SizedBox(height: 24),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/signin');
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.accentColor,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 40,
+                            vertical: 16,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+                          ),
+                        ),
+                        child: Text(
+                          'Login or Register',
+                          style: AppTheme.buttonText.copyWith(color: Colors.white),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
