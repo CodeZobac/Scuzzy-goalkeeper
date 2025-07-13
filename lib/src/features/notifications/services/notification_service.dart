@@ -4,14 +4,16 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+// import 'package:flutter_local_notifications/flutter_local_notifications.dart';  // Temporarily disabled
 import 'package:permission_handler/permission_handler.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class NotificationService with ChangeNotifier {
   FirebaseMessaging? _firebaseMessaging;
-  final FlutterLocalNotificationsPlugin _localNotifications =
-      FlutterLocalNotificationsPlugin();
+  
+  // Temporarily disabled local notifications
+  // final FlutterLocalNotificationsPlugin _localNotifications =
+  //     FlutterLocalNotificationsPlugin();
 
   static const String _channelId = 'goalkeeper_notifications';
   static const String _channelName = 'Goalkeeper Notifications';
@@ -40,7 +42,7 @@ class NotificationService with ChangeNotifier {
       await _requestPermissions();
 
       // Initialize local notifications
-      await _initializeLocalNotifications();
+      // await _initializeLocalNotifications();  // Temporarily disabled
 
       // Initialize Firebase messaging handlers
       await _initializeFirebaseMessaging();
@@ -83,7 +85,8 @@ class NotificationService with ChangeNotifier {
     }
   }
 
-  /// Initialize local notifications
+  /// Initialize local notifications - temporarily disabled
+  /*
   Future<void> _initializeLocalNotifications() async {
     const AndroidInitializationSettings androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -122,6 +125,7 @@ class NotificationService with ChangeNotifier {
           ?.createNotificationChannel(channel);
     }
   }
+  */
 
   /// Initialize Firebase messaging
   Future<void> _initializeFirebaseMessaging() async {
@@ -189,7 +193,7 @@ class NotificationService with ChangeNotifier {
     debugPrint('Foreground message received: ${message.notification?.title}');
     
     // Show local notification when app is in foreground
-    _showLocalNotification(message);
+    // _showLocalNotification(message);  // Temporarily disabled
     
     // Call callback if set
     if (onNotificationReceived != null && message.data.isNotEmpty) {
@@ -206,7 +210,8 @@ class NotificationService with ChangeNotifier {
     }
   }
 
-  /// Handle local notification tap
+  /// Handle local notification tap - temporarily disabled
+  /*
   void _onLocalNotificationTapped(NotificationResponse response) {
     debugPrint('Local notification tapped: ${response.payload}');
     
@@ -219,8 +224,10 @@ class NotificationService with ChangeNotifier {
       }
     }
   }
+  */
 
-  /// Show local notification
+  /// Show local notification - temporarily disabled
+  /*
   Future<void> _showLocalNotification(RemoteMessage message) async {
     try {
       const AndroidNotificationDetails androidDetails =
@@ -257,6 +264,7 @@ class NotificationService with ChangeNotifier {
       debugPrint('Error showing local notification: $e');
     }
   }
+  */
 
   /// Get current FCM token
   String? get fcmToken => _fcmToken;

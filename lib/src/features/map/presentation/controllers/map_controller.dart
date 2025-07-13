@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
+import 'package:flutter_map/flutter_map.dart' as fm;
+import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
+import 'package:latlong2/latlong.dart';
 import '../../domain/models/map_field.dart';
 import '../../data/repositories/field_repository.dart';
+import '../widgets/field_marker.dart';
+import '../widgets/cluster_marker.dart';
+import '../widgets/user_marker.dart';
 
 enum MapLoadingState {
   idle,
@@ -12,7 +17,7 @@ enum MapLoadingState {
 
 class MapController extends ChangeNotifier {
   final FieldRepository _fieldRepository = FieldRepository();
-  MapboxMap? _mapboxMap;
+  fm.MapController? _mapController;
   List<MapField> _fields = [];
   bool _isAddingField = false;
   String? _fieldName;
@@ -20,9 +25,10 @@ class MapController extends ChangeNotifier {
   String? _selectedSurfaceType;
   double? _selectedLatitude;
   double? _selectedLongitude;
+  String? _selectedFieldId;
   
   // Mock user location (in a real app, you'd get this from location services)
-  Position? _userLocation;
+  LatLng? _userLocation;
   
   // Text controllers for form
   final TextEditingController nameController = TextEditingController();
@@ -34,6 +40,7 @@ class MapController extends ChangeNotifier {
   MapLoadingState _loadingState = MapLoadingState.idle;
 
   // Getters
+  fm.MapController? get mapController => _mapController;
   List<MapField> get fields => _fields;
   bool get isAddingField => _isAddingField;
   String? get fieldName => _fieldName;
@@ -41,20 +48,13 @@ class MapController extends ChangeNotifier {
   String? get selectedSurfaceType => _selectedSurfaceType;
   double? get selectedLatitude => _selectedLatitude;
   double? get selectedLongitude => _selectedLongitude;
+  String? get selectedFieldId => _selectedFieldId;
   MapLoadingState get loadingState => _loadingState;
   bool get canSubmitField => nameController.text.isNotEmpty && _selectedLatitude != null && _selectedLongitude != null;
-  Position? get userLocation => _userLocation;
+  LatLng? get userLocation => _userLocation;
 
-  // Initialize map
-  void onMapCreated(MapboxMap mapboxMap) {
-    _mapboxMap = mapboxMap;
-    loadFields();
-  }
-
-  // Set mapbox map (alternative method for initialization)
-  Future<void> setMapboxMap(MapboxMap mapboxMap) async {
-    _mapboxMap = mapboxMap;
-    await loadFields();
+  void setMapController(fm.MapController controller) {
+    _mapController = controller;
   }
 
   // Initialize method for compatibility
@@ -69,7 +69,6 @@ class MapController extends ChangeNotifier {
       notifyListeners();
       
       _fields = await _fieldRepository.getApprovedFields();
-      await _createAnnotations();
       
       _loadingState = MapLoadingState.loaded;
       notifyListeners();
@@ -80,26 +79,72 @@ class MapController extends ChangeNotifier {
     }
   }
 
-  // Create annotations on map
-  Future<void> _createAnnotations() async {
-    if (_mapboxMap == null) return;
+  // Markers for the map with clustering
+  List<fm.Marker> get markers {
+    final List<fm.Marker> fieldMarkers = _fields.map((field) {
+      return fm.Marker(
+        width: 28.0,
+        height: 28.0,
+        point: LatLng(field.latitude, field.longitude),
+        child: FieldMarker(
+          isSelected: field.id == _selectedFieldId,
+          onTap: () {
+            _selectedFieldId = field.id;
+            onFieldTapped?.call(field);
+            notifyListeners();
+          },
+        ),
+      );
+    }).toList();
 
-    final pointAnnotationManager = await _mapboxMap!.annotations.createPointAnnotationManager();
-    
-    final options = _fields
-        .map((field) => PointAnnotationOptions(
-              geometry: Point(coordinates: Position(field.longitude, field.latitude)),
-              textField: field.name,
-              iconImage: 'marker-15',
-            ))
-        .toList();
-
-    if (options.isNotEmpty) {
-      await pointAnnotationManager.createMulti(options);
+    // Add user marker if location is available
+    if (_userLocation != null) {
+      fieldMarkers.add(
+        fm.Marker(
+          width: 32.0,
+          height: 32.0,
+          point: _userLocation!,
+          child: const UserMarker(),
+        ),
+      );
     }
 
-    // Set up click listener
-    pointAnnotationManager.addOnPointAnnotationClickListener(_AnnotationClickListener(this));
+    return fieldMarkers;
+  }
+
+  // Cluster marker builder
+  Widget buildClusterMarker(BuildContext context, List<fm.Marker> markers) {
+    return ClusterMarker(
+      count: markers.length,
+      onTap: () {
+        // Optional: Handle cluster tap to zoom in
+        if (_mapController != null && markers.isNotEmpty) {
+          final bounds = _calculateBounds(markers);
+          _mapController!.fitBounds(bounds);
+        }
+      },
+    );
+  }
+
+  // Calculate bounds for markers
+  fm.LatLngBounds _calculateBounds(List<fm.Marker> markers) {
+    double minLat = double.infinity;
+    double maxLat = -double.infinity;
+    double minLng = double.infinity;
+    double maxLng = -double.infinity;
+
+    for (final marker in markers) {
+      final point = marker.point;
+      if (point.latitude < minLat) minLat = point.latitude;
+      if (point.latitude > maxLat) maxLat = point.latitude;
+      if (point.longitude < minLng) minLng = point.longitude;
+      if (point.longitude > maxLng) maxLng = point.longitude;
+    }
+
+    return fm.LatLngBounds(
+      LatLng(minLat, minLng),
+      LatLng(maxLat, maxLng),
+    );
   }
 
   // Toggle field adding mode
@@ -112,11 +157,11 @@ class MapController extends ChangeNotifier {
   }
 
   // Handle map tap for adding field
-  Future<void> onMapTap(Point point) async {
+  void onMapTap(LatLng point) {
     if (!_isAddingField) return;
 
-    _selectedLatitude = point.coordinates.lat.toDouble();
-    _selectedLongitude = point.coordinates.lng.toDouble();
+    _selectedLatitude = point.latitude;
+    _selectedLongitude = point.longitude;
     notifyListeners();
   }
 
@@ -180,36 +225,22 @@ class MapController extends ChangeNotifier {
   }
 
   // Move camera to user location
-  Future<void> moveToUserLocation() async {
-    if (_mapboxMap == null) return;
+  void moveToUserLocation() {
+    if (_mapController == null) return;
 
-    // If we have user location, use it, otherwise use default
     if (_userLocation != null) {
-      final cameraOptions = CameraOptions(
-        center: Point(coordinates: Position(_userLocation!.lng, _userLocation!.lat)),
-        zoom: 15.0,
-      );
-      await _mapboxMap!.easeTo(cameraOptions, MapAnimationOptions(duration: 1000));
+      _mapController!.move(LatLng(_userLocation!.latitude, _userLocation!.longitude), 15.0);
     } else {
       // Default to a sample location (you can integrate location services here)
-      final cameraOptions = CameraOptions(
-        center: Point(coordinates: Position(-74.0060, 40.7128)), // New York
-        zoom: 12.0,
-      );
-      await _mapboxMap!.easeTo(cameraOptions, MapAnimationOptions(duration: 1000));
+      _mapController!.move(LatLng(40.7128, -74.0060), 12.0);
     }
   }
 
   // Move camera to specific location
-  Future<void> moveToLocation(double latitude, double longitude) async {
-    if (_mapboxMap == null) return;
+  void moveToLocation(double latitude, double longitude) {
+    if (_mapController == null) return;
 
-    final cameraOptions = CameraOptions(
-      center: Point(coordinates: Position(longitude, latitude)),
-      zoom: 15.0,
-    );
-
-    await _mapboxMap!.easeTo(cameraOptions, MapAnimationOptions(duration: 1000));
+    _mapController!.move(LatLng(latitude, longitude), 15.0);
   }
 
   // Search fields by name
@@ -230,7 +261,6 @@ class MapController extends ChangeNotifier {
       notifyListeners();
 
       _fields = await _fieldRepository.searchFields(query);
-      await _createAnnotations();
       
       _loadingState = MapLoadingState.loaded;
     } catch (e) {
@@ -253,7 +283,6 @@ class MapController extends ChangeNotifier {
         longitude: -74.0060,
         radiusInMeters: 5000, // 5km radius
       );
-      await _createAnnotations();
       
       _loadingState = MapLoadingState.loaded;
     } catch (e) {
@@ -294,9 +323,16 @@ class MapController extends ChangeNotifier {
   void onAnnotationClick(String fieldId) {
     final field = getFieldById(fieldId);
     if (field != null) {
-      // You can emit an event or call a callback here
-      print('Field clicked: ${field.name}');
+      _selectedFieldId = fieldId;
+      onFieldTapped?.call(field);
+      notifyListeners();
     }
+  }
+
+  // Clear selected field
+  void clearSelectedField() {
+    _selectedFieldId = null;
+    notifyListeners();
   }
 
   // Callback for field tapped - can be set from UI
@@ -309,20 +345,7 @@ class MapController extends ChangeNotifier {
     descriptionController.dispose();
     photoUrlController.dispose();
     dimensionsController.dispose();
-    _mapboxMap = null;
     _fields.clear();
     super.dispose();
-  }
-}
-
-// Annotation click listener class
-class _AnnotationClickListener extends OnPointAnnotationClickListener {
-  final MapController _controller;
-
-  _AnnotationClickListener(this._controller);
-
-  @override
-  void onPointAnnotationClick(PointAnnotation annotation) {
-    _controller.onAnnotationClick(annotation.id);
   }
 }

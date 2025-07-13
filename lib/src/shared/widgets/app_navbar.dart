@@ -81,32 +81,8 @@ class _AppNavbarState extends State<AppNavbar>
           offset: Offset(0, 100 * (1 - _slideAnimation.value)),
           child: Container(
             height: 90 + MediaQuery.of(context).padding.bottom,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  AppTheme.secondaryBackground.withOpacity(0.95),
-                  AppTheme.primaryBackground.withOpacity(0.98),
-                ],
-              ),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(24),
-                topRight: Radius.circular(24),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, -5),
-                ),
-                BoxShadow(
-                  color: AppTheme.accentColor.withOpacity(0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, -2),
-                ),
-              ],
-            ),
+            // Completely transparent - no decoration at all
+            decoration: null,
             child: SafeArea(
               top: false,
               child: Padding(
@@ -233,8 +209,8 @@ class _NavbarIconState extends State<_NavbarIcon>
     ));
     
     _colorAnimation = ColorTween(
-      begin: AppTheme.secondaryText,
-      end: AppTheme.accentColor,
+      begin: Colors.white.withOpacity(0.7), // Better contrast on green background
+      end: Colors.white, // White for selected state on green background
     ).animate(CurvedAnimation(
       parent: _selectedController,
       curve: Curves.easeInOut,
@@ -352,6 +328,13 @@ class _NavbarIconState extends State<_NavbarIcon>
                           widget.icon,
                           size: 24,
                           color: _colorAnimation.value,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withOpacity(0.5),
+                              offset: const Offset(0, 1),
+                              blurRadius: 3,
+                            ),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -363,6 +346,13 @@ class _NavbarIconState extends State<_NavbarIcon>
                           fontWeight: widget.isSelected 
                               ? FontWeight.w600 
                               : FontWeight.w400,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withOpacity(0.5),
+                              offset: const Offset(0, 1),
+                              blurRadius: 3,
+                            ),
+                          ],
                         ),
                         child: Text(widget.label),
                       ),

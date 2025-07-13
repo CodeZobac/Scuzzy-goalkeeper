@@ -125,28 +125,39 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       value: _ratingNotificationService,
       child: Scaffold(
         backgroundColor: AppTheme.primaryBackground,
-        body: Container(
-          decoration: const BoxDecoration(
-            gradient: AppTheme.primaryGradient,
-          ),
-          child: SafeArea(
-            child: AnimatedBuilder(
-              animation: _contentAnimationController,
-              builder: (context, child) {
-                return FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: SlideTransition(
-                    position: _slideAnimation,
-                    child: _buildContent(),
-                  ),
-                );
-              },
+        body: Stack(
+          children: [
+            // Main content with full screen coverage
+            Container(
+              decoration: const BoxDecoration(
+                gradient: AppTheme.primaryGradient,
+              ),
+              child: SafeArea(
+                child: AnimatedBuilder(
+                  animation: _contentAnimationController,
+                  builder: (context, child) {
+                    return FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: SlideTransition(
+                        position: _slideAnimation,
+                        child: _buildContent(),
+                      ),
+                    );
+                  },
+                ),
+              ),
             ),
-          ),
-        ),
-        bottomNavigationBar: AppNavbar(
-          selectedItem: _selectedItem,
-          onItemSelected: _onNavbarTap,
+            // Floating transparent navbar
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: AppNavbar(
+                selectedItem: _selectedItem,
+                onItemSelected: _onNavbarTap,
+              ),
+            ),
+          ],
         ),
       ),
     );
