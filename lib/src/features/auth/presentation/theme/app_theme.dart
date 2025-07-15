@@ -5,7 +5,7 @@ class AppTheme {
   // Paleta de Cores (Tema Escuro)
   static const Color primaryBackground = Color(0xFF1A1A2E);
   static const Color secondaryBackground = Color(0xFF16213E);
-  static const Color accentColor = Color(0xFFE94560);
+  static const Color accentColor = Color(0xFF00A85A);
   static const Color primaryText = Color(0xFFF0F0F0);
   static const Color secondaryText = Color(0xFFA9A9A9);
   static const Color errorColor = Color(0xFFFF6B6B);
@@ -151,7 +151,7 @@ class AppTheme {
     ),
 
     // Card Theme
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       color: secondaryBackground,
       elevation: 8,
       shadowColor: Colors.black26,

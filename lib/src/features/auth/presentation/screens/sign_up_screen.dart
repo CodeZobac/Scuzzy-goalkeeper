@@ -140,6 +140,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     try {
       await _authRepository.signUp(
+        name: _nameController.text,
         email: _emailController.text,
         password: _passwordController.text,
       );
@@ -156,9 +157,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
       }
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _emailError = 'Este email já está em uso';
-        });
+        debugPrint('Sign up error: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Ocorreu um erro ao criar a conta. Tente novamente.'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
       }
     } finally {
       if (mounted) {

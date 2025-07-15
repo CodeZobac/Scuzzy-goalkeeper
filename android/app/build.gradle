@@ -23,6 +23,16 @@ if (flutterVersionName == null) {
     flutterVersionName = "1.0"
 }
 
+def properties = new Properties()
+if (rootProject.file('local.properties').exists()) {
+    properties.load(rootProject.file('local.properties').newDataInputStream())
+}
+
+def googleMapsApiKey = properties.getProperty('GOOGLE_MAPS_API_KEY')
+if (googleMapsApiKey == null) {
+    googleMapsApiKey = System.getenv('GOOGLE_MAPS_API_KEY')
+}
+
 android {
     namespace = "com.example.goalkeeper"
     compileSdk = flutter.compileSdkVersion
@@ -33,15 +43,28 @@ android {
         targetCompatibility = JavaVersion.VERSION_1_8
     }
 
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.goalkeeper"
+        applicationId "com.example.goalkeeper"
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
-        versionCode = flutterVersionCode.toInteger()
-        versionName = flutterVersionName
+        minSdk 26
+        targetSdk flutter.targetSdkVersion
+        versionCode flutterVersionCode.toInteger()
+        versionName flutterVersionName
+        multiDexEnabled true
+        manifestPlaceholders = [
+                GOOGLE_MAPS_API_KEY: googleMapsApiKey,
+                applicationName: "io.flutter.app.FlutterApplication"
+        ]
     }
 
     buildTypes {
@@ -50,6 +73,9 @@ android {
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.debug
         }
+    }
+    dependencies {
+        // implementation 'com.android.tools:desugar_jdk_libs:1.2.2'  // Removed due to compatibility issues
     }
 }
 

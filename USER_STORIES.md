@@ -154,7 +154,7 @@ Este documento detalha as user stories para o desenvolvimento da aplicação Goa
 ### Tarefa 6.1: Tela de Avaliação (UI)
 - **Descrição:** Criar uma interface para o jogador submeter a sua avaliação.
 - **Sub-tarefas:**
-    - Após um agendamento ter o `status` alterado para `'completed'`, o jogador deve ver uma opção para "Avaliar Guarda-redes".
+    - Após um agendamento ter o `status` alterado para `'completed'`, o jogador quando voltar a entrar na app deve ver uma opção para "Avaliar Guarda-redes", por exemplo, como forma de uma notificação, isto não é obrigatório mas é encorajado.
     - Criar uma tela de avaliação com um seletor de estrelas (1 a 5) e um campo de texto para o `comment`.
 - **Stack:** Flutter, Dart.
 
@@ -173,16 +173,16 @@ Este documento detalha as user stories para o desenvolvimento da aplicação Goa
 ### Tarefa 7.1: Tela do Mapa (UI)
 - **Descrição:** Desenvolver uma tela que exiba um mapa interativo.
 - **Sub-tarefas:**
-    - Integrar o widget `flutter_map` na aplicação.
+    - Integrar o widget `mapbox-maps-flutter` na aplicação.
     - Configurar o OpenStreetMap como provedor de mapas.
-- **Stack:** Flutter, Dart, `flutter_map`.
+- **Stack:** Flutter, Dart, `mapbox-maps-flutter`.
 
 ### Tarefa 7.2: Exibição dos Campos no Mapa
 - **Descrição:** Obter os dados dos campos da base de dados e mostrá-los como marcadores no mapa.
 - **Sub-tarefas:**
     - Consultar a tabela `fields` para obter todos os campos com `status = 'approved'`.
     - Para cada campo, adicionar um marcador no mapa utilizando as suas coordenadas `latitude` e `longitude`.
-- **Stack:** Flutter, Dart, `flutter_map`, `supabase_flutter`.
+- **Stack:** Flutter, Dart, `mapbox-maps-flutter`, `supabase_flutter`.
 
 ### Tarefa 7.3: Sugestão de Novos Campos
 - **Descrição:** Permitir que os utilizadores sugiram novos campos de futebol.

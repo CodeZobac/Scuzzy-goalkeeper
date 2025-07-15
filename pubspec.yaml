@@ -37,6 +37,22 @@ dependencies:
   cupertino_icons: ^1.0.6
   google_fonts: ^6.1.0
   supabase_flutter: ^2.5.0
+  provider: ^6.1.5
+  flutter_dotenv: ^5.2.1
+  
+  # Firebase and notifications
+  firebase_core: ^3.6.0
+  firebase_messaging: ^15.1.3
+  # flutter_local_notifications: ^18.0.1  # Temporarily disabled due to desugaring issues
+  permission_handler: ^11.3.1
+  
+  # Map dependencies
+  flutter_map: ^6.1.0
+  latlong2: ^0.9.0
+  geolocator: ^10.1.0
+  flutter_map_marker_cluster: ^1.3.6
+  cached_network_image: ^3.4.1
+  google_maps_flutter: ^2.6.0
 
 dev_dependencies:
   flutter_test:
@@ -59,6 +75,10 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  assets:
+    - .env
+    - assets/map_style.json
 
   # To add assets to your application, add an assets section, like this:
   # assets:
