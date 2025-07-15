@@ -13,7 +13,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:goalkeeper/src/features/auth/presentation/screens/sign_in_screen.dart';
 import 'package:goalkeeper/src/features/auth/presentation/screens/sign_up_screen.dart';
 import 'package:goalkeeper/src/features/auth/presentation/theme/app_theme.dart';
-import 'package:goalkeeper/src/shared/screens/main_screen.dart';
+import 'package:goalkeeper/src/features/map/presentation/screens/map_screen.dart';
+import 'package:goalkeeper/src/features/main/presentation/screens/main_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -108,6 +109,7 @@ class _MyAppState extends State<MyApp> {
         '/home': (context) => const MainScreen(),
         '/profile': (context) => const ProfileScreen(),
         '/notifications': (context) => const NotificationsScreen(),
+        '/map': (context) => const MapScreen(),
       },
     );
   }

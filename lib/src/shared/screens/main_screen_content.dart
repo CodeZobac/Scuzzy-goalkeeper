@@ -412,9 +412,11 @@ class _TeamMemberCard extends StatelessWidget {
   }
 }
 
+
 class MapContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MapScreen();
   }
 }
+

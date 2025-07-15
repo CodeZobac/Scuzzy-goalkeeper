@@ -85,6 +85,44 @@ Armazena informações sobre os campos de futebol.
 | `submitted_by` | UUID | FK para `users.id` (quem sugeriu o campo). |
 | `created_at` | Timestamp | Data de criação do registo. |
 
+### 6. Estatísticas de Jogadores (`player_stats`)
+Armazena as estatísticas de desempenho dos jogadores.
+
+| Coluna | Tipo de Dados | Descrição/Notas |
+| :--- | :--- | :--- |
+| `id` | UUID | Chave Primária (PK) |
+| `player_id` | UUID | Chave Estrangeira (FK) para `users.id`. |
+| `games_played` | Inteiro | Número de jogos disputados. |
+| `goals_scored` | Inteiro | Número de golos marcados. |
+| `assists` | Inteiro | Número de assistências. |
+| `clean_sheets` | Inteiro | Apenas para guarda-redes: número de jogos sem sofrer golos. |
+| `updated_at` | Timestamp | Data da última atualização. |
+
+### 7. Equipas (`teams`)
+Armazena informações sobre as equipas.
+
+| Coluna | Tipo de Dados | Descrição/Notas |
+| :--- | :--- | :--- |
+| `id` | UUID | Chave Primária (PK) |
+| `name` | Texto | Nome da equipa. |
+| `captain_id` | UUID | FK para `users.id` (capitão da equipa). |
+| `created_at` | Timestamp | Data de criação do registo. |
+
+### 8. Estatísticas de Equipas (`team_stats`)
+Armazena as estatísticas de desempenho das equipas.
+
+| Coluna | Tipo de Dados | Descrição/Notas |
+| :--- | :--- | :--- |
+| `id` | UUID | Chave Primária (PK) |
+| `team_id` | UUID | Chave Estrangeira (FK) para `teams.id`. |
+| `games_played` | Inteiro | Número de jogos disputados. |
+| `wins` | Inteiro | Número de vitórias. |
+| `draws` | Inteiro | Número de empates. |
+| `losses` | Inteiro | Número de derrotas. |
+| `goals_for` | Inteiro | Número de golos marcados. |
+| `goals_against` | Inteiro | Número de golos sofridos. |
+| `updated_at` | Timestamp | Data da última atualização. |
+
 ## Tecnologias Sugeridas
 - **Framework:** Flutter.
 - **Linguagem:** Dart.

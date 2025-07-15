@@ -12,33 +12,18 @@ class UserMarker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: AppTheme.accentColor,
-          width: 2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 5,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: CircleAvatar(
-        radius: 14,
-        backgroundColor: AppTheme.primaryBackground,
-        backgroundImage: imageUrl != null ? CachedNetworkImageProvider(imageUrl!) : null,
-        child: imageUrl == null
-            ? const Icon(
-                Icons.person,
-                color: Colors.white,
-                size: 18,
-              )
-            : null,
-      ),
+    return CircleAvatar(
+      radius: 16,
+      backgroundColor: AppTheme.primaryBackground,
+      backgroundImage:
+          imageUrl != null ? CachedNetworkImageProvider(imageUrl!) : null,
+      child: imageUrl == null
+          ? const Icon(
+              Icons.person,
+              color: Colors.white,
+              size: 20,
+            )
+          : null,
     );
   }
 }

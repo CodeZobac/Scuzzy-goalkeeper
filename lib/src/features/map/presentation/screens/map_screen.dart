@@ -1,163 +1,88 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:provider/provider.dart';
-import 'package:flutter_map/flutter_map.dart' as fm;
-import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
-import 'package:latlong2/latlong.dart';
-import 'dart:io' show Platform;
-import '../controllers/map_controller_new.dart';
-import '../../domain/models/map_field.dart';
-import '../../../auth/presentation/theme/app_theme.dart';
-import '../widgets/field_details_card_new.dart';
-import '../widgets/field_marker.dart';
-import '../widgets/user_marker.dart';
-import '../widgets/cluster_marker.dart';
 
-class MapScreen extends StatefulWidget {
-  const MapScreen({Key? key}) : super(key: key);
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:provider/provider.dart';
+import '../controllers/map_view_model.dart';
+import '../widgets/field_details_card.dart';
+
+class MapScreen extends StatelessWidget {
+  const MapScreen({super.key});
 
   @override
-  State<MapScreen> createState() => _MapScreenState();
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => MapViewModel(),
+      child: const _MapScreenContent(),
+    );
+  }
 }
 
-class _MapScreenState extends State<MapScreen> {
-  late MapControllerNew _mapController;
+class _MapScreenContent extends StatefulWidget {
+  const _MapScreenContent();
 
+  @override
+  State<_MapScreenContent> createState() => _MapScreenContentState();
+}
+
+class _MapScreenContentState extends State<_MapScreenContent> {
   @override
   void initState() {
     super.initState();
-    _mapController = MapControllerNew();
-    _mapController.setMapController(fm.MapController());
-    _mapController.initialize();
+    _loadMapStyle();
   }
 
-  @override
-  void dispose() {
-    _mapController.dispose();
-    super.dispose();
+  Future<void> _loadMapStyle() async {
+    final style = await rootBundle.loadString('assets/map_style.json');
+    context.read<MapViewModel>().setMapStyle(style);
   }
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider.value(
-      value: _mapController,
-      child: Scaffold(
-        body: Stack(
-          children: [
-            Consumer<MapControllerNew>(
-              builder: (context, controller, _) {
-                return fm.FlutterMap(
-                  mapController: controller.mapController,
-                  options: fm.MapOptions(
-                    initialCenter: LatLng(39.7392, -104.9903),
-                    initialZoom: 10.0,
-                    onTap: (tapPosition, point) {
-                      controller.clearSelectedField();
-                    },
-                  ),
-                  children: [
-                    fm.TileLayer(
-                      urlTemplate: 'https://tiles.stadiamaps.com/tiles/stamen_terrain/{z}/{x}/{y}{r}.png?api_key=${dotenv.env['STADIA_API_KEY']}',
-                      retinaMode: Platform.isAndroid || Platform.isIOS,
-                      userAgentPackageName: 'com.goalkeeper.app',
-                    ),
-                    MarkerClusterLayerWidget(
-                      options: MarkerClusterLayerOptions(
-                        markers: _buildMarkers(controller),
-                        builder: (context, markers) {
-                          return ClusterMarker(
-                            count: markers.length,
-                            onTap: () {
-                              // Implement zoom logic if needed
-                            },
-                          );
-                        },
-                        maxClusterRadius: 80,
-                        size: const Size(40, 40),
-                      ),
-                    ),
-                  ],
-                );
-              },
+    final viewModel = context.watch<MapViewModel>();
+
+    return Scaffold(
+      body: Stack(
+        children: [
+          GoogleMap(
+            onMapCreated: viewModel.onMapCreated,
+            initialCameraPosition: const CameraPosition(
+              target: LatLng(38.7223, -9.1393), // Lisbon
+              zoom: 12,
             ),
-            Consumer<MapControllerNew>(
-              builder: (context, controller, _) {
-                if (controller.loadingState == MapLoadingState.loading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                return const SizedBox.shrink();
-              },
+            markers: viewModel.markers,
+            myLocationEnabled: true,
+            myLocationButtonEnabled: false, // Disable default button
+            zoomControlsEnabled: false,
+            onTap: (_) => viewModel.clearSelectedField(),
+          ),
+          _buildFloatingButtons(),
+          if (viewModel.selectedField != null)
+            FieldDetailsCard(
+              field: viewModel.selectedField!,
+              onClose: () => viewModel.clearSelectedField(),
             ),
-            Consumer<MapControllerNew>(
-              builder: (context, controller, _) {
-                if (controller.selectedField != null) {
-                  return Positioned(
-                    bottom: 80,
-                    left: 0,
-                    right: 0,
-                    child: FieldDetailsCardNew(
-                      field: controller.selectedField!,
-                      onClose: () => controller.clearSelectedField(),
-                    ),
-                  );
-                }
-                return const SizedBox.shrink();
-              },
-            ),
-            _buildFloatingActionButtons(),
-          ],
-        ),
+        ],
       ),
     );
   }
 
-  List<fm.Marker> _buildMarkers(MapControllerNew controller) {
-    final markers = controller.fields.map((field) {
-      return fm.Marker(
-        width: 40.0,
-        height: 40.0,
-        point: LatLng(field.latitude, field.longitude),
-        child: FieldMarker(
-          isSelected: controller.selectedField?.id == field.id,
-          onTap: () => controller.onFieldSelected(field),
-        ),
-      );
-    }).toList();
-
-    if (controller.userLocation != null) {
-      markers.add(
-        fm.Marker(
-          width: 40.0,
-          height: 40.0,
-          point: controller.userLocation!,
-          child: const UserMarker(
-            imageUrl: 'https://via.placeholder.com/150/000000/FFFFFF/?text=User',
-          ),
-        ),
-      );
-    }
-
-    return markers;
-  }
-
-  Widget _buildFloatingActionButtons() {
+  Widget _buildFloatingButtons() {
     return Positioned(
-      top: MediaQuery.of(context).padding.top + 16,
+      top: 50,
       right: 16,
       child: Column(
         children: [
           FloatingActionButton(
-            heroTag: 'filter_btn',
             onPressed: () {},
             backgroundColor: Colors.white,
-            child: const Icon(Icons.tune, color: AppTheme.primaryText),
+            child: const Icon(Icons.tune, color: Colors.black),
           ),
           const SizedBox(height: 16),
           FloatingActionButton(
-            heroTag: 'location_btn',
-            onPressed: () => _mapController.moveToUserLocation(),
+            onPressed: () {},
             backgroundColor: Colors.white,
-            child: const Icon(Icons.my_location, color: AppTheme.primaryText),
+            child: const Icon(Icons.near_me_outlined, color: Colors.black),
           ),
         ],
       ),
