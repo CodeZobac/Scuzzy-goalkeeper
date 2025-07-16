@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:goalkeeper/src/features/map/presentation/screens/map_screen.dart';
+import 'package:goalkeeper/src/features/map/presentation/providers/field_selection_provider.dart';
 import '../../../../shared/widgets/app_navbar.dart';
 
 class MainScreen extends StatefulWidget {
@@ -49,9 +51,19 @@ class _MainScreenState extends State<MainScreen> {
             bottom: 0,
             left: 0,
             right: 0,
-            child: AppNavbar(
-              selectedItem: _selectedItem,
-              onItemSelected: _onItemSelected,
+            child: Consumer<FieldSelectionProvider>(
+              builder: (context, fieldSelection, child) {
+                final shouldHideNavbar = _selectedItem == NavbarItem.map && fieldSelection.isFieldDetailsVisible;
+                return AnimatedOpacity(
+                  opacity: shouldHideNavbar ? 0.0 : 1.0,
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.easeInOut,
+                  child: AppNavbar(
+                    selectedItem: _selectedItem,
+                    onItemSelected: _onItemSelected,
+                  ),
+                );
+              },
             ),
           ),
         ],

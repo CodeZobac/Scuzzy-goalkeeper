@@ -4,7 +4,9 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import '../controllers/map_view_model.dart';
+import '../providers/field_selection_provider.dart';
 import '../widgets/field_details_card.dart';
+import '../widgets/city_filter_dialog.dart';
 
 class MapScreen extends StatelessWidget {
   const MapScreen({super.key});
@@ -12,7 +14,7 @@ class MapScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => MapViewModel(),
+      create: (context) => MapViewModel(context.read<FieldSelectionProvider>()),
       child: const _MapScreenContent(),
     );
   }
@@ -57,34 +59,198 @@ class _MapScreenContentState extends State<_MapScreenContent> {
             onTap: (_) => viewModel.clearSelectedField(),
           ),
           _buildFloatingButtons(),
-          if (viewModel.selectedField != null)
-            FieldDetailsCard(
-              field: viewModel.selectedField!,
-              onClose: () => viewModel.clearSelectedField(),
-            ),
+          _buildFilterStatusIndicator(),
+          Consumer<FieldSelectionProvider>(
+            builder: (context, fieldSelection, child) {
+              return AnimatedOpacity(
+                opacity: fieldSelection.selectedField != null ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 600),
+                curve: Curves.easeInOut,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 600),
+                  curve: Curves.easeInOut,
+                  transform: Matrix4.identity()..translate(
+                    0.0,
+                    fieldSelection.selectedField != null ? 0.0 : MediaQuery.of(context).size.height * 0.5,
+                  ),
+                  child: fieldSelection.selectedField != null ?
+                    FieldDetailsCard(
+                      field: fieldSelection.selectedField!,
+                      onClose: () => fieldSelection.clearSelection(),
+                    ) : const SizedBox.shrink(),
+                ),
+              );
+            },
+          ),
         ],
       ),
     );
   }
 
   Widget _buildFloatingButtons() {
+    final viewModel = context.watch<MapViewModel>();
+    
     return Positioned(
       top: 50,
       right: 16,
       child: Column(
         children: [
-          FloatingActionButton(
-            onPressed: () {},
-            backgroundColor: Colors.white,
-            child: const Icon(Icons.tune, color: Colors.black),
+          // City filter button
+          Container(
+            decoration: BoxDecoration(
+              color: viewModel.selectedCity != null 
+                  ? const Color(0xFF6C5CE7) 
+                  : Colors.white,
+              borderRadius: BorderRadius.circular(28),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => _showCityFilterDialog(context),
+                borderRadius: BorderRadius.circular(28),
+                child: Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(28),
+                  ),
+                  child: Stack(
+                    children: [
+                      Center(
+                        child: Icon(
+                          Icons.location_city,
+                          color: viewModel.selectedCity != null 
+                              ? Colors.white 
+                              : Colors.black,
+                          size: 24,
+                        ),
+                      ),
+                      if (viewModel.selectedCity != null)
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: Container(
+                            width: 12,
+                            height: 12,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF00D68F),
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
           const SizedBox(height: 16),
+          // Location button
           FloatingActionButton(
-            onPressed: () {},
+            onPressed: () => _centerOnUserLocation(context),
             backgroundColor: Colors.white,
             child: const Icon(Icons.near_me_outlined, color: Colors.black),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showCityFilterDialog(BuildContext context) {
+    final viewModel = context.read<MapViewModel>();
+    
+    showDialog(
+      context: context,
+      builder: (context) => CityFilterDialog(
+        availableCities: viewModel.availableCities,
+        selectedCity: viewModel.selectedCity,
+        onCitySelected: (city) {
+          viewModel.filterByCity(city);
+        },
+        onClearFilter: () {
+          viewModel.clearCityFilter();
+        },
+      ),
+    );
+  }
+
+  void _centerOnUserLocation(BuildContext context) {
+    final viewModel = context.read<MapViewModel>();
+    
+    if (viewModel.userPosition != null && viewModel.mapController != null) {
+      viewModel.mapController!.animateCamera(
+        CameraUpdate.newLatLngZoom(viewModel.userPosition!, 15),
+      );
+    }
+  }
+
+  Widget _buildFilterStatusIndicator() {
+    final viewModel = context.watch<MapViewModel>();
+    
+    if (viewModel.selectedCity == null) {
+      return const SizedBox.shrink();
+    }
+    
+    return Positioned(
+      top: 50,
+      left: 16,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFF6C5CE7),
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.location_city,
+              color: Colors.white,
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              viewModel.selectedCity!,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: () {
+                viewModel.clearCityFilter();
+              },
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.close,
+                  color: Colors.white,
+                  size: 16,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
