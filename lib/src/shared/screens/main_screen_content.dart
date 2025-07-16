@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../features/auth/presentation/theme/app_theme.dart';
 import '../../features/goalkeeper_search/presentation/screens/goalkeeper_search_screen.dart';
 import '../../features/map/presentation/screens/map_screen.dart';
+import '../../features/announcements/presentation/widgets/announcements_preview_widget.dart';
 
 class HomeContent extends StatelessWidget {
   @override
@@ -22,6 +23,8 @@ class HomeContent extends StatelessWidget {
               color: AppTheme.secondaryText,
             ),
           ),
+          const SizedBox(height: 32),
+          const AnnouncementsPreviewWidget(),
           const SizedBox(height: 32),
           Expanded(
             child: Container(
@@ -419,4 +422,3 @@ class MapContent extends StatelessWidget {
     return const MapScreen();
   }
 }
-
