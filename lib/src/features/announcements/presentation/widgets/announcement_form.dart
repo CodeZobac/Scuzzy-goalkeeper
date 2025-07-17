@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/models/announcement.dart';
 import '../controllers/announcement_controller.dart';
+import '../../utils/error_handler.dart';
 
 class AnnouncementForm extends StatefulWidget {
   const AnnouncementForm({super.key});
@@ -46,14 +47,12 @@ class _AnnouncementFormState extends State<AnnouncementForm> {
     }
   }
 
-  void _submitForm() {
+  Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
       if (_selectedDate == null || _selectedTime == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please select a date and time.'),
-            backgroundColor: Colors.red,
-          ),
+        AnnouncementErrorHandler.showErrorSnackBar(
+          context,
+          'Please select a date and time.',
         );
         return;
       }
@@ -70,10 +69,25 @@ class _AnnouncementFormState extends State<AnnouncementForm> {
         createdAt: DateTime.now(),
       );
 
-      Provider.of<AnnouncementController>(context, listen: false)
-          .createAnnouncement(announcement);
-
-      Navigator.of(context).pop();
+      try {
+        await Provider.of<AnnouncementController>(context, listen: false)
+            .createAnnouncement(announcement);
+        
+        if (mounted) {
+          AnnouncementErrorHandler.showSuccessSnackBar(
+            context,
+            'Announcement created successfully!',
+          );
+          Navigator.of(context).pop();
+        }
+      } catch (e) {
+        if (mounted) {
+          AnnouncementErrorHandler.showErrorSnackBar(
+            context,
+            'Failed to create announcement: ${AnnouncementErrorHandler.getErrorMessage(e)}',
+          );
+        }
+      }
     }
   }
 
@@ -141,9 +155,39 @@ class _AnnouncementFormState extends State<AnnouncementForm> {
               ],
             ),
             const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _submitForm,
-              child: const Text('Add Announcement'),
+            Consumer<AnnouncementController>(
+              builder: (context, controller, child) {
+                return SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: controller.isCreatingAnnouncement ? null : _submitForm,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4CAF50),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: controller.isCreatingAnnouncement
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          )
+                        : const Text(
+                            'Add Announcement',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                  ),
+                );
+              },
             ),
           ],
         ),
