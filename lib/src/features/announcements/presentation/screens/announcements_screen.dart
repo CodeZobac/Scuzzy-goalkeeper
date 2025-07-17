@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../controllers/announcement_controller.dart';
 import '../widgets/announcement_form.dart';
 import 'announcement_detail_screen.dart';
-import '../../auth/presentation/theme/app_theme.dart';
+import 'package:goalkeeper/src/features/auth/presentation/theme/app_theme.dart';
 
 class AnnouncementsScreen extends StatefulWidget {
   const AnnouncementsScreen({super.key});
@@ -266,37 +266,43 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
                         ),
                       ],
                     ),
-                    if (announcement.stadium != null) ..[
-                      const SizedBox(height: 8),
-                      Row(
+                    if (announcement.stadium != null)
+                      Column(
                         children: [
-                          Icon(
-                            Icons.stadium,
-                            size: 16,
-                            color: AppTheme.secondaryText,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            announcement.stadium!,
-                            style: AppTheme.bodyMedium.copyWith(
-                              color: AppTheme.secondaryText,
-                            ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.stadium,
+                                size: 16,
+                                color: AppTheme.secondaryText,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                announcement.stadium!,
+                                style: AppTheme.bodyMedium.copyWith(
+                                  color: AppTheme.secondaryText,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
-                    if (announcement.description != null) ..[
-                      const SizedBox(height: 12),
-                      Text(
-                        announcement.description!,
-                        style: AppTheme.bodyMedium.copyWith(
-                          color: Colors.white.withOpacity(0.8),
-                          height: 1.4,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                    if (announcement.description != null)
+                      Column(
+                        children: [
+                          const SizedBox(height: 12),
+                          Text(
+                            announcement.description!,
+                            style: AppTheme.bodyMedium.copyWith(
+                              color: Colors.white.withOpacity(0.8),
+                              height: 1.4,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
-                    ],
                   ],
                 ),
               ),
