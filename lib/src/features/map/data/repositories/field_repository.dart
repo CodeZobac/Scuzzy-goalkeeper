@@ -65,6 +65,7 @@ class FieldRepository {
     String? description,
     String? surfaceType,
     String? dimensions,
+    String? city,
   }) async {
     try {
       final user = _supabase.auth.currentUser;
@@ -82,6 +83,7 @@ class FieldRepository {
         'description': description,
         'surface_type': surfaceType,
         'dimensions': dimensions,
+        'city': city,
         'created_at': DateTime.now().toIso8601String(),
       };
 
@@ -94,6 +96,47 @@ class FieldRepository {
       return MapField.fromMap(response);
     } catch (e) {
       throw Exception('Failed to suggest field: $e');
+    }
+  }
+
+  /// Get fields by city
+  Future<List<MapField>> getFieldsByCity(String city) async {
+    try {
+      final response = await _supabase
+          .from('fields')
+          .select()
+          .eq('status', 'approved')
+          .eq('city', city)
+          .order('created_at', ascending: false);
+
+      return (response as List)
+          .map((field) => MapField.fromMap(field))
+          .toList();
+    } catch (e) {
+      throw Exception('Failed to fetch fields by city: $e');
+    }
+  }
+
+  /// Get all unique cities from approved fields
+  Future<List<String>> getAvailableCities() async {
+    try {
+      final response = await _supabase
+          .from('fields')
+          .select('city')
+          .eq('status', 'approved')
+          .not('city', 'is', null);
+
+      final cities = (response as List)
+          .map((item) => item['city'] as String?)
+          .where((city) => city != null && city.isNotEmpty)
+          .cast<String>()
+          .toSet()
+          .toList();
+      
+      cities.sort();
+      return cities;
+    } catch (e) {
+      throw Exception('Failed to fetch available cities: $e');
     }
   }
 

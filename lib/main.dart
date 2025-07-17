@@ -8,6 +8,7 @@ import 'package:goalkeeper/src/features/goalkeeper_search/data/repositories/goal
 import 'package:goalkeeper/src/features/goalkeeper_search/presentation/controllers/goalkeeper_search_controller.dart';
 import 'package:goalkeeper/src/features/notifications/services/notification_service.dart';
 import 'package:goalkeeper/src/features/notifications/presentation/screens/notifications_screen.dart';
+import 'package:goalkeeper/src/features/map/presentation/providers/field_selection_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:goalkeeper/src/features/auth/presentation/screens/sign_in_screen.dart';
@@ -53,6 +54,9 @@ Future<void> main() async {
         ),
         ChangeNotifierProvider(
           create: (_) => GoalkeeperSearchController(GoalkeeperSearchRepository()),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => FieldSelectionProvider(),
         ),
       ],
       child: const MyApp(),
