@@ -22,6 +22,7 @@ class MapViewModel extends ChangeNotifier {
   List<MapField> _allFields = [];
   List<MapField> _filteredFields = [];
   String? _selectedCity;
+  String? _selectedAvailability;
   List<String> _availableCities = [];
   
   MapViewModel(this._fieldSelectionProvider);
@@ -35,6 +36,7 @@ class MapViewModel extends ChangeNotifier {
   String? get mapStyle => _mapStyle;
   List<String> get availableCities => _availableCities;
   String? get selectedCity => _selectedCity;
+  String? get selectedAvailability => _selectedAvailability;
   List<MapField> get filteredFields => _filteredFields;
 
   void setMapStyle(String style) {
@@ -78,19 +80,62 @@ class MapViewModel extends ChangeNotifier {
     _fieldSelectionProvider.clearSelection();
   }
 
-  // City filtering methods
+  // Filtering methods
   void filterByCity(String city) {
     _selectedCity = city;
-    _filteredFields = _allFields.where((field) => field.city == city).toList();
-    _updateMarkers();
+    _applyFilters();
+    notifyListeners();
+  }
+
+  void filterByAvailability(String availability) {
+    _selectedAvailability = availability;
+    _applyFilters();
     notifyListeners();
   }
 
   void clearCityFilter() {
     _selectedCity = null;
-    _filteredFields = _allFields;
-    _updateMarkers();
+    _applyFilters();
     notifyListeners();
+  }
+
+  void clearAvailabilityFilter() {
+    _selectedAvailability = null;
+    _applyFilters();
+    notifyListeners();
+  }
+
+  void clearAllFilters() {
+    _selectedCity = null;
+    _selectedAvailability = null;
+    _applyFilters();
+    notifyListeners();
+  }
+
+  void _applyFilters() {
+    _filteredFields = _allFields.where((field) {
+      bool cityMatch = _selectedCity == null || field.city == _selectedCity;
+      bool availabilityMatch = _selectedAvailability == null || _matchesAvailability(field, _selectedAvailability!);
+      return cityMatch && availabilityMatch;
+    }).toList();
+    _updateMarkers();
+  }
+
+  bool _matchesAvailability(MapField field, String availability) {
+    // For now, we'll simulate availability matching
+    // In a real implementation, this would check against actual booking data
+    switch (availability) {
+      case 'Disponível agora':
+        return true; // Simulate that some fields are available now
+      case 'Disponível hoje':
+        return field.name.contains('Municipal') || field.name.contains('Complexo');
+      case 'Disponível esta semana':
+        return !field.name.contains('Estádio');
+      case 'Sempre disponível':
+        return field.name.contains('Campo');
+      default:
+        return true;
+    }
   }
 
   Future<void> _updateMarkers() async {

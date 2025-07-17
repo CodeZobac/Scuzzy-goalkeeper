@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 import '../controllers/map_view_model.dart';
 import '../providers/field_selection_provider.dart';
 import '../widgets/field_details_card.dart';
-import '../widgets/city_filter_dialog.dart';
+import '../widgets/enhanced_filter_dialog.dart';
 
 class MapScreen extends StatelessWidget {
   const MapScreen({super.key});
@@ -64,10 +64,10 @@ class _MapScreenContentState extends State<_MapScreenContent> {
             builder: (context, fieldSelection, child) {
               return AnimatedOpacity(
                 opacity: fieldSelection.selectedField != null ? 1.0 : 0.0,
-                duration: const Duration(milliseconds: 600),
+                duration: const Duration(milliseconds: 800),
                 curve: Curves.easeInOut,
                 child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 600),
+                  duration: const Duration(milliseconds: 800),
                   curve: Curves.easeInOut,
                   transform: Matrix4.identity()..translate(
                     0.0,
@@ -98,7 +98,7 @@ class _MapScreenContentState extends State<_MapScreenContent> {
           // City filter button
           Container(
             decoration: BoxDecoration(
-              color: viewModel.selectedCity != null 
+              color: (viewModel.selectedCity != null || viewModel.selectedAvailability != null)
                   ? const Color(0xFF6C5CE7) 
                   : Colors.white,
               borderRadius: BorderRadius.circular(28),
@@ -113,7 +113,7 @@ class _MapScreenContentState extends State<_MapScreenContent> {
             child: Material(
               color: Colors.transparent,
               child: InkWell(
-                onTap: () => _showCityFilterDialog(context),
+                onTap: () => _showEnhancedFilterDialog(context),
                 borderRadius: BorderRadius.circular(28),
                 child: Container(
                   width: 56,
@@ -125,14 +125,14 @@ class _MapScreenContentState extends State<_MapScreenContent> {
                     children: [
                       Center(
                         child: Icon(
-                          Icons.location_city,
-                          color: viewModel.selectedCity != null 
+                          Icons.tune,
+                          color: (viewModel.selectedCity != null || viewModel.selectedAvailability != null)
                               ? Colors.white 
                               : Colors.black,
                           size: 24,
                         ),
                       ),
-                      if (viewModel.selectedCity != null)
+                      if (viewModel.selectedCity != null || viewModel.selectedAvailability != null)
                         Positioned(
                           top: 8,
                           right: 8,
@@ -163,19 +163,23 @@ class _MapScreenContentState extends State<_MapScreenContent> {
     );
   }
 
-  void _showCityFilterDialog(BuildContext context) {
+  void _showEnhancedFilterDialog(BuildContext context) {
     final viewModel = context.read<MapViewModel>();
     
     showDialog(
       context: context,
-      builder: (context) => CityFilterDialog(
+      builder: (context) => EnhancedFilterDialog(
         availableCities: viewModel.availableCities,
         selectedCity: viewModel.selectedCity,
+        selectedAvailability: viewModel.selectedAvailability,
         onCitySelected: (city) {
           viewModel.filterByCity(city);
         },
+        onAvailabilitySelected: (availability) {
+          viewModel.filterByAvailability(availability);
+        },
         onClearFilter: () {
-          viewModel.clearCityFilter();
+          viewModel.clearAllFilters();
         },
       ),
     );
@@ -194,7 +198,7 @@ class _MapScreenContentState extends State<_MapScreenContent> {
   Widget _buildFilterStatusIndicator() {
     final viewModel = context.watch<MapViewModel>();
     
-    if (viewModel.selectedCity == null) {
+    if (viewModel.selectedCity == null && viewModel.selectedAvailability == null) {
       return const SizedBox.shrink();
     }
     
@@ -218,23 +222,38 @@ class _MapScreenContentState extends State<_MapScreenContent> {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(
-              Icons.location_city,
+              Icons.filter_list,
               color: Colors.white,
               size: 20,
             ),
             const SizedBox(width: 8),
-            Text(
-              viewModel.selectedCity!,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (viewModel.selectedCity != null)
+                  Text(
+                    viewModel.selectedCity!,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                if (viewModel.selectedAvailability != null)
+                  Text(
+                    viewModel.selectedAvailability!,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(width: 8),
             GestureDetector(
               onTap: () {
-                viewModel.clearCityFilter();
+                viewModel.clearAllFilters();
               },
               child: Container(
                 padding: const EdgeInsets.all(4),
