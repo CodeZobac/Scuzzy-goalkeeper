@@ -123,6 +123,31 @@ Armazena as estatísticas de desempenho das equipas.
 | `goals_against` | Inteiro | Número de golos sofridos. |
 | `updated_at` | Timestamp | Data da última atualização. |
 
+### 9. Anúncios (`announcements`)
+Armazena os anúncios de jogos criados pelos utilizadores.
+
+| Coluna | Tipo de Dados | Descrição/Notas |
+| :--- | :--- | :--- |
+| `id` | BIGINT | Chave Primária (PK) |
+| `created_by` | UUID | Chave Estrangeira (FK) para `auth.users.id`. |
+| `title` | Texto | Título do anúncio. |
+| `description` | Texto | Descrição do anúncio (opcional). |
+| `date` | Data | Data do jogo. |
+| `time` | Hora | Hora do jogo. |
+| `price` | Decimal | Preço do jogo (opcional). |
+| `stadium` | Texto | Local do jogo (opcional). |
+| `created_at` | Timestamp | Data de criação do registo. |
+
+### 10. Participantes de Anúncios (`announcement_participants`)
+Regista os utilizadores que participam num anúncio.
+
+| Coluna | Tipo de Dados | Descrição/Notas |
+| :--- | :--- | :--- |
+| `id` | BIGINT | Chave Primária (PK) |
+| `announcement_id` | BIGINT | Chave Estrangeira (FK) para `announcements.id`. |
+| `user_id` | UUID | Chave Estrangeira (FK) para `auth.users.id`. |
+| `created_at` | Timestamp | Data de criação do registo. |
+
 ## Tecnologias Sugeridas
 - **Framework:** Flutter.
 - **Linguagem:** Dart.
