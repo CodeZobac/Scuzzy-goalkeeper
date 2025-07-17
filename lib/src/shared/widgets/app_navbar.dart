@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../features/auth/presentation/theme/app_theme.dart';
 import '../../features/map/data/repositories/field_repository.dart';
 import '../../features/map/domain/models/map_field.dart';
+import '../../features/announcements/presentation/controllers/announcement_controller.dart';
 
 enum NavbarItem { home, map, notifications, profile }
 
@@ -25,7 +26,6 @@ class _AppNavbarState extends State<AppNavbar>
     with TickerProviderStateMixin {
   late AnimationController _slideController;
   late Animation<double> _slideAnimation;
-  final int _eventsCount = 14; // Mocked value from the design
 
   @override
   void initState() {
@@ -79,11 +79,15 @@ class _AppNavbarState extends State<AppNavbar>
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _NavbarIcon(
-                      icon: Icons.campaign,
-                      isSelected: widget.selectedItem == NavbarItem.home,
-                      onTap: () => _onItemTap(NavbarItem.home),
-                      badgeCount: _eventsCount,
+                    Consumer<AnnouncementController>(
+                      builder: (context, announcementController, child) {
+                        return _NavbarIcon(
+                          icon: Icons.campaign,
+                          isSelected: widget.selectedItem == NavbarItem.home,
+                          onTap: () => _onItemTap(NavbarItem.home),
+                          badgeCount: announcementController.announcements.length,
+                        );
+                      },
                     ),
                     _NavbarIcon(
                       icon: Icons.stadium,

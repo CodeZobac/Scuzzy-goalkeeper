@@ -10,6 +10,7 @@ import 'package:goalkeeper/src/features/notifications/services/notification_serv
 import 'package:goalkeeper/src/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:goalkeeper/src/features/announcements/data/repositories/announcement_repository_impl.dart';
 import 'package:goalkeeper/src/features/announcements/presentation/controllers/announcement_controller.dart';
+import 'package:goalkeeper/src/features/map/presentation/providers/field_selection_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:goalkeeper/src/features/auth/presentation/screens/sign_in_screen.dart';
@@ -60,6 +61,9 @@ Future<void> main() async {
           create: (_) => AnnouncementController(
             AnnouncementRepositoryImpl(Supabase.instance.client),
           ),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => FieldSelectionProvider(),
         ),
       ],
       child: const MyApp(),
