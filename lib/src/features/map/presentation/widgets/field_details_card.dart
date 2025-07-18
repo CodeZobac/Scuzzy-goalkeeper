@@ -97,6 +97,7 @@ class FieldDetailsCard extends StatelessWidget {
             style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
+              color: Colors.black,
             ),
           ),
           const SizedBox(height: 8),
@@ -106,30 +107,33 @@ class FieldDetailsCard extends StatelessWidget {
               const SizedBox(width: 4),
               const Text(
                 '4.5',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
               ),
               const SizedBox(width: 8),
               Text(
-                '4291 Rogahn Terrace',
+                field.city != null ? '${field.city}' : 'Localização não disponível',
                 style: TextStyle(color: Colors.grey[600]),
               ),
             ],
           ),
           const SizedBox(height: 16),
           Text(
-            'Modern football field, based on the football academy of the AC Milan. Open to everyone since 2017. Free amateur friday tournaments.',
+            field.description ?? 'Descrição não disponível.',
             style: TextStyle(color: Colors.grey[800], height: 1.5),
           ),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              _buildTag('Natural Grass'),
-              const SizedBox(width: 8),
-              _buildTag('40x70m'),
-              const SizedBox(width: 8),
-              _buildTag('Outdoor'),
-            ],
-          ),
+            Row(
+              children: [
+                _buildTag(field.displaySurfaceType),
+                const SizedBox(width: 8),
+                _buildTag(field.dimensions ?? 'N/A'),
+                const SizedBox(width: 8),
+                _buildTag('Outdoor'),
+              ],
+            ),
         ],
       ),
     );
@@ -144,7 +148,10 @@ class FieldDetailsCard extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: const TextStyle(fontWeight: FontWeight.w500),
+        style: const TextStyle(
+          fontWeight: FontWeight.w500,
+          color: Colors.black,
+        ),
       ),
     );
   }
@@ -157,7 +164,11 @@ class FieldDetailsCard extends StatelessWidget {
         children: [
           const Text(
             'Upcoming events (9)',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
           ),
           const SizedBox(height: 16),
           _buildEventCard(),
@@ -182,10 +193,10 @@ class FieldDetailsCard extends StatelessWidget {
               ),
               child: const Column(
                 children: [
-                  Text('NOV', style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text('NOV', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
                   Text('25',
                       style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
                 ],
               ),
             ),
@@ -195,10 +206,10 @@ class FieldDetailsCard extends StatelessWidget {
               children: [
                 Text(
                   'Friday Free Tournament',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
                 ),
                 SizedBox(height: 4),
-                Text('12:30 pm - 4 slots - Beginners'),
+                Text('12:30 pm - 4 slots - Beginners', style: TextStyle(color: Colors.black)),
               ],
             ),
           ],
@@ -214,8 +225,12 @@ class FieldDetailsCard extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           const Text(
-            '£24 / hour',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            '€24 / hour',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
           ),
           ElevatedButton(
             onPressed: () {},
@@ -228,9 +243,9 @@ class FieldDetailsCard extends StatelessWidget {
             ),
             child: const Row(
               children: [
-                Text('Availability'),
+                Text('Availability', style: TextStyle(color: Colors.black)),
                 SizedBox(width: 8),
-                Icon(Icons.arrow_forward, size: 16),
+                Icon(Icons.arrow_forward, size: 16, color: Colors.black),
               ],
             ),
           ),

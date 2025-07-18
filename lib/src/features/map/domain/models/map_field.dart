@@ -12,6 +12,7 @@ class MapField {
   final String? description;
   final String? surfaceType;
   final String? dimensions;
+  final String? city;
 
   MapField({
     required this.id,
@@ -25,6 +26,7 @@ class MapField {
     this.description,
     this.surfaceType,
     this.dimensions,
+    this.city,
   });
 
   Map<String, dynamic> toMap() {
@@ -40,6 +42,7 @@ class MapField {
       'description': description,
       'surface_type': surfaceType,
       'dimensions': dimensions,
+      'city': city,
     };
   }
 
@@ -58,6 +61,7 @@ class MapField {
       description: map['description'],
       surfaceType: map['surface_type'],
       dimensions: map['dimensions'],
+      city: map['city'],
     );
   }
 
@@ -115,6 +119,7 @@ class MapField {
     String? description,
     String? surfaceType,
     String? dimensions,
+    String? city,
   }) {
     return MapField(
       id: id ?? this.id,
@@ -128,6 +133,7 @@ class MapField {
       description: description ?? this.description,
       surfaceType: surfaceType ?? this.surfaceType,
       dimensions: dimensions ?? this.dimensions,
+      city: city ?? this.city,
     );
   }
 }
