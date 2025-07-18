@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:goalkeeper/src/features/map/presentation/screens/map_screen.dart';
 import 'package:goalkeeper/src/features/map/presentation/providers/field_selection_provider.dart';
+import 'package:goalkeeper/src/features/announcements/presentation/screens/announcements_screen.dart';
+import 'package:goalkeeper/src/features/notifications/presentation/screens/notifications_screen.dart';
+import 'package:goalkeeper/src/features/user_profile/presentation/screens/profile_screen.dart';
 import '../../../../shared/widgets/app_navbar.dart';
 
 class MainScreen extends StatefulWidget {
@@ -17,19 +20,13 @@ class _MainScreenState extends State<MainScreen> {
   Widget _getSelectedScreen() {
     switch (_selectedItem) {
       case NavbarItem.home:
-        return const Center(
-          child: Text('Home Screen', style: TextStyle(fontSize: 24)),
-        );
+        return const AnnouncementsScreen();
       case NavbarItem.map:
         return const MapScreen();
       case NavbarItem.notifications:
-        return const Center(
-          child: Text('Notifications Screen', style: TextStyle(fontSize: 24)),
-        );
+        return const NotificationsScreen();
       case NavbarItem.profile:
-        return const Center(
-          child: Text('Profile Screen', style: TextStyle(fontSize: 24)),
-        );
+        return const ProfileScreen();
     }
   }
 

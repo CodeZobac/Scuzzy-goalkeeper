@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../features/auth/presentation/theme/app_theme.dart';
 import '../../features/map/data/repositories/field_repository.dart';
 import '../../features/map/domain/models/map_field.dart';
+import '../../features/announcements/presentation/controllers/announcement_controller.dart';
 
 enum NavbarItem { home, map, notifications, profile }
 
@@ -25,7 +26,6 @@ class _AppNavbarState extends State<AppNavbar>
     with TickerProviderStateMixin {
   late AnimationController _slideController;
   late Animation<double> _slideAnimation;
-  final int _eventsCount = 14; // Mocked value from the design
 
   @override
   void initState() {
@@ -79,27 +79,35 @@ class _AppNavbarState extends State<AppNavbar>
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _NavbarIcon(
-                      icon: Icons.campaign,
-                      isSelected: widget.selectedItem == NavbarItem.home,
-                      onTap: () => _onItemTap(NavbarItem.home),
-                      badgeCount: _eventsCount,
+                    Consumer<AnnouncementController>(
+                      builder: (context, announcementController, child) {
+                        return _NavbarIcon(
+                          icon: Icons.campaign,
+                          isSelected: widget.selectedItem == NavbarItem.home,
+                          onTap: () => _onItemTap(NavbarItem.home),
+                          badgeCount: announcementController.announcements.length,
+                          currentScreen: widget.selectedItem,
+                        );
+                      },
                     ),
                     _NavbarIcon(
                       icon: Icons.stadium,
                       isSelected: widget.selectedItem == NavbarItem.map,
                       onTap: () => _onItemTap(NavbarItem.map),
+                      currentScreen: widget.selectedItem,
                     ),
                     _NavbarIcon(
                       icon: Icons.notifications,
                       isSelected:
                           widget.selectedItem == NavbarItem.notifications,
                       onTap: () => _onItemTap(NavbarItem.notifications),
+                      currentScreen: widget.selectedItem,
                     ),
                     _NavbarIcon(
                       icon: Icons.person,
                       isSelected: widget.selectedItem == NavbarItem.profile,
                       onTap: () => _onItemTap(NavbarItem.profile),
+                      currentScreen: widget.selectedItem,
                     ),
                   ],
                 ),
@@ -117,13 +125,25 @@ class _NavbarIcon extends StatelessWidget {
   final bool isSelected;
   final VoidCallback onTap;
   final int? badgeCount;
+  final NavbarItem? currentScreen;
 
   const _NavbarIcon({
     required this.icon,
     required this.isSelected,
     required this.onTap,
     this.badgeCount,
+    this.currentScreen,
   });
+
+  Color _getIconColor(BuildContext context) {
+    // For map screen, always use white icons (dark background)
+    if (currentScreen == NavbarItem.map) {
+      return Colors.white;
+    }
+    
+    // For other screens, use dark icons on light backgrounds
+    return isSelected ? const Color(0xFF0BA95F) : const Color(0xFF757575);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -152,7 +172,7 @@ class _NavbarIcon extends StatelessWidget {
             Icon(
               icon,
               size: 28,
-              color: Colors.white, // Always white
+              color: _getIconColor(context),
             ),
             if (badgeCount != null && badgeCount! > 0)
               Positioned(

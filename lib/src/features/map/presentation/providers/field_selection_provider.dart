@@ -14,6 +14,16 @@ class FieldSelectionProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void showFieldDetails() {
+    _isFieldDetailsVisible = true;
+    notifyListeners();
+  }
+
+  void hideFieldDetails() {
+    _isFieldDetailsVisible = false;
+    notifyListeners();
+  }
+
   void clearSelection() {
     _selectedField = null;
     _isFieldDetailsVisible = false;

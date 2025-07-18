@@ -8,7 +8,13 @@ import 'package:goalkeeper/src/features/goalkeeper_search/data/repositories/goal
 import 'package:goalkeeper/src/features/goalkeeper_search/presentation/controllers/goalkeeper_search_controller.dart';
 import 'package:goalkeeper/src/features/notifications/services/notification_service.dart';
 import 'package:goalkeeper/src/features/notifications/presentation/screens/notifications_screen.dart';
+import 'package:goalkeeper/src/features/announcements/data/repositories/announcement_repository_impl.dart';
+import 'package:goalkeeper/src/features/announcements/presentation/controllers/announcement_controller.dart';
+import 'package:goalkeeper/src/features/announcements/presentation/screens/announcements_screen.dart';
+import 'package:goalkeeper/src/features/announcements/presentation/screens/announcement_detail_screen.dart';
+import 'package:goalkeeper/src/features/announcements/presentation/screens/create_announcement_screen.dart';
 import 'package:goalkeeper/src/features/map/presentation/providers/field_selection_provider.dart';
+import 'package:goalkeeper/src/core/navigation/navigation_service.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:goalkeeper/src/features/auth/presentation/screens/sign_in_screen.dart';
@@ -56,6 +62,11 @@ Future<void> main() async {
           create: (_) => GoalkeeperSearchController(GoalkeeperSearchRepository()),
         ),
         ChangeNotifierProvider(
+          create: (_) => AnnouncementController(
+            AnnouncementRepositoryImpl(Supabase.instance.client),
+          ),
+        ),
+        ChangeNotifierProvider(
           create: (_) => FieldSelectionProvider(),
         ),
       ],
@@ -79,12 +90,18 @@ class _MyAppState extends State<MyApp> {
     // Handle user authentication state changes
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final notificationService = context.read<NotificationService>();
+      final announcementController = context.read<AnnouncementController>();
+      
       Supabase.instance.client.auth.onAuthStateChange.listen((data) {
         final event = data.event;
         
         if (event == AuthChangeEvent.signedIn) {
           notificationService.onUserSignIn().catchError((error) {
             debugPrint('Failed to handle user sign-in for notifications: $error');
+          });
+          // Fetch announcements when user signs in
+          announcementController.fetchAnnouncements().catchError((error) {
+            debugPrint('Failed to fetch announcements on sign-in: $error');
           });
           if (mounted) {
             Navigator.of(context).pushReplacementNamed('/home');
@@ -93,6 +110,8 @@ class _MyAppState extends State<MyApp> {
           notificationService.disableToken().catchError((error) {
             debugPrint('Failed to disable notification token: $error');
           });
+          // Clear announcement cache when user signs out
+          announcementController.clearParticipationCache();
           if (mounted) {
             Navigator.of(context).pushReplacementNamed('/signin');
           }
@@ -106,7 +125,9 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       title: 'Goalkeeper-Finder',
       theme: AppTheme.darkTheme,
+      navigatorKey: NavigationService.navigatorKey,
       initialRoute: Supabase.instance.client.auth.currentSession == null ? '/signin' : '/home',
+      onGenerateRoute: _generateRoute,
       routes: {
         '/signin': (context) => const SignInScreen(),
         '/signup': (context) => const SignUpScreen(),
@@ -114,6 +135,47 @@ class _MyAppState extends State<MyApp> {
         '/profile': (context) => const ProfileScreen(),
         '/notifications': (context) => const NotificationsScreen(),
         '/map': (context) => const MapScreen(),
+        '/announcements': (context) => const AnnouncementsScreen(),
+        '/create-announcement': (context) => const CreateAnnouncementScreen(),
+      },
+    );
+  }
+
+  Route<dynamic>? _generateRoute(RouteSettings settings) {
+    switch (settings.name) {
+      case '/announcement-detail':
+        final announcement = settings.arguments;
+        if (announcement != null) {
+          return _createSlideRoute(
+            AnnouncementDetailScreen(announcement: announcement as dynamic),
+          );
+        }
+        return null;
+      default:
+        return null;
+    }
+  }
+
+  PageRouteBuilder _createSlideRoute(Widget page) {
+    return PageRouteBuilder(
+      pageBuilder: (context, animation, secondaryAnimation) => page,
+      transitionDuration: const Duration(milliseconds: 300),
+      reverseTransitionDuration: const Duration(milliseconds: 250),
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        const begin = Offset(1.0, 0.0);
+        const end = Offset.zero;
+        const curve = Curves.easeInOutCubic;
+
+        var tween = Tween(begin: begin, end: end).chain(
+          CurveTween(curve: curve),
+        );
+
+        var offsetAnimation = animation.drive(tween);
+
+        return SlideTransition(
+          position: offsetAnimation,
+          child: child,
+        );
       },
     );
   }
