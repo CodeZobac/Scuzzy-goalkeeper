@@ -40,13 +40,12 @@ class GameDetailsRow extends StatelessWidget {
         SizedBox(width: showLargeIcons ? 24 : 16),
         
         // Price
-        if (price != null)
-          _buildDetailItem(
-            Icons.attach_money,
-            price!.toStringAsFixed(0),
-            iconSize,
-            textSize,
-          ),
+        _buildDetailItem(
+          Icons.attach_money,
+          price != null ? price!.toStringAsFixed(0) : 'Free',
+          iconSize,
+          textSize,
+        ),
       ],
     );
   }
