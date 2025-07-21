@@ -145,7 +145,7 @@ class _SignInScreenState extends State<SignInScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 8),
+                const SizedBox(height: 4), // Reduzido
                 
                 // Campo de Email
                 ModernTextField(
@@ -166,7 +166,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   },
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 18), // Reduzido
 
                 // Campo de Palavra-passe
                 ModernTextField(
@@ -187,7 +187,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   },
                 ),
 
-                const SizedBox(height: 12),
+                const SizedBox(height: 10), // Reduzido
 
                 // Link "Esqueceu a palavra-passe?"
                 Align(
@@ -209,7 +209,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   ),
                 ),
 
-                const SizedBox(height: 32),
+                const SizedBox(height: 28), // Reduzido
 
                 // Botão de Login
                 ModernButton(
@@ -219,7 +219,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   icon: Icons.login,
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 20), // Reduzido
 
                 // Divisor "OU"
                 Row(
@@ -248,7 +248,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   ],
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 20), // Reduzido
 
                 // Link para Registo
                 Row(
@@ -269,7 +269,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   ],
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 12), // Reduzido significativamente
               ],
             ),
           ),

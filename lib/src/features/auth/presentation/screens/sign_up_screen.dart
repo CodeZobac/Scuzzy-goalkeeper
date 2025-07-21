@@ -196,7 +196,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 8),
+                const SizedBox(height: 4), // Reduzido
                 
                 // Campo de Nome
                 ModernTextField(
@@ -216,7 +216,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   },
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 16), // Reduzido
 
                 // Campo de Email
                 ModernTextField(
@@ -237,7 +237,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   },
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 16), // Reduzido
 
                 // Campo de Palavra-passe
                 ModernTextField(
@@ -262,7 +262,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   },
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 16), // Reduzido
 
                 // Campo de Confirmação de Palavra-passe
                 ModernTextField(
@@ -283,7 +283,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   },
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 16), // Reduzido
 
                 // Checkbox dos Termos e Condições
                 Container(
@@ -356,7 +356,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                 ),
 
-                const SizedBox(height: 32),
+                const SizedBox(height: 24), // Reduzido
 
                 // Botão de Registo
                 ModernButton(
@@ -367,7 +367,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   width: double.infinity,
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 20), // Reduzido
 
                 // Divisor "OU"
                 Row(
@@ -396,7 +396,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ],
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 20), // Reduzido
 
                 // Link para Login
                 Row(
@@ -417,7 +417,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ],
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 12), // Reduzido significativamente
               ],
             ),
           ),

@@ -161,7 +161,7 @@ class _ModernAuthLayoutState extends State<ModernAuthLayout>
           child: SlideTransition(
             position: _headerSlideAnimation,
             child: Container(
-              height: isTablet ? 300 : 260,
+              height: isTablet ? 280 : 240, // Reduzido para evitar sobreposição
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
@@ -173,14 +173,14 @@ class _ModernAuthLayoutState extends State<ModernAuthLayout>
                   stops: const [0.0, 1.0],
                 ),
                 borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(40),
-                  bottomRight: Radius.circular(40),
+                  bottomLeft: Radius.circular(32), // Reduzido ligeiramente
+                  bottomRight: Radius.circular(32),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: AppTheme.authPrimaryGreen.withOpacity(0.3),
-                    blurRadius: 30,
-                    offset: const Offset(0, 15),
+                    color: AppTheme.authPrimaryGreen.withOpacity(0.25),
+                    blurRadius: 25,
+                    offset: const Offset(0, 12),
                   ),
                 ],
               ),
@@ -195,7 +195,12 @@ class _ModernAuthLayoutState extends State<ModernAuthLayout>
                   
                   // Main content
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(32, 40, 32, 32),
+                    padding: EdgeInsets.fromLTRB(
+                      32, 
+                      isTablet ? 50 : 40, // top ajustado
+                      32, 
+                      isTablet ? 28 : 24  // bottom reduzido
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -297,30 +302,32 @@ class _ModernAuthLayoutState extends State<ModernAuthLayout>
     return AnimatedBuilder(
       animation: _cardController,
       builder: (context, child) {
-        return Transform.translate(
-          offset: const Offset(0, -40), // Overlap with header
+        return Padding(
+          padding: EdgeInsets.fromLTRB(
+            isTablet ? 40 : 24, // left
+            20, // top - reduzido para menos espaçamento
+            isTablet ? 40 : 24, // right
+            24, // bottom
+          ),
           child: FadeTransition(
             opacity: _cardFadeAnimation,
             child: ScaleTransition(
               scale: _cardScaleAnimation,
               child: Container(
                 width: double.infinity,
-                margin: EdgeInsets.symmetric(
-                  horizontal: isTablet ? 40 : 24,
-                ),
                 decoration: BoxDecoration(
                   color: AppTheme.authCardBackground,
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 30,
-                      offset: const Offset(0, 15),
+                      color: Colors.black.withOpacity(0.08),
+                      blurRadius: 25,
+                      offset: const Offset(0, 10),
                     ),
                     BoxShadow(
-                      color: AppTheme.authPrimaryGreen.withOpacity(0.05),
-                      blurRadius: 50,
-                      offset: const Offset(0, 25),
+                      color: AppTheme.authPrimaryGreen.withOpacity(0.04),
+                      blurRadius: 40,
+                      offset: const Offset(0, 20),
                     ),
                   ],
                 ),
@@ -332,7 +339,12 @@ class _ModernAuthLayoutState extends State<ModernAuthLayout>
                       child: SlideTransition(
                         position: _contentSlideAnimation,
                         child: Padding(
-                          padding: EdgeInsets.all(isTablet ? 32 : 24),
+                          padding: EdgeInsets.fromLTRB(
+                            isTablet ? 32 : 24, // left
+                            isTablet ? 28 : 24, // top
+                            isTablet ? 32 : 24, // right
+                            isTablet ? 24 : 20, // bottom - reduzido para menos espaço em branco
+                          ),
                           child: widget.child,
                         ),
                       ),
