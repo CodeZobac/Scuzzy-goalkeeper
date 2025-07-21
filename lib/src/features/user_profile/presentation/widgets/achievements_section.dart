@@ -439,16 +439,18 @@ class _AchievementsSectionState extends State<AchievementsSection>
               ),
             ),
             const SizedBox(height: 8),
-            Text(
-              title,
-              style: AppTheme.bodyMedium.copyWith(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: isUnlocked ? AppTheme.primaryText : AppTheme.secondaryText,
+            Expanded(
+              child: Text(
+                title,
+                style: AppTheme.bodyMedium.copyWith(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: isUnlocked ? AppTheme.primaryText : AppTheme.secondaryText,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 4),
             Container(
