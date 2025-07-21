@@ -150,7 +150,6 @@ class _SignInScreenState extends State<SignInScreen> {
                 // Campo de Email
                 ModernTextField(
                   hintText: 'Digite o seu email',
-                  labelText: 'Email',
                   prefixIcon: Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
@@ -172,7 +171,6 @@ class _SignInScreenState extends State<SignInScreen> {
                 // Campo de Palavra-passe
                 ModernTextField(
                   hintText: 'Digite a sua palavra-passe',
-                  labelText: 'Palavra-passe',
                   prefixIcon: Icons.lock_outline,
                   isPassword: true,
                   textInputAction: TextInputAction.done,

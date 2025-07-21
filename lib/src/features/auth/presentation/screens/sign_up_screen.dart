@@ -201,7 +201,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 // Campo de Nome
                 ModernTextField(
                   hintText: 'Digite o seu nome completo',
-                  labelText: 'Nome completo',
                   prefixIcon: Icons.person_outline,
                   textInputAction: TextInputAction.next,
                   controller: _nameController,
@@ -222,7 +221,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 // Campo de Email
                 ModernTextField(
                   hintText: 'Digite o seu email',
-                  labelText: 'Email',
                   prefixIcon: Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
@@ -244,7 +242,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 // Campo de Palavra-passe
                 ModernTextField(
                   hintText: 'Crie uma palavra-passe segura',
-                  labelText: 'Palavra-passe',
                   prefixIcon: Icons.lock_outline,
                   isPassword: true,
                   textInputAction: TextInputAction.next,
@@ -270,7 +267,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 // Campo de Confirmação de Palavra-passe
                 ModernTextField(
                   hintText: 'Confirme a sua palavra-passe',
-                  labelText: 'Confirmar palavra-passe',
                   prefixIcon: Icons.lock_outline,
                   isPassword: true,
                   textInputAction: TextInputAction.done,

@@ -297,10 +297,26 @@ class AppTheme {
 
   // Constantes de Layout
   static const double borderRadius = 12.0;
+  static const double borderRadiusLarge = 16.0;
   static const double cardElevation = 8.0;
   static const double spacing = 16.0;
   static const double spacingLarge = 24.0;
   static const double spacingSmall = 8.0;
+
+  // Modern Theme Colors (for compatibility with ModernTextField)
+  static const Color primaryGreen = authPrimaryGreen;
+  static const Color textDark = authTextPrimary;
+  static const Color textSecondary = authTextSecondary;
+  static const Color surfaceLight = authInputBackground;
+  static const Color borderLight = authInputBorder;
+  
+  // Modern Theme Text Styles (for compatibility)
+  static TextStyle get bodySmall => GoogleFonts.poppins(
+    fontSize: 12,
+    fontWeight: FontWeight.normal,
+    color: authTextSecondary,
+    height: 1.4,
+  );
 
   // Duração das Animações
   static const Duration shortAnimation = Duration(milliseconds: 200);
