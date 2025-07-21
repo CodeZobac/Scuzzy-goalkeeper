@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // Paleta de Cores (Tema Escuro)
+  // Main App Palette (Dark Theme for Main App)
   static const Color primaryBackground = Color(0xFF1A1A2E);
   static const Color secondaryBackground = Color(0xFF16213E);
   static const Color accentColor = Color(0xFF00A85A);
@@ -11,7 +11,50 @@ class AppTheme {
   static const Color errorColor = Color(0xFFFF6B6B);
   static const Color successColor = Color(0xFF4ECDC4);
   
-  // Gradientes
+  // Auth Theme Colors (White/Green matching announcements and map)
+  static const Color authPrimaryGreen = Color(0xFF4CAF50);
+  static const Color authSecondaryGreen = Color(0xFF45A049);
+  static const Color authLightGreen = Color(0xFF66BB6A);
+  static const Color authBackground = Color(0xFFF8F9FA);
+  static const Color authCardBackground = Color(0xFFFFFFFF);
+  static const Color authTextPrimary = Color(0xFF2C2C2C);
+  static const Color authTextSecondary = Color(0xFF757575);
+  static const Color authTextLight = Color(0xFFFFFFFF);
+  static const Color authInputBackground = Color(0xFFFFFFFF);
+  static const Color authInputBorder = Color(0xFFE0E0E0);
+  static const Color authInputFocused = Color(0xFF4CAF50);
+  static const Color authError = Color(0xFFFF6B6B);
+  static const Color authSuccess = Color(0xFF4CAF50);
+  
+  // Auth Theme Gradients
+  static const LinearGradient authPrimaryGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [
+      authPrimaryGreen,
+      authSecondaryGreen,
+    ],
+  );
+
+  static const LinearGradient authButtonGradient = LinearGradient(
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
+    colors: [
+      authPrimaryGreen,
+      authLightGreen,
+    ],
+  );
+
+  static const LinearGradient authBackgroundGradient = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [
+      authPrimaryGreen,
+      authSecondaryGreen,
+    ],
+  );
+  
+  // Main App Gradients (Keep original dark theme)
   static const LinearGradient primaryGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
@@ -30,7 +73,7 @@ class AppTheme {
     ],
   );
 
-  // Estilos de Texto
+  // Estilos de Texto (Main App - Dark Theme)
   static TextStyle get headingLarge => GoogleFonts.poppins(
     fontSize: 32,
     fontWeight: FontWeight.bold,
@@ -46,6 +89,96 @@ class AppTheme {
   );
 
   static TextStyle get bodyLarge => GoogleFonts.poppins(
+    fontSize: 16,
+    fontWeight: FontWeight.normal,
+    color: primaryText,
+    height: 1.5,
+  );
+
+  static TextStyle get bodyMedium => GoogleFonts.poppins(
+    fontSize: 14,
+    fontWeight: FontWeight.normal,
+    color: secondaryText,
+    height: 1.4,
+  );
+
+  static TextStyle get buttonText => GoogleFonts.poppins(
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+    color: Colors.white,
+    letterSpacing: 0.5,
+  );
+
+  static TextStyle get linkText => GoogleFonts.poppins(
+    fontSize: 14,
+    fontWeight: FontWeight.w500,
+    color: accentColor,
+    decoration: TextDecoration.underline,
+  );
+
+  // Auth Theme Text Styles (White/Green Theme)
+  static TextStyle get authHeadingLarge => GoogleFonts.poppins(
+    fontSize: 34,
+    fontWeight: FontWeight.bold,
+    color: authTextPrimary,
+    height: 1.2,
+  );
+
+  static TextStyle get authHeadingMedium => GoogleFonts.poppins(
+    fontSize: 28,
+    fontWeight: FontWeight.w700,
+    color: authTextPrimary,
+    height: 1.3,
+  );
+
+  static TextStyle get authHeadingSmall => GoogleFonts.poppins(
+    fontSize: 22,
+    fontWeight: FontWeight.w600,
+    color: authTextPrimary,
+    height: 1.3,
+  );
+
+  static TextStyle get authBodyLarge => GoogleFonts.poppins(
+    fontSize: 16,
+    fontWeight: FontWeight.normal,
+    color: authTextPrimary,
+    height: 1.5,
+  );
+
+  static TextStyle get authBodyMedium => GoogleFonts.poppins(
+    fontSize: 14,
+    fontWeight: FontWeight.normal,
+    color: authTextSecondary,
+    height: 1.4,
+  );
+
+  static TextStyle get authButtonText => GoogleFonts.poppins(
+    fontSize: 16,
+    fontWeight: FontWeight.w700,
+    color: authTextLight,
+    letterSpacing: 0.5,
+  );
+
+  static TextStyle get authLinkText => GoogleFonts.poppins(
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
+    color: authPrimaryGreen,
+    decoration: TextDecoration.none,
+  );
+
+  static TextStyle get authInputText => GoogleFonts.poppins(
+    fontSize: 16,
+    fontWeight: FontWeight.normal,
+    color: authTextPrimary,
+    height: 1.4,
+  );
+
+  static TextStyle get authHintText => GoogleFonts.poppins(
+    fontSize: 14,
+    fontWeight: FontWeight.normal,
+    color: authTextSecondary,
+    height: 1.4,
+  );
     fontSize: 16,
     fontWeight: FontWeight.normal,
     color: primaryText,
