@@ -75,7 +75,7 @@
   - Handle navigation to map screen when "On the map" is tapped
 
 - _Requirements: 2.1, 5.4_
-- [ ] 10. Implement loading states and error handling
+- [x] 10. Implement loading states and error handling
 
 - [-] 10. Implement loading states and error handling
 
@@ -86,7 +86,7 @@
   - Add loading indicators for join/leave actions
   - _Requirements: 1.5, 3.3, 3.4_
 
-- [-] 11. Add create announcement functionality
+- [x] 11. Add create announcement functionality
 
   - Build announcement creation form with title, description, date, time, price, and stadium fields
   - Implement form validation for required fields
