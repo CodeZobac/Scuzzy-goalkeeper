@@ -179,31 +179,12 @@ class AppTheme {
     color: authTextSecondary,
     height: 1.4,
   );
-    fontSize: 16,
-    fontWeight: FontWeight.normal,
-    color: primaryText,
-    height: 1.5,
-  );
 
-  static TextStyle get bodyMedium => GoogleFonts.poppins(
+  static TextStyle get authBodyText => GoogleFonts.poppins(
     fontSize: 14,
     fontWeight: FontWeight.normal,
-    color: secondaryText,
+    color: authTextSecondary,
     height: 1.4,
-  );
-
-  static TextStyle get buttonText => GoogleFonts.poppins(
-    fontSize: 16,
-    fontWeight: FontWeight.w600,
-    color: Colors.white,
-    letterSpacing: 0.5,
-  );
-
-  static TextStyle get linkText => GoogleFonts.poppins(
-    fontSize: 14,
-    fontWeight: FontWeight.w500,
-    color: accentColor,
-    decoration: TextDecoration.underline,
   );
 
   // Theme Data
@@ -272,14 +253,14 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
-        textStyle: buttonText,
+        textStyle: authButtonText,
       ),
     ),
 
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
         foregroundColor: accentColor,
-        textStyle: linkText,
+        textStyle: authLinkText,
       ),
     ),
 
