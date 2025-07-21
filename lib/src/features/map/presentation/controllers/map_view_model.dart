@@ -2,131 +2,144 @@ import 'dart:async';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:geolocator/geolocator.dart';
+import 'package:geolocator/geolocator.dart' as geolocator;
+import 'package:geolocator_platform_interface/geolocator_platform_interface.dart';
+import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' hide Position;
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../data/repositories/field_repository.dart';
 import '../../domain/models/map_field.dart';
-import '../widgets/field_marker.dart';
 import '../providers/field_selection_provider.dart';
 
 class MapViewModel extends ChangeNotifier {
   final FieldRepository _fieldRepository = FieldRepository();
   final FieldSelectionProvider _fieldSelectionProvider;
 
-  GoogleMapController? _mapController;
-  final Set<Marker> _markers = {};
-  final Set<Marker> _allMarkers = {};
+  MapboxMap? _mapboxMap;
+  PointAnnotationManager? _pointAnnotationManager;
+  PointAnnotation? _userLocationAnnotation;
+
   bool _isMapReady = false;
-  LatLng? _userPosition;
-  String? _mapStyle;
+  geolocator.Position? _userPosition;
   List<MapField> _allFields = [];
   List<MapField> _filteredFields = [];
   String? _selectedCity;
   String? _selectedAvailability;
   List<String> _availableCities = [];
-  
+
   MapViewModel(this._fieldSelectionProvider);
 
   // Getters
-  Set<Marker> get markers => _markers;
   bool get isMapReady => _isMapReady;
-  LatLng? get userPosition => _userPosition;
+  geolocator.Position? get userPosition => _userPosition;
   MapField? get selectedField => _fieldSelectionProvider.selectedField;
-  GoogleMapController? get mapController => _mapController;
-  String? get mapStyle => _mapStyle;
   List<String> get availableCities => _availableCities;
   String? get selectedCity => _selectedCity;
   String? get selectedAvailability => _selectedAvailability;
   List<MapField> get filteredFields => _filteredFields;
 
-  void setMapStyle(String style) {
-    _mapStyle = style;
-    _mapController?.setMapStyle(style);
+  void setMapboxMap(MapboxMap map) {
+    _mapboxMap = map;
+    _isMapReady = true;
     notifyListeners();
   }
 
-  void onMapCreated(GoogleMapController controller) {
-    _mapController = controller;
-    if (_mapStyle != null) {
-      _mapController?.setMapStyle(_mapStyle);
-    }
-    _isMapReady = true;
+  void setPointAnnotationManager(PointAnnotationManager manager) {
+    _pointAnnotationManager = manager;
+    manager.onPointAnnotationClickListener.add((annotation) {
+      final fieldId = annotation.textField;
+      if (fieldId != null) {
+        final field = _allFields.firstWhere((f) => f.id == fieldId);
+        _fieldSelectionProvider.selectField(field);
+        _animateToField(field);
+      }
+    });
+  }
+
+  void initializeMap() {
     _loadFields();
     _determinePosition();
-    notifyListeners();
   }
 
   Future<void> _loadFields() async {
     try {
       _allFields = await _fieldRepository.getApprovedFields();
       _filteredFields = _allFields;
-      
-      // Extract unique cities from fields
       _availableCities = _allFields
-          .where((field) => field.city != null && field.city!.isNotEmpty)
-          .map((field) => field.city!)
+          .map((field) => field.city)
+          .where((city) => city != null && city.isNotEmpty)
           .toSet()
-          .toList();
+          .toList()
+          .cast<String>();
       _availableCities.sort();
-      
-      await _updateMarkers();
+      await addMarkersToMapbox();
       notifyListeners();
     } catch (e) {
       print('Error loading fields: $e');
     }
   }
 
+  Future<void> addMarkersToMapbox() async {
+    if (_pointAnnotationManager == null || _mapboxMap == null) return;
+
+    await _pointAnnotationManager?.deleteAll();
+
+    final soccerIcon = await _createIconImage(FontAwesomeIcons.futbol);
+    await _mapboxMap?.style.addStyleImage(
+        'soccer-ball-icon',
+        1.0,
+        MbxImage(width: 64, height: 64, data: soccerIcon),
+        false,
+        [],
+        [],
+        null);
+
+    final List<PointAnnotationOptions> options = [];
+    for (final field in _filteredFields) {
+      options.add(PointAnnotationOptions(
+        geometry: Point(coordinates: Position(field.longitude, field.latitude)).toJson(),
+        textField: field.id,
+        iconImage: 'soccer-ball-icon',
+      ));
+    }
+    _pointAnnotationManager?.createMulti(options);
+    _updateUserLocationMarker();
+  }
+
   void clearSelectedField() {
     _fieldSelectionProvider.clearSelection();
   }
 
-  // Filtering methods
   void filterByCity(String city) {
     _selectedCity = city;
     _applyFilters();
-    notifyListeners();
+    animateToCity(city);
   }
 
   void filterByAvailability(String availability) {
     _selectedAvailability = availability;
     _applyFilters();
-    notifyListeners();
-  }
-
-  void clearCityFilter() {
-    _selectedCity = null;
-    _applyFilters();
-    notifyListeners();
-  }
-
-  void clearAvailabilityFilter() {
-    _selectedAvailability = null;
-    _applyFilters();
-    notifyListeners();
   }
 
   void clearAllFilters() {
     _selectedCity = null;
     _selectedAvailability = null;
     _applyFilters();
-    notifyListeners();
   }
 
   void _applyFilters() {
     _filteredFields = _allFields.where((field) {
-      bool cityMatch = _selectedCity == null || field.city == _selectedCity;
-      bool availabilityMatch = _selectedAvailability == null || _matchesAvailability(field, _selectedAvailability!);
+      final cityMatch = _selectedCity == null || field.city == _selectedCity;
+      final availabilityMatch = _selectedAvailability == null || _matchesAvailability(field, _selectedAvailability!);
       return cityMatch && availabilityMatch;
     }).toList();
-    _updateMarkers();
+    addMarkersToMapbox();
+    notifyListeners();
   }
 
   bool _matchesAvailability(MapField field, String availability) {
-    // For now, we'll simulate availability matching
-    // In a real implementation, this would check against actual booking data
     switch (availability) {
       case 'Disponível agora':
-        return true; // Simulate that some fields are available now
+        return true;
       case 'Disponível hoje':
         return field.name.contains('Municipal') || field.name.contains('Complexo');
       case 'Disponível esta semana':
@@ -138,161 +151,115 @@ class MapViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> _updateMarkers() async {
-    // Clear existing field markers (keep user location marker)
-    _markers.removeWhere((marker) => marker.markerId.value != 'user_location');
-    
-    final customIcon = await _createStadiumMarker();
-    
-    final newMarkers = _filteredFields.map((field) {
-      return Marker(
-        markerId: MarkerId(field.id),
-        position: LatLng(field.latitude, field.longitude),
-        infoWindow: InfoWindow(
-          title: field.name,
-          snippet: field.city != null ? '${field.city} - ${field.description ?? "Campo de futebol"}' : field.description ?? 'Campo de futebol',
-        ),
-        icon: customIcon,
-        onTap: () {
-          _fieldSelectionProvider.selectField(field);
-        },
-      );
-    }).toSet();
-
-    _markers.addAll(newMarkers);
-  }
-
-  Future<BitmapDescriptor> _createStadiumMarker() async {
-    // Create a simple but distinctive marker for football fields
-    final pictureRecorder = ui.PictureRecorder();
-    final canvas = Canvas(pictureRecorder);
-    final size = 60.0;
-    
-    final rect = Rect.fromLTWH(0, 0, size, size);
-    final centerX = size / 2;
-    final centerY = size / 2;
-    
-    // Create gradient paint
-    final gradientPaint = Paint()
-      ..shader = ui.Gradient.radial(
-        Offset(centerX, centerY),
-        size / 2,
-        [const Color(0xFF6C5CE7), const Color(0xFF74B9FF)],
-        [0.0, 1.0],
-      );
-    
-    // Draw main circle
-    canvas.drawCircle(Offset(centerX, centerY), size / 2 - 2, gradientPaint);
-    
-    // Draw white border
-    final borderPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3;
-    
-    canvas.drawCircle(Offset(centerX, centerY), size / 2 - 2, borderPaint);
-    
-    // Draw stadium icon (simplified)
-    final iconPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-    
-    // Draw stadium shape (rectangle with rounded corners)
-    final stadiumRect = Rect.fromCenter(
-      center: Offset(centerX, centerY),
-      width: size * 0.5,
-      height: size * 0.35,
-    );
-    
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(stadiumRect, const Radius.circular(4)),
-      iconPaint,
-    );
-    
-    // Draw field lines
-    final linePaint = Paint()
-      ..color = const Color(0xFF6C5CE7)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
-    
-    // Center line
-    canvas.drawLine(
-      Offset(centerX, stadiumRect.top + 2),
-      Offset(centerX, stadiumRect.bottom - 2),
-      linePaint,
-    );
-    
-    // Goal areas
-    final goalWidth = stadiumRect.width * 0.3;
-    final goalHeight = stadiumRect.height * 0.4;
-    
-    canvas.drawRect(
-      Rect.fromCenter(
-        center: Offset(stadiumRect.left + goalWidth / 2, centerY),
-        width: goalWidth,
-        height: goalHeight,
-      ),
-      linePaint,
-    );
-    
-    canvas.drawRect(
-      Rect.fromCenter(
-        center: Offset(stadiumRect.right - goalWidth / 2, centerY),
-        width: goalWidth,
-        height: goalHeight,
-      ),
-      linePaint,
-    );
-    
-    final picture = pictureRecorder.endRecording();
-    final image = await picture.toImage(size.toInt(), size.toInt());
-    final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-    
-    return BitmapDescriptor.fromBytes(bytes!.buffer.asUint8List());
-  }
-
   Future<void> _determinePosition() async {
     try {
-      bool serviceEnabled;
-      LocationPermission permission;
+      bool serviceEnabled = await geolocator.Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) return;
 
-      serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        return;
+      geolocator.LocationPermission permission = await geolocator.Geolocator.checkPermission();
+      if (permission == geolocator.LocationPermission.denied) {
+        permission = await geolocator.Geolocator.requestPermission();
+        if (permission == geolocator.LocationPermission.denied) return;
       }
+      if (permission == geolocator.LocationPermission.deniedForever) return;
 
-      permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          return;
-        }
-      }
-
-      if (permission == LocationPermission.deniedForever) {
-        return;
-      }
-
-      final position = await Geolocator.getCurrentPosition();
-      _userPosition = LatLng(position.latitude, position.longitude);
-      _markers.add(
-        Marker(
-          markerId: const MarkerId('user_location'),
-          position: _userPosition!,
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
-          infoWindow: const InfoWindow(title: 'Sua Localização'),
-        ),
-      );
-      _mapController?.animateCamera(CameraUpdate.newLatLngZoom(_userPosition!, 15));
+      _userPosition = await geolocator.Geolocator.getCurrentPosition();
+      centerOnUserLocationWithStyle();
+      _updateUserLocationMarker();
       notifyListeners();
     } catch (e) {
       print("Error getting user location: $e");
     }
   }
 
-  @override
-  void dispose() {
-    _mapController?.dispose();
-    super.dispose();
+  Future<void> _updateUserLocationMarker() async {
+    if (_mapboxMap == null || _userPosition == null || _pointAnnotationManager == null) return;
+
+    final userIcon = await _createIconImage(FontAwesomeIcons.locationArrow, color: Colors.blue);
+    await _mapboxMap?.style.addStyleImage(
+        'user-location-icon',
+        1.0,
+        MbxImage(width: 64, height: 64, data: userIcon),
+        false,
+        [],
+        [],
+        null);
+
+    if (_userLocationAnnotation != null) {
+      _pointAnnotationManager?.delete(_userLocationAnnotation!);
+    }
+
+    _pointAnnotationManager
+        ?.create(PointAnnotationOptions(
+      geometry: Point(coordinates: Position(_userPosition!.longitude, _userPosition!.latitude))
+          .toJson(),
+      iconImage: 'user-location-icon',
+    ))
+        .then((annotation) => _userLocationAnnotation = annotation);
+  }
+
+  void _animateToField(MapField field) {
+    _mapboxMap?.flyTo(
+      CameraOptions(
+        center: Point(coordinates: Position(field.longitude, field.latitude)).toJson(),
+        zoom: 17.0,
+        pitch: 60.0,
+        bearing: -15.0,
+      ),
+      MapAnimationOptions(duration: 1200, startDelay: 0),
+    );
+  }
+
+  void animateToCity(String cityName) {
+    final cityFields = _allFields.where((field) => field.city == cityName).toList();
+    if (cityFields.isNotEmpty) {
+      double avgLat = cityFields.map((f) => f.latitude).reduce((a, b) => a + b) / cityFields.length;
+      double avgLng = cityFields.map((f) => f.longitude).reduce((a, b) => a + b) / cityFields.length;
+
+      _mapboxMap?.flyTo(
+        CameraOptions(
+          center: Point(coordinates: Position(avgLng, avgLat)).toJson(),
+          zoom: 13.0,
+          pitch: 45.0,
+        ),
+        MapAnimationOptions(duration: 1500),
+      );
+    }
+  }
+
+  void centerOnUserLocationWithStyle() {
+    if (_userPosition != null) {
+      _mapboxMap?.flyTo(
+        CameraOptions(
+          center: Point(coordinates: Position(_userPosition!.longitude, _userPosition!.latitude))
+              .toJson(),
+          zoom: 16.0,
+          pitch: 50.0,
+        ),
+        MapAnimationOptions(duration: 1000),
+      );
+    }
+  }
+
+  Future<Uint8List> _createIconImage(IconData iconData, {Color color = Colors.white, double size = 48.0}) async {
+    final pictureRecorder = ui.PictureRecorder();
+    final canvas = Canvas(pictureRecorder);
+    final textPainter = TextPainter(textDirection: ui.TextDirection.ltr);
+    final iconStr = String.fromCharCode(iconData.codePoint);
+    textPainter.text = TextSpan(
+      text: iconStr,
+      style: TextStyle(
+        letterSpacing: 0.0,
+        fontSize: size,
+        fontFamily: iconData.fontFamily,
+        color: color,
+      ),
+    );
+    textPainter.layout();
+    textPainter.paint(canvas, Offset.zero);
+    final picture = pictureRecorder.endRecording();
+    final image = await picture.toImage(textPainter.width.toInt(), textPainter.height.toInt());
+    final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
+    return bytes!.buffer.asUint8List();
   }
 }
