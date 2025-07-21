@@ -4,29 +4,27 @@ import '../theme/app_theme.dart';
 class ModernButton extends StatefulWidget {
   final String text;
   final VoidCallback? onPressed;
-  final bool isLoading;
   final IconData? icon;
-  final double? width;
-  final double height;
+  final bool isLoading;
+  final bool outlined;
   final Color? backgroundColor;
   final Color? textColor;
+  final double? width;
+  final double? height;
   final BorderRadius? borderRadius;
-  final EdgeInsets? padding;
-  final bool outlined;
 
   const ModernButton({
     super.key,
     required this.text,
     this.onPressed,
-    this.isLoading = false,
     this.icon,
-    this.width,
-    this.height = 56,
+    this.isLoading = false,
+    this.outlined = false,
     this.backgroundColor,
     this.textColor,
+    this.width,
+    this.height,
     this.borderRadius,
-    this.padding,
-    this.outlined = false,
   });
 
   @override
@@ -57,8 +55,8 @@ class _ModernButtonState extends State<ModernButton>
     ));
 
     _elevationAnimation = Tween<double>(
-      begin: 8.0,
-      end: 16.0,
+      begin: 6.0,
+      end: 12.0,
     ).animate(CurvedAnimation(
       parent: _controller,
       curve: Curves.easeInOut,
@@ -96,93 +94,121 @@ class _ModernButtonState extends State<ModernButton>
   Widget build(BuildContext context) {
     final backgroundColor = widget.backgroundColor ?? AppTheme.authPrimaryGreen;
     final textColor = widget.textColor ?? Colors.white;
+    final isEnabled = widget.onPressed != null && !widget.isLoading;
 
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
         return Transform.scale(
           scale: _scaleAnimation.value,
-          child: Container(
-            width: widget.width,
-            height: widget.height,
-            decoration: BoxDecoration(
-              gradient: widget.outlined 
-                  ? null 
-                  : LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        backgroundColor,
-                        backgroundColor.withOpacity(0.8),
-                      ],
-                    ),
-              color: widget.outlined ? Colors.transparent : null,
-              borderRadius: widget.borderRadius ?? BorderRadius.circular(16),
-              border: widget.outlined 
-                  ? Border.all(
-                      color: backgroundColor,
-                      width: 2,
-                    )
-                  : null,
-              boxShadow: widget.outlined 
-                  ? null 
-                  : [
-                      BoxShadow(
-                        color: backgroundColor.withOpacity(0.3),
-                        blurRadius: _elevationAnimation.value,
-                        offset: const Offset(0, 4),
-                      ),
-                      BoxShadow(
-                        color: backgroundColor.withOpacity(0.1),
-                        blurRadius: _elevationAnimation.value * 2,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: widget.isLoading ? null : widget.onPressed,
-                onTapDown: widget.onPressed != null ? _onTapDown : null,
-                onTapUp: widget.onPressed != null ? _onTapUp : null,
-                onTapCancel: widget.onPressed != null ? _onTapCancel : null,
+          child: GestureDetector(
+            onTapDown: isEnabled ? _onTapDown : null,
+            onTapUp: isEnabled ? _onTapUp : null,
+            onTapCancel: isEnabled ? _onTapCancel : null,
+            onTap: widget.onPressed,
+            child: Container(
+              width: widget.width ?? double.infinity,
+              height: widget.height ?? 56,
+              decoration: BoxDecoration(
+                gradient: !widget.outlined && isEnabled
+                    ? LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          backgroundColor,
+                          backgroundColor.withOpacity(0.8),
+                        ],
+                      )
+                    : null,
+                color: widget.outlined 
+                    ? Colors.transparent
+                    : isEnabled 
+                        ? null 
+                        : const Color(0xFFE5E7EB),
                 borderRadius: widget.borderRadius ?? BorderRadius.circular(16),
-                child: Container(
-                  padding: widget.padding ?? 
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                  child: widget.isLoading
-                      ? Center(
-                          child: SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                widget.outlined ? backgroundColor : textColor,
-                              ),
-                              strokeWidth: 2.5,
+                border: widget.outlined
+                    ? Border.all(
+                        color: isEnabled 
+                            ? backgroundColor 
+                            : const Color(0xFFE5E7EB),
+                        width: 2,
+                      )
+                    : null,
+                boxShadow: !widget.outlined && isEnabled
+                    ? [
+                        BoxShadow(
+                          color: backgroundColor.withOpacity(0.3),
+                          blurRadius: _elevationAnimation.value,
+                          offset: const Offset(0, 4),
+                        ),
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // Ripple effect overlay
+                  if (_isPressed)
+                    Container(
+                      decoration: BoxDecoration(
+                        color: widget.outlined
+                            ? backgroundColor.withOpacity(0.1)
+                            : Colors.white.withOpacity(0.1),
+                        borderRadius: widget.borderRadius ?? BorderRadius.circular(16),
+                      ),
+                    ),
+                  
+                  // Content
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (widget.isLoading) ...[
+                        SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              widget.outlined ? backgroundColor : textColor,
                             ),
                           ),
-                        )
-                      : Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            if (widget.icon != null) ...[
-                              Icon(
-                                widget.icon,
-                                color: widget.outlined ? backgroundColor : textColor,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 8),
-                            ],
-                            Text(
-                              widget.text,
-                              style: AppTheme.authButtonText.copyWith(
-                                color: widget.outlined ? backgroundColor : textColor,
-                              ),
-                            ),
-                          ],
                         ),
-                ),
+                        const SizedBox(width: 12),
+                      ] else if (widget.icon != null) ...[
+                        Icon(
+                          widget.icon,
+                          color: widget.outlined
+                              ? (isEnabled ? backgroundColor : const Color(0xFF9CA3AF))
+                              : (isEnabled ? textColor : const Color(0xFF9CA3AF)),
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                      ],
+                      Text(
+                        widget.text,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: widget.outlined
+                              ? (isEnabled ? backgroundColor : const Color(0xFF9CA3AF))
+                              : (isEnabled ? textColor : const Color(0xFF9CA3AF)),
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),
@@ -214,7 +240,6 @@ class _ModernLinkButtonState extends State<ModernLinkButton>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
-  bool _isPressed = false;
 
   @override
   void initState() {
@@ -239,48 +264,44 @@ class _ModernLinkButtonState extends State<ModernLinkButton>
     super.dispose();
   }
 
+  void _onTapDown(TapDownDetails details) {
+    _controller.forward();
+  }
+
+  void _onTapUp(TapUpDetails details) {
+    _controller.reverse();
+  }
+
+  void _onTapCancel() {
+    _controller.reverse();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) {
-        setState(() {
-          _isPressed = true;
-        });
-        _controller.forward();
-      },
-      onTapUp: (_) {
-        setState(() {
-          _isPressed = false;
-        });
-        _controller.reverse();
-        if (widget.onPressed != null) {
-          widget.onPressed!();
-        }
-      },
-      onTapCancel: () {
-        setState(() {
-          _isPressed = false;
-        });
-        _controller.reverse();
-      },
-      child: AnimatedBuilder(
-        animation: _controller,
-        builder: (context, child) {
-          return Transform.scale(
-            scale: _scaleAnimation.value,
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _scaleAnimation.value,
+          child: GestureDetector(
+            onTapDown: widget.onPressed != null ? _onTapDown : null,
+            onTapUp: widget.onPressed != null ? _onTapUp : null,
+            onTapCancel: widget.onPressed != null ? _onTapCancel : null,
+            onTap: widget.onPressed,
             child: Text(
               widget.text,
-              style: widget.style ?? 
-                  AppTheme.authLinkText.copyWith(
+              style: widget.style ??
+                  TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
                     color: widget.color ?? AppTheme.authPrimaryGreen,
-                    decoration: _isPressed 
-                        ? TextDecoration.underline 
-                        : TextDecoration.none,
+                    decoration: TextDecoration.underline,
+                    decorationColor: widget.color ?? AppTheme.authPrimaryGreen,
                   ),
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }

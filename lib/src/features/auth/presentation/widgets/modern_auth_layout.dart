@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:math';
 import '../theme/app_theme.dart';
 
 class ModernAuthLayout extends StatefulWidget {
@@ -160,51 +161,41 @@ class _ModernAuthLayoutState extends State<ModernAuthLayout>
           child: SlideTransition(
             position: _headerSlideAnimation,
             child: Container(
-              height: isTablet ? 320 : 280,
-              decoration: const BoxDecoration(
-                gradient: AppTheme.authBackgroundGradient,
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(32),
-                  bottomRight: Radius.circular(32),
+              height: isTablet ? 300 : 260,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppTheme.authPrimaryGreen,
+                    AppTheme.authSecondaryGreen,
+                  ],
+                  stops: const [0.0, 1.0],
+                ),
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(40),
+                  bottomRight: Radius.circular(40),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Color(0x1A4CAF50),
-                    blurRadius: 20,
-                    offset: Offset(0, 10),
+                    color: AppTheme.authPrimaryGreen.withOpacity(0.3),
+                    blurRadius: 30,
+                    offset: const Offset(0, 15),
                   ),
                 ],
               ),
               child: Stack(
                 children: [
-                  // Decorative circles
-                  Positioned(
-                    top: -50,
-                    right: -50,
-                    child: Container(
-                      width: 150,
-                      height: 150,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
+                  // Animated background pattern
+                  Positioned.fill(
+                    child: CustomPaint(
+                      painter: BackgroundPatternPainter(),
                     ),
                   ),
-                  Positioned(
-                    top: 40,
-                    left: -30,
-                    child: Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.05),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ),
-                  // Content
+                  
+                  // Main content
                   Padding(
-                    padding: const EdgeInsets.all(24),
+                    padding: const EdgeInsets.fromLTRB(32, 40, 32, 32),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -215,25 +206,29 @@ class _ModernAuthLayoutState extends State<ModernAuthLayout>
                             child: Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(12),
+                                color: Colors.white.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.1),
+                                  width: 1,
+                                ),
                               ),
                               child: const Icon(
                                 Icons.arrow_back_ios_new,
                                 color: Colors.white,
-                                size: 20,
+                                size: 18,
                               ),
                             ),
                           ),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 24),
                         ],
                         
                         const Spacer(),
                         
-                        // Logo/Icon
+                        // App logo/icon with modern design
                         Container(
-                          width: 80,
-                          height: 80,
+                          width: 72,
+                          height: 72,
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(20),
@@ -241,40 +236,51 @@ class _ModernAuthLayoutState extends State<ModernAuthLayout>
                               BoxShadow(
                                 color: Colors.black.withOpacity(0.1),
                                 blurRadius: 20,
-                                offset: const Offset(0, 10),
+                                offset: const Offset(0, 8),
+                              ),
+                              BoxShadow(
+                                color: Colors.white.withOpacity(0.1),
+                                blurRadius: 10,
+                                offset: const Offset(0, -2),
                               ),
                             ],
                           ),
-                          child: const Icon(
-                            Icons.sports_soccer,
-                            size: 40,
+                          child: Icon(
+                            Icons.sports_soccer_rounded,
+                            size: 36,
                             color: AppTheme.authPrimaryGreen,
                           ),
                         ),
                         
                         const SizedBox(height: 24),
                         
-                        // Title
+                        // Title with better typography
                         Text(
                           widget.title,
-                          style: AppTheme.authHeadingMedium.copyWith(
+                          style: TextStyle(
+                            fontSize: isTablet ? 34 : 28,
+                            fontWeight: FontWeight.w700,
                             color: Colors.white,
-                            fontSize: isTablet ? 32 : 28,
+                            height: 1.2,
+                            letterSpacing: -0.5,
                           ),
                         ),
                         
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 12),
                         
-                        // Subtitle
+                        // Subtitle with improved styling
                         Text(
                           widget.subtitle,
-                          style: AppTheme.authBodyLarge.copyWith(
-                            color: Colors.white.withOpacity(0.9),
+                          style: TextStyle(
                             fontSize: isTablet ? 18 : 16,
+                            fontWeight: FontWeight.w400,
+                            color: Colors.white.withOpacity(0.9),
+                            height: 1.5,
+                            letterSpacing: 0.1,
                           ),
                         ),
                         
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 32),
                       ],
                     ),
                   ),
@@ -340,4 +346,41 @@ class _ModernAuthLayoutState extends State<ModernAuthLayout>
       },
     );
   }
+}
+
+// Custom painter for background pattern
+class BackgroundPatternPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withOpacity(0.08)
+      ..style = PaintingStyle.fill;
+
+    // Draw subtle geometric pattern
+    for (int i = 0; i < 6; i++) {
+      for (int j = 0; j < 4; j++) {
+        final x = (size.width / 6) * i + (j % 2) * 30;
+        final y = (size.height / 4) * j;
+        
+        // Draw hexagon pattern
+        final path = Path();
+        final radius = 15.0;
+        for (int k = 0; k < 6; k++) {
+          final angle = (k * 60) * (3.14159 / 180);
+          final px = x + radius * cos(angle);
+          final py = y + radius * sin(angle);
+          if (k == 0) {
+            path.moveTo(px, py);
+          } else {
+            path.lineTo(px, py);
+          }
+        }
+        path.close();
+        canvas.drawPath(path, paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => false;
 }

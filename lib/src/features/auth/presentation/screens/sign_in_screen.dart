@@ -148,7 +148,12 @@ class _SignInScreenState extends State<SignInScreen> {
                 const SizedBox(height: 8),
                 
                 // Campo de Email
-                ModernEmailTextField(
+                ModernTextField(
+                  hintText: 'Digite o seu email',
+                  labelText: 'Email',
+                  prefixIcon: Icons.email_outlined,
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
                   controller: _emailController,
                   focusNode: _emailFocusNode,
                   validator: _validateEmail,
@@ -165,7 +170,12 @@ class _SignInScreenState extends State<SignInScreen> {
                 const SizedBox(height: 20),
 
                 // Campo de Palavra-passe
-                ModernPasswordTextField(
+                ModernTextField(
+                  hintText: 'Digite a sua palavra-passe',
+                  labelText: 'Palavra-passe',
+                  prefixIcon: Icons.lock_outline,
+                  isPassword: true,
+                  textInputAction: TextInputAction.done,
                   controller: _passwordController,
                   focusNode: _passwordFocusNode,
                   validator: _validatePassword,
@@ -209,7 +219,6 @@ class _SignInScreenState extends State<SignInScreen> {
                   onPressed: _isLoading ? null : _handleSignIn,
                   isLoading: _isLoading,
                   icon: Icons.login,
-                  width: double.infinity,
                 ),
 
                 const SizedBox(height: 24),

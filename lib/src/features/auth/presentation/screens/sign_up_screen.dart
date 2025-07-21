@@ -199,7 +199,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 const SizedBox(height: 8),
                 
                 // Campo de Nome
-                ModernNameTextField(
+                ModernTextField(
+                  hintText: 'Digite o seu nome completo',
+                  labelText: 'Nome completo',
+                  prefixIcon: Icons.person_outline,
+                  textInputAction: TextInputAction.next,
                   controller: _nameController,
                   focusNode: _nameFocusNode,
                   validator: _validateName,
@@ -216,7 +220,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 const SizedBox(height: 20),
 
                 // Campo de Email
-                ModernEmailTextField(
+                ModernTextField(
+                  hintText: 'Digite o seu email',
+                  labelText: 'Email',
+                  prefixIcon: Icons.email_outlined,
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
                   controller: _emailController,
                   focusNode: _emailFocusNode,
                   validator: _validateEmail,
@@ -233,13 +242,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 const SizedBox(height: 20),
 
                 // Campo de Palavra-passe
-                ModernPasswordTextField(
+                ModernTextField(
+                  hintText: 'Crie uma palavra-passe segura',
+                  labelText: 'Palavra-passe',
+                  prefixIcon: Icons.lock_outline,
+                  isPassword: true,
+                  textInputAction: TextInputAction.next,
                   controller: _passwordController,
                   focusNode: _passwordFocusNode,
                   validator: _validatePassword,
                   errorText: _passwordError,
-                  hintText: 'Crie uma palavra-passe segura',
-                  labelText: 'Palavra-passe',
                   onChanged: (value) {
                     if (_passwordError != null) {
                       setState(() {
@@ -256,13 +268,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 const SizedBox(height: 20),
 
                 // Campo de Confirmação de Palavra-passe
-                ModernPasswordTextField(
+                ModernTextField(
+                  hintText: 'Confirme a sua palavra-passe',
+                  labelText: 'Confirmar palavra-passe',
+                  prefixIcon: Icons.lock_outline,
+                  isPassword: true,
+                  textInputAction: TextInputAction.done,
                   controller: _confirmPasswordController,
                   focusNode: _confirmPasswordFocusNode,
                   validator: _validateConfirmPassword,
                   errorText: _confirmPasswordError,
-                  hintText: 'Confirme a sua palavra-passe',
-                  labelText: 'Confirmar palavra-passe',
                   onChanged: (value) {
                     if (_confirmPasswordError != null) {
                       setState(() {
