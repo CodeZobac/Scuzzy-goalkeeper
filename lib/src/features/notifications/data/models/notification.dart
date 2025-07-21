@@ -1,5 +1,9 @@
 import 'dart:convert';
 
+import 'notification_category.dart';
+import 'contract_notification_data.dart';
+import 'full_lobby_notification_data.dart';
+
 class AppNotification {
   final String id;
   final String userId;
@@ -86,6 +90,47 @@ class AppNotification {
   bool get isBookingRequest => type == 'booking_request';
   bool get isBookingConfirmed => type == 'booking_confirmed';
   bool get isBookingCancelled => type == 'booking_cancelled';
+
+  // New notification type helpers
+  bool get isContractRequest => type == 'contract_request';
+  bool get isFullLobby => type == 'full_lobby';
+  bool get requiresAction => isContractRequest;
+
+  // Notification category
+  NotificationCategory get category {
+    if (isContractRequest) return NotificationCategory.contracts;
+    if (isFullLobby) return NotificationCategory.fullLobbies;
+    return NotificationCategory.general;
+  }
+
+  // Enhanced data accessors
+  String? get contractId => data?['contract_id'];
+  String? get announcementId => data?['announcement_id'];
+  String? get contractorName => data?['contractor_name'];
+  String? get contractorAvatarUrl => data?['contractor_avatar_url'];
+  double? get offeredAmount => data?['offered_amount']?.toDouble();
+  String? get gameLocation => data?['stadium'];
+  DateTime? get gameDateTime => data?['game_date_time'] != null
+      ? DateTime.parse(data!['game_date_time']) : null;
+
+  // Structured data accessors
+  ContractNotificationData? get contractData {
+    if (!isContractRequest || data == null) return null;
+    try {
+      return ContractNotificationData.fromMap(data!);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  FullLobbyNotificationData? get fullLobbyData {
+    if (!isFullLobby || data == null) return null;
+    try {
+      return FullLobbyNotificationData.fromMap(data!);
+    } catch (e) {
+      return null;
+    }
+  }
 
   // Create copy with updated fields
   AppNotification copyWith({
