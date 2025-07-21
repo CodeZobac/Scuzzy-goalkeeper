@@ -185,7 +185,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.05),
+                            color: Colors.black.withAlpha(0.05.toInt()),
                             blurRadius: 10,
                             offset: const Offset(0, 2),
                           ),
