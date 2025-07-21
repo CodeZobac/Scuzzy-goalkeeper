@@ -57,30 +57,37 @@ class _StatsDashboardState extends State<StatsDashboard>
     super.dispose();
   }
 
+  double _calculateAverage(List<int>? values) {
+    if (values == null || values.isEmpty) {
+      return 0.0;
+    }
+    return values.reduce((a, b) => a + b) / values.length / 100;
+  }
+
   List<Map<String, dynamic>> _getStatsData() {
     if (widget.userProfile.isGoalkeeper) {
       return [
         {
           'label': 'Reflexos',
-          'value': 0.87,
+          'value': _calculateAverage(widget.userProfile.reflexes),
           'color': AppTheme.successColor,
           'icon': Icons.sports_handball,
         },
         {
           'label': 'Posicionamento',
-          'value': 0.84,
+          'value': _calculateAverage(widget.userProfile.positioning),
           'color': AppTheme.accentColor,
           'icon': Icons.gps_fixed,
         },
         {
           'label': 'Distribuição',
-          'value': 0.79,
+          'value': _calculateAverage(widget.userProfile.distribution),
           'color': const Color(0xFF9C27B0),
           'icon': Icons.sports_soccer,
         },
         {
           'label': 'Comunicação',
-          'value': 0.92,
+          'value': _calculateAverage(widget.userProfile.communication),
           'color': const Color(0xFF2196F3),
           'icon': Icons.campaign,
         },
@@ -231,7 +238,7 @@ class _StatsDashboardState extends State<StatsDashboard>
     Color color,
     IconData icon,
   ) {
-    final percentage = (animatedValue * 100).round();
+    final percentage = (animatedValue * 100);
     
     return Container(
       padding: const EdgeInsets.all(16),
@@ -269,7 +276,7 @@ class _StatsDashboardState extends State<StatsDashboard>
               ),
               const Spacer(),
               Text(
-                '$percentage%',
+                percentage > 0 ? '${percentage.round()}%' : 'N/D',
                 style: AppTheme.bodyLarge.copyWith(
                   fontWeight: FontWeight.bold,
                   color: color,
@@ -313,7 +320,7 @@ class _StatsDashboardState extends State<StatsDashboard>
 
   Widget _buildOverallPerformance() {
     final stats = _getStatsData();
-    final averageScore = stats.map((s) => s['value'] as double).reduce((a, b) => a + b) / stats.length;
+    final averageScore = stats.isEmpty ? 0.0 : stats.map((s) => s['value'] as double).reduce((a, b) => a + b) / stats.length;
     final overallPercentage = (averageScore * 100).round();
     
     return Container(

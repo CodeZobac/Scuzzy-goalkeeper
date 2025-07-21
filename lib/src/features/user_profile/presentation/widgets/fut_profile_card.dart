@@ -82,16 +82,26 @@ class _FUTProfileCardState extends State<FUTProfileCard>
     return widget.userProfile.isGoalkeeper ? 'GK' : 'FP';
   }
 
-  int get _overallRating {
-    // Generate a rating based on profile completion and other factors
-    int baseRating = 65;
-    if (widget.userProfile.club != null) baseRating += 5;
-    if (widget.userProfile.nationality != null) baseRating += 5;
-    if (widget.userProfile.birthDate != null) baseRating += 5;
-    if (widget.userProfile.pricePerGame != null) baseRating += 10;
-    if (widget.userProfile.isGoalkeeper) baseRating += 5;
-    
-    return math.min(99, baseRating);
+  String get _overallRating {
+    if (widget.userProfile.isGoalkeeper) {
+      final reflexes = _calculateAverage(widget.userProfile.reflexes);
+      final positioning = _calculateAverage(widget.userProfile.positioning);
+      final distribution = _calculateAverage(widget.userProfile.distribution);
+      final communication = _calculateAverage(widget.userProfile.communication);
+      if (reflexes == 0 && positioning == 0 && distribution == 0 && communication == 0) {
+        return 'N/D';
+      }
+      final average = (reflexes + positioning + distribution + communication) / 4;
+      return math.min(99, average.round()).toString();
+    } else {
+      // Generate a rating based on profile completion and other factors
+      int baseRating = 65;
+      if (widget.userProfile.club != null) baseRating += 5;
+      if (widget.userProfile.nationality != null) baseRating += 5;
+      if (widget.userProfile.birthDate != null) baseRating += 5;
+      if (widget.userProfile.pricePerGame != null) baseRating += 10;
+      return math.min(99, baseRating).toString();
+    }
   }
 
   @override
@@ -461,12 +471,23 @@ class _FUTProfileCardState extends State<FUTProfileCard>
     );
   }
 
+  double _calculateAverage(List<int>? values) {
+    if (values == null || values.isEmpty) {
+      return 0.0;
+    }
+    return values.reduce((a, b) => a + b) / values.length;
+  }
+
   List<Map<String, String>> _getPlayerStats() {
     if (widget.userProfile.isGoalkeeper) {
+      final reflexes = _calculateAverage(widget.userProfile.reflexes);
+      final positioning = _calculateAverage(widget.userProfile.positioning);
+      final distribution = _calculateAverage(widget.userProfile.distribution);
+
       return [
-        {'label': 'REF', 'value': '87'},
-        {'label': 'POS', 'value': '84'},
-        {'label': 'KIC', 'value': '79'},
+        {'label': 'REF', 'value': reflexes > 0 ? reflexes.toStringAsFixed(0) : 'N/D'},
+        {'label': 'POS', 'value': positioning > 0 ? positioning.toStringAsFixed(0) : 'N/D'},
+        {'label': 'KIC', 'value': distribution > 0 ? distribution.toStringAsFixed(0) : 'N/D'},
       ];
     } else {
       return [
