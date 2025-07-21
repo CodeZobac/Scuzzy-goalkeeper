@@ -72,15 +72,15 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen>
       end: 1.0,
     ).animate(CurvedAnimation(
       parent: _cardAnimationController,
-      curve: Curves.elasticOut,
+      curve: Curves.easeOutBack,
     ));
     
     _fabScaleAnimation = Tween<double>(
-      begin: 0,
-      end: 1,
+      begin: 0.0,
+      end: 1.0,
     ).animate(CurvedAnimation(
       parent: _fabAnimationController,
-      curve: Curves.elasticOut,
+      curve: Curves.easeOutBack,
     ));
     
     // Load profile and start animations
@@ -129,6 +129,7 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen>
       floatingActionButton: controller.userProfile != null
           ? _buildAnimatedFAB(controller)
           : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
   
@@ -141,11 +142,15 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen>
             width: 100,
             height: 100,
             decoration: BoxDecoration(
-              gradient: AppTheme.buttonGradient,
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFFFF8C00), Color(0xFFFF7F00)],
+              ),
               borderRadius: BorderRadius.circular(25),
               boxShadow: [
                 BoxShadow(
-                  color: AppTheme.accentColor.withOpacity(0.4),
+                  color: const Color(0xFFFF8C00).withOpacity(0.4),
                   blurRadius: 30,
                   offset: const Offset(0, 15),
                 ),
@@ -159,7 +164,7 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen>
           ),
           const SizedBox(height: 32),
           const CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(AppTheme.accentColor),
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFF8C00)),
             strokeWidth: 3,
           ),
           const SizedBox(height: 24),
@@ -186,7 +191,7 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen>
               color: AppTheme.secondaryBackground.withOpacity(0.5),
               borderRadius: BorderRadius.circular(75),
               border: Border.all(
-                color: AppTheme.accentColor.withOpacity(0.3),
+                color: const Color(0xFFFF8C00).withOpacity(0.3),
                 width: 3,
               ),
             ),
@@ -364,22 +369,18 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen>
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppTheme.successColor.withOpacity(0.1),
-            AppTheme.successColor.withOpacity(0.05),
+            Color(0xFF8B4513),
+            Color(0xFF654321),
           ],
         ),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: AppTheme.successColor.withOpacity(0.3),
-          width: 2,
-        ),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.successColor.withOpacity(0.2),
+            color: const Color(0xFF8B4513).withOpacity(0.4),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -419,17 +420,8 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen>
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [AppTheme.successColor, AppTheme.successColor.withOpacity(0.8)],
-                        ),
+                        color: Colors.white.withAlpha(51),
                         borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppTheme.successColor.withOpacity(0.3),
-                            blurRadius: 12,
-                            offset: const Offset(0, 6),
-                          ),
-                        ],
                       ),
                       child: const Icon(
                         Icons.schedule,
@@ -447,13 +439,14 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen>
                             style: AppTheme.headingMedium.copyWith(
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
+                              color: Colors.white,
                             ),
                           ),
                           const SizedBox(height: 6),
                           Text(
                             'Gerencie seus horários disponíveis',
                             style: AppTheme.bodyMedium.copyWith(
-                              color: AppTheme.successColor,
+                              color: Colors.white70,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -463,12 +456,12 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen>
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: AppTheme.successColor.withOpacity(0.2),
+                        color: Colors.white.withAlpha(51),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(
+                      child: const Icon(
                         Icons.arrow_forward_ios,
-                        color: AppTheme.successColor,
+                        color: Colors.white,
                         size: 18,
                       ),
                     ),
@@ -479,17 +472,14 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen>
                   width: double.infinity,
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: AppTheme.successColor.withOpacity(0.1),
+                    color: Colors.white.withAlpha(25),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: AppTheme.successColor.withOpacity(0.3),
-                    ),
                   ),
                   child: Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.event_available,
-                        color: AppTheme.successColor,
+                        color: Colors.white,
                         size: 24,
                       ),
                       const SizedBox(width: 16),
@@ -497,7 +487,7 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen>
                         child: Text(
                           'Defina quando está disponível para jogos e permita que jogadores agendem sessões',
                           style: AppTheme.bodyMedium.copyWith(
-                            color: AppTheme.successColor,
+                            color: Colors.white,
                             fontWeight: FontWeight.w500,
                             height: 1.4,
                           ),
@@ -520,35 +510,57 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen>
       builder: (context, child) {
         return Transform.scale(
           scale: _fabScaleAnimation.value,
-          child: FloatingActionButton.extended(
-            onPressed: () {
-              Navigator.push(
-                context,
-                PageRouteBuilder(
-                  pageBuilder: (context, animation, secondaryAnimation) =>
-                      EditProfileScreen(userProfile: controller.userProfile!),
-                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                    return SlideTransition(
-                      position: Tween<Offset>(
-                        begin: const Offset(1.0, 0.0),
-                        end: Offset.zero,
-                      ).animate(CurvedAnimation(
-                        parent: animation,
-                        curve: Curves.easeInOut,
-                      )),
-                      child: child,
-                    );
-                  },
+          child: Container(
+            margin: EdgeInsets.only(
+              bottom: MediaQuery.of(context).padding.bottom + 35,
+              left: 16,
+              right: 16,
+            ),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFFFF8C00), Color(0xFFFF7F00)],
+              ),
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFFF8C00).withOpacity(0.4),
+                  blurRadius: 15,
+                  offset: const Offset(0, 8),
                 ),
-              );
-            },
-            backgroundColor: AppTheme.accentColor,
-            foregroundColor: Colors.white,
-            elevation: 12,
-            icon: const Icon(Icons.edit_outlined),
-            label: Text(
-              'Editar Perfil',
-              style: AppTheme.buttonText.copyWith(fontSize: 14),
+              ],
+            ),
+            child: FloatingActionButton.extended(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder: (context, animation, secondaryAnimation) =>
+                        EditProfileScreen(userProfile: controller.userProfile!),
+                    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                      return SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(1.0, 0.0),
+                          end: Offset.zero,
+                        ).animate(CurvedAnimation(
+                          parent: animation,
+                          curve: Curves.easeInOut,
+                        )),
+                        child: child,
+                      );
+                    },
+                  ),
+                );
+              },
+              backgroundColor: Colors.transparent,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              icon: const Icon(Icons.edit_outlined),
+              label: Text(
+                'Editar Perfil',
+                style: AppTheme.buttonText.copyWith(fontSize: 14),
+              ),
             ),
           ),
         );
@@ -634,12 +646,12 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen>
           decoration: BoxDecoration(
             color: isDestructive
                 ? AppTheme.errorColor.withOpacity(0.1)
-                : AppTheme.accentColor.withOpacity(0.1),
+                : const Color(0xFFFF8C00).withOpacity(0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(
             icon,
-            color: isDestructive ? AppTheme.errorColor : AppTheme.accentColor,
+            color: isDestructive ? AppTheme.errorColor : const Color(0xFFFF8C00),
             size: 24,
           ),
         ),
