@@ -47,7 +47,8 @@ dependencies:
   permission_handler: ^11.3.1
 
   # Map dependencies
-  mapbox_maps_flutter: ^1.0.0
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
   geolocator: ^10.1.0
 
   # Date formatting
@@ -79,8 +80,8 @@ flutter:
 
   assets:
     - .env
-    - assets/map_style.json
-    - assets/mapbox_style.json
+    - assets/goalkeeper_fields.geojson
+    - assets/goalkeeper_mapbox_style.json
 
   # To add assets to your application, add an assets section, like this:
   # assets:
