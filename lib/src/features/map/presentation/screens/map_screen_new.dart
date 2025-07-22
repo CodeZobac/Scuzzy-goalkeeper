@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import '../../../../core/config/app_config.dart';
 import '../controllers/map_view_model.dart';
 import '../providers/field_selection_provider.dart';
-import '../../data/repositories/field_repository.dart';
 import '../widgets/field_details_card.dart';
 import '../widgets/enhanced_filter_dialog.dart';
 
@@ -14,15 +13,8 @@ class MapScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => FieldSelectionProvider()),
-        ChangeNotifierProxyProvider<FieldSelectionProvider, MapViewModel>(
-          create: (context) => MapViewModel(FieldRepository(), context.read<FieldSelectionProvider>()),
-          update: (context, fieldSelection, previous) => 
-            previous ?? MapViewModel(FieldRepository(), fieldSelection),
-        ),
-      ],
+    return ChangeNotifierProvider(
+      create: (context) => MapViewModel(context.read<FieldSelectionProvider>()),
       child: const _MapScreenContent(),
     );
   }
@@ -42,11 +34,9 @@ class _MapScreenContentState extends State<_MapScreenContent> {
   void initState() {
     super.initState();
     _mapController = MapController();
-    // Initialize the view model after the first frame
+    // Set the map controller after the first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final viewModel = context.read<MapViewModel>();
-      viewModel.setMapController(_mapController);
-      viewModel.initialize();
+      context.read<MapViewModel>().setMapController(_mapController);
     });
   }
 
@@ -62,7 +52,7 @@ class _MapScreenContentState extends State<_MapScreenContent> {
             options: MapOptions(
               initialCenter: const LatLng(38.7223, -9.1393), // Lisbon
               initialZoom: 12.0,
-              onTap: (_, __) => context.read<FieldSelectionProvider>().clearSelection(),
+              onTap: (_, __) => viewModel.clearSelectedField(),
             ),
             children: [
               TileLayer(
@@ -72,7 +62,7 @@ class _MapScreenContentState extends State<_MapScreenContent> {
                 },
               ),
               MarkerLayer(
-                markers: viewModel.buildMarkers(),
+                markers: viewModel.markers,
               ),
             ],
           ),

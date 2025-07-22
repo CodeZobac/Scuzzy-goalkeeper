@@ -77,8 +77,18 @@ android {
     dependencies {
         // implementation 'com.android.tools:desugar_jdk_libs:1.2.2'  // Removed due to compatibility issues
     }
+    
+    mapboxOptions {
+        downloadsToken = properties.getProperty('MAPBOX_DOWNLOADS_TOKEN')
+    }
 }
 
 flutter {
     source = "../.."
+}
+
+android.applicationVariants.all { variant ->
+    variant.outputs.all {
+        outputFileName = "app-${variant.name}.apk"
+    }
 }
