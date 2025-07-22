@@ -115,11 +115,8 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen>
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: AppTheme.primaryBackground,
+      backgroundColor: Colors.white,
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: AppTheme.primaryGradient,
-        ),
         child: controller.isLoading
             ? _buildLoadingState()
             : controller.userProfile == null

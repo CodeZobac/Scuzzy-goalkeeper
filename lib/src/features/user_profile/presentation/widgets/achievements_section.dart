@@ -173,7 +173,14 @@ class _AchievementsSectionState extends State<AchievementsSection>
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.secondaryBackground,
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFF4CAF50),
+            Color(0xFF45A049),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
