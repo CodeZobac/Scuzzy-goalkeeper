@@ -676,7 +676,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
       child: DropdownButtonFormField<String>(
         value: _selectedGender,
         decoration: InputDecoration(
-          labelText: 'Genero',
+          hintText: 'Genero',
           prefixIcon: Icon(Icons.wc, color: const Color(0xFFFFFFFF).withOpacity(0.6)),
         ),
         dropdownColor: const Color(0xFF283c44),
