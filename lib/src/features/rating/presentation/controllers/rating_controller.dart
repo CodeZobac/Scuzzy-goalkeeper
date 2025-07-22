@@ -11,25 +11,50 @@ class RatingController extends ChangeNotifier {
   // State variables
   bool _isLoading = false;
   String? _error;
-  int _selectedRating = 0;
+  double _reflexes = 50;
+  double _positioning = 50;
+  double _distribution = 50;
+  double _communication = 50;
   String _comment = '';
   bool _hasSubmitted = false;
 
   // Getters
   bool get isLoading => _isLoading;
   String? get error => _error;
-  int get selectedRating => _selectedRating;
+  double get reflexes => _reflexes;
+  double get positioning => _positioning;
+  double get distribution => _distribution;
+  double get communication => _communication;
   String get comment => _comment;
   bool get hasSubmitted => _hasSubmitted;
-  bool get canSubmit => _selectedRating > 0 && !_hasSubmitted;
+  bool get canSubmit => !_hasSubmitted;
 
   // Setters
-  void setRating(int rating) {
-    if (rating >= 1 && rating <= 5) {
-      _selectedRating = rating;
-      _error = null; // Clear any previous errors
-      notifyListeners();
+  void setStat(String stat, double value) {
+    switch (stat) {
+      case 'reflexes':
+        _reflexes = value;
+        break;
+      case 'positioning':
+        _positioning = value;
+        break;
+      case 'distribution':
+        _distribution = value;
+        break;
+      case 'communication':
+        _communication = value;
+        break;
     }
+    notifyListeners();
+  }
+
+  void setOverallRating(int rating) {
+    final value = rating * 20.0;
+    _reflexes = value;
+    _positioning = value;
+    _distribution = value;
+    _communication = value;
+    notifyListeners();
   }
 
   void setComment(String comment) {
@@ -44,11 +69,6 @@ class RatingController extends ChangeNotifier {
 
   /// Submits a rating for a completed booking
   Future<bool> submitRating(Booking booking) async {
-    if (_selectedRating == 0) {
-      _error = 'Por favor, selecione uma classificação de 1 a 5 estrelas';
-      notifyListeners();
-      return false;
-    }
 
     _isLoading = true;
     _error = null;
@@ -70,9 +90,13 @@ class RatingController extends ChangeNotifier {
         bookingId: booking.id,
         playerId: booking.playerId,
         goalkeeperId: booking.goalkeeperId,
-        rating: _selectedRating,
+        rating: ((_reflexes + _positioning + _distribution + _communication) / 4).round(),
         comment: _comment.isNotEmpty ? _comment : null,
         createdAt: DateTime.now(),
+        reflexes: _reflexes.round(),
+        positioning: _positioning.round(),
+        distribution: _distribution.round(),
+        communication: _communication.round(),
       );
 
       // Submit to database
@@ -110,7 +134,10 @@ class RatingController extends ChangeNotifier {
 
   /// Resets the form for a new rating
   void reset() {
-    _selectedRating = 0;
+    _reflexes = 50;
+    _positioning = 50;
+    _distribution = 50;
+    _communication = 50;
     _comment = '';
     _hasSubmitted = false;
     _error = null;

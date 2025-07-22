@@ -6,6 +6,8 @@ import '../controllers/notification_controller.dart';
 import '../../data/models/notification.dart';
 import '../../data/repositories/notification_repository.dart';
 import '../../services/notification_service.dart';
+import '../../../rating/presentation/screens/rating_screen.dart';
+import '../../../booking/data/models/booking.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});

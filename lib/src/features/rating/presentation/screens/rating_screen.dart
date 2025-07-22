@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../auth/presentation/theme/app_theme.dart';
 import '../../../auth/presentation/widgets/primary_button.dart';
 import '../controllers/rating_controller.dart';
+import '../widgets/stat_rating_widget.dart';
 import '../widgets/star_rating_widget.dart';
 import '../../../booking/data/models/booking.dart';
 import '../../data/repositories/rating_repository.dart';
@@ -34,6 +35,7 @@ class _RatingScreenState extends State<RatingScreen>
 
   final _commentController = TextEditingController();
   final _commentFocusNode = FocusNode();
+  bool _isDetailedReview = false;
 
   @override
   void initState() {
@@ -103,26 +105,21 @@ class _RatingScreenState extends State<RatingScreen>
     return ChangeNotifierProvider(
       create: (context) => RatingController(RatingRepository()),
       child: Scaffold(
-        backgroundColor: AppTheme.primaryBackground,
-        body: Container(
-          decoration: const BoxDecoration(
-            gradient: AppTheme.primaryGradient,
-          ),
-          child: SafeArea(
-            child: Consumer<RatingController>(
-              builder: (context, controller, child) {
-                return Column(
-                  children: [
-                    _buildHeader(controller),
-                    Expanded(
-                      child: controller.hasSubmitted
-                          ? _buildSuccessState(controller)
-                          : _buildRatingForm(controller),
-                    ),
-                  ],
-                );
-              },
-            ),
+        backgroundColor: Colors.white,
+        body: SafeArea(
+          child: Consumer<RatingController>(
+            builder: (context, controller, child) {
+              return Column(
+                children: [
+                  _buildHeader(controller),
+                  Expanded(
+                    child: controller.hasSubmitted
+                        ? _buildSuccessState(controller)
+                        : _buildRatingForm(controller),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),
@@ -145,7 +142,7 @@ class _RatingScreenState extends State<RatingScreen>
                       onPressed: () => Navigator.of(context).pop(),
                       icon: const Icon(
                         Icons.arrow_back_ios,
-                        color: AppTheme.primaryText,
+                        color: Color(0xFF4CAF50),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -154,7 +151,7 @@ class _RatingScreenState extends State<RatingScreen>
                         controller.hasSubmitted
                             ? 'Avaliação Enviada'
                             : 'Avaliar Guarda-redes',
-                        style: AppTheme.headingLarge,
+                        style: AppTheme.headingLarge.copyWith(color: const Color(0xFF4CAF50)),
                       ),
                     ),
                   ],
@@ -163,15 +160,10 @@ class _RatingScreenState extends State<RatingScreen>
                 Container(
                   padding: const EdgeInsets.all(AppTheme.spacing),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppTheme.secondaryBackground.withOpacity(0.8),
-                        AppTheme.secondaryBackground.withOpacity(0.4),
-                      ],
-                    ),
+                    color: const Color(0xFF4CAF50).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(AppTheme.borderRadius),
                     border: Border.all(
-                      color: AppTheme.accentColor.withOpacity(0.3),
+                      color: const Color(0xFF4CAF50).withOpacity(0.2),
                       width: 1,
                     ),
                   ),
@@ -181,7 +173,9 @@ class _RatingScreenState extends State<RatingScreen>
                         width: 50,
                         height: 50,
                         decoration: const BoxDecoration(
-                          gradient: AppTheme.buttonGradient,
+                          gradient: LinearGradient(
+                            colors: [Color(0xFF4CAF50), Color(0xFF45A049)],
+                          ),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -199,12 +193,13 @@ class _RatingScreenState extends State<RatingScreen>
                               widget.goalkeeperName,
                               style: AppTheme.bodyLarge.copyWith(
                                 fontWeight: FontWeight.w600,
+                                color: const Color(0xFF4CAF50),
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               widget.booking.displayDateTime,
-                              style: AppTheme.bodyMedium,
+                              style: AppTheme.bodyMedium.copyWith(color: Colors.black54),
                             ),
                           ],
                         ),
@@ -228,7 +223,7 @@ class _RatingScreenState extends State<RatingScreen>
           position: _slideAnimation,
           child: FadeTransition(
             opacity: _fadeAnimation,
-            child: Padding(
+            child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacingLarge),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -240,7 +235,7 @@ class _RatingScreenState extends State<RatingScreen>
                   // Comment Section
                   _buildCommentSection(controller),
                   
-                  const Spacer(),
+                  const SizedBox(height: AppTheme.spacingLarge),
                   
                   // Error Display
                   if (controller.error != null)
@@ -262,69 +257,97 @@ class _RatingScreenState extends State<RatingScreen>
     return Container(
       padding: const EdgeInsets.all(AppTheme.spacingLarge),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF4CAF50), Color(0xFF45A049)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            AppTheme.secondaryBackground.withOpacity(0.8),
-            AppTheme.secondaryBackground.withOpacity(0.4),
-          ],
         ),
         borderRadius: BorderRadius.circular(AppTheme.borderRadius),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Como avalia o desempenho?',
-            style: AppTheme.headingMedium,
-          ),
-          const SizedBox(height: AppTheme.spacing),
-          Text(
-            'Toque nas estrelas para classificar de 1 a 5',
-            style: AppTheme.bodyMedium,
-          ),
-          const SizedBox(height: AppTheme.spacingLarge),
-          
-          // Star Rating Widget
-          Center(
-            child: StarRatingWidget(
-              rating: controller.selectedRating,
-              onRatingChanged: controller.setRating,
-              size: 45,
+          if (!_isDetailedReview)
+            Center(
+              child: StarRatingWidget(
+                title: 'Como avalia o desempenho?',
+                rating: ((controller.reflexes + controller.positioning + controller.distribution + controller.communication) / 4 / 20).round(),
+                onRatingChanged: (rating) => controller.setOverallRating(rating),
+                size: 45,
+              ),
             ),
-          ),
-          
-          const SizedBox(height: AppTheme.spacing),
-          
-          // Rating Description
-          if (controller.selectedRating > 0)
-            AnimatedSwitcher(
-              duration: AppTheme.shortAnimation,
-              child: Center(
-                key: ValueKey(controller.selectedRating),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppTheme.accentColor.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    controller.getRatingDescription(controller.selectedRating),
-                    style: AppTheme.bodyMedium.copyWith(
-                      color: AppTheme.accentColor,
-                      fontWeight: FontWeight.w600,
+          const SizedBox(height: AppTheme.spacingLarge),
+          if (_isDetailedReview)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Como avalia o desempenho?',
+                  style: AppTheme.headingMedium.copyWith(color: Colors.white),
+                ),
+                const SizedBox(height: AppTheme.spacingLarge),
+                
+                // Stat Rating Widgets
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    StatRatingWidget(
+                      title: 'Reflexos',
+                      rating: controller.reflexes,
+                      onRatingChanged: (value) => controller.setStat('reflexes', value),
                     ),
+                    const SizedBox(height: AppTheme.spacing),
+                    StatRatingWidget(
+                      title: 'Posicionamento',
+                      rating: controller.positioning,
+                      onRatingChanged: (value) => controller.setStat('positioning', value),
+                    ),
+                    const SizedBox(height: AppTheme.spacing),
+                    StatRatingWidget(
+                      title: 'Distribuição',
+                      rating: controller.distribution,
+                      onRatingChanged: (value) => controller.setStat('distribution', value),
+                    ),
+                    const SizedBox(height: AppTheme.spacing),
+                    StatRatingWidget(
+                      title: 'Comunicação',
+                      rating: controller.communication,
+                      onRatingChanged: (value) => controller.setStat('communication', value),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          if (!_isDetailedReview)
+            Center(
+              child: TextButton(
+                onPressed: () {
+                  setState(() {
+                    _isDetailedReview = true;
+                  });
+                },
+                child: Text(
+                  'Deixar uma avaliação detalhada',
+                  style: AppTheme.bodyLarge.copyWith(
+                    color: Colors.white,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              ),
+            ),
+          if (_isDetailedReview)
+            Center(
+              child: TextButton(
+                onPressed: () {
+                  setState(() {
+                    _isDetailedReview = false;
+                  });
+                },
+                child: Text(
+                  'Voltar',
+                  style: AppTheme.bodyLarge.copyWith(
+                    color: Colors.white,
+                    decoration: TextDecoration.underline,
                   ),
                 ),
               ),
@@ -335,85 +358,79 @@ class _RatingScreenState extends State<RatingScreen>
   }
 
   Widget _buildCommentSection(RatingController controller) {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spacingLarge),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppTheme.secondaryBackground.withOpacity(0.8),
-            AppTheme.secondaryBackground.withOpacity(0.4),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(AppTheme.borderRadius),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                'Comentário',
-                style: AppTheme.headingMedium,
+    return _isDetailedReview
+        ? Container(
+            padding: const EdgeInsets.all(AppTheme.spacingLarge),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF4CAF50), Color(0xFF45A049)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-              const SizedBox(width: 8),
-              Text(
-                '(opcional)',
-                style: AppTheme.bodyMedium.copyWith(
-                  color: AppTheme.secondaryText,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppTheme.spacing),
-          Text(
-            'Partilhe a sua experiência com outros jogadores',
-            style: AppTheme.bodyMedium,
-          ),
-          const SizedBox(height: AppTheme.spacing),
-          
-          TextField(
-            controller: _commentController,
-            focusNode: _commentFocusNode,
-            onChanged: controller.setComment,
-            maxLines: 4,
-            maxLength: 500,
-            style: AppTheme.bodyLarge,
-            decoration: InputDecoration(
-              hintText: 'O guarda-redes foi pontual, profissional e demonstrou excelente técnica...',
-              hintStyle: AppTheme.bodyMedium.copyWith(
-                color: AppTheme.secondaryText.withOpacity(0.7),
-              ),
-              filled: true,
-              fillColor: AppTheme.primaryBackground.withOpacity(0.5),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppTheme.borderRadius),
-                borderSide: BorderSide.none,
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppTheme.borderRadius),
-                borderSide: const BorderSide(
-                  color: AppTheme.accentColor,
-                  width: 2,
-                ),
-              ),
-              contentPadding: const EdgeInsets.all(AppTheme.spacing),
-              counterStyle: AppTheme.bodyMedium.copyWith(
-                color: AppTheme.secondaryText,
-              ),
+              borderRadius: BorderRadius.circular(AppTheme.borderRadius),
             ),
-          ),
-        ],
-      ),
-    );
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      'Comentário',
+                      style: AppTheme.headingMedium.copyWith(color: Colors.white),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '(opcional)',
+                      style: AppTheme.bodyMedium.copyWith(
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppTheme.spacing),
+                Text(
+                  'Partilhe a sua experiência com outros jogadores',
+                  style: AppTheme.bodyMedium.copyWith(color: Colors.white70),
+                ),
+                const SizedBox(height: AppTheme.spacing),
+                TextField(
+                  controller: _commentController,
+                  focusNode: _commentFocusNode,
+                  onChanged: controller.setComment,
+                  maxLines: 4,
+                  maxLength: 500,
+                  style: AppTheme.bodyLarge.copyWith(color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText:
+                        'O guarda-redes foi pontual, profissional e demonstrou excelente técnica...',
+                    hintStyle: AppTheme.bodyMedium.copyWith(
+                      color: Colors.white.withOpacity(0.7),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white.withOpacity(0.1),
+                    border: OutlineInputBorder(
+                      borderRadius:
+                          BorderRadius.circular(AppTheme.borderRadius),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius:
+                          BorderRadius.circular(AppTheme.borderRadius),
+                      borderSide: const BorderSide(
+                        color: Colors.white,
+                        width: 2,
+                      ),
+                    ),
+                    contentPadding: const EdgeInsets.all(AppTheme.spacing),
+                    counterStyle: AppTheme.bodyMedium.copyWith(
+                      color: Colors.white70,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          )
+        : const SizedBox.shrink();
   }
 
   Widget _buildErrorMessage(String error) {
