@@ -30,10 +30,16 @@ class ContractNotificationCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
+        border: notification.isUnread
+            ? Border.all(
+                color: const Color(0xFFFF9800).withOpacity(0.3),
+                width: 2,
+              )
+            : null,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
+            color: Colors.black.withOpacity(notification.isUnread ? 0.15 : 0.08),
+            blurRadius: notification.isUnread ? 12 : 8,
             offset: const Offset(0, 2),
           ),
         ],
