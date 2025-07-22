@@ -1,7 +1,9 @@
 import 'services/contract_management_service.dart';
 import 'services/contract_expiration_handler.dart';
+import 'services/notification_service.dart';
 import 'presentation/controllers/contract_controller.dart';
 import 'data/repositories/notification_repository.dart';
+import 'data/models/contract_notification_data.dart';
 
 /// Integration class to manage all contract-related services
 class ContractIntegration {
