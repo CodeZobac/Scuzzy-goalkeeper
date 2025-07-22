@@ -4,8 +4,8 @@ class Booking {
   final String id;
   final String playerId;
   final String goalkeeperId;
-  final String? fieldId;
-  final DateTime gameDateTime;
+  final String fieldId;
+  final DateTime gameDatetime;
   final double price;
   final String status;
   final DateTime createdAt;
@@ -14,8 +14,8 @@ class Booking {
     required this.id,
     required this.playerId,
     required this.goalkeeperId,
-    this.fieldId,
-    required this.gameDateTime,
+    required this.fieldId,
+    required this.gameDatetime,
     required this.price,
     required this.status,
     required this.createdAt,
@@ -27,7 +27,7 @@ class Booking {
       'player_id': playerId,
       'goalkeeper_id': goalkeeperId,
       'field_id': fieldId,
-      'game_datetime': gameDateTime.toIso8601String(),
+      'game_datetime': gameDatetime.toIso8601String(),
       'price': price,
       'status': status,
       'created_at': createdAt.toIso8601String(),
@@ -40,7 +40,7 @@ class Booking {
       playerId: map['player_id'],
       goalkeeperId: map['goalkeeper_id'],
       fieldId: map['field_id'],
-      gameDateTime: DateTime.parse(map['game_datetime']),
+      gameDatetime: DateTime.parse(map['game_datetime']),
       price: (map['price'] as num).toDouble(),
       status: map['status'],
       createdAt: DateTime.parse(map['created_at']),
@@ -53,32 +53,24 @@ class Booking {
       Booking.fromMap(json.decode(source));
 
   // Helper methods
-  String get displayPrice {
-    return '€${price.toStringAsFixed(2)}';
-  }
-
-  String get displayStatus {
-    switch (status) {
-      case 'pending':
-        return 'Pendente';
-      case 'confirmed':
-        return 'Confirmado';
-      case 'cancelled':
-        return 'Cancelado';
-      case 'completed':
-        return 'Concluído';
-      default:
-        return status;
-    }
+  bool get isCompleted {
+    return status == 'completed' && gameDatetime.isBefore(DateTime.now());
   }
 
   String get displayDateTime {
-    final date = gameDateTime.toLocal();
-    return '${date.day}/${date.month}/${date.year} às ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+    final date = gameDatetime.toLocal();
+    return '${date.day}/${date.month}/${date.year} às ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
   }
 
-  bool get isPending => status == 'pending';
-  bool get isConfirmed => status == 'confirmed';
-  bool get isCancelled => status == 'cancelled';
-  bool get isCompleted => status == 'completed';
+  // Create booking for submission
+  Map<String, dynamic> toCreateMap() {
+    return {
+      'player_id': playerId,
+      'goalkeeper_id': goalkeeperId,
+      'field_id': fieldId,
+      'game_datetime': gameDatetime.toIso8601String(),
+      'price': price,
+      'status': status,
+    };
+  }
 }
