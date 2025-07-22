@@ -1,0 +1,2 @@
+#!/bin/bash
+flutter build web --dart-define=SUPABASE_URL=${SUPABASE_URL} --dart-define=SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY} --dart-define=MAPBOX_ACCESS_TOKEN=${MAPBOX_ACCESS_TOKEN} --dart-define=MAPBOX_DOWNLOADS_TOKEN=${MAPBOX_DOWNLOADS_TOKEN}
