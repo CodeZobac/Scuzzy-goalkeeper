@@ -67,7 +67,7 @@ class _MapScreenContentState extends State<_MapScreenContent> {
             children: [
               TileLayer(
                 urlTemplate: 'https://api.mapbox.com/styles/v1/afonsocaboz/cmdd83lik011o01s9crrz77xe/tiles/256/{z}/{x}/{y}@2x?access_token=${AppConfig.mapboxAccessToken}',
-                additionalOptions: const {
+                additionalOptions: {
                   'access_token': AppConfig.mapboxAccessToken,
                 },
               ),

@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:goalkeeper/src/core/config/app_config.dart';
 import 'package:goalkeeper/src/features/user_profile/data/repositories/user_profile_repository.dart';
@@ -27,10 +26,6 @@ import 'package:goalkeeper/src/features/main/presentation/screens/main_screen.da
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  if (!kIsWeb) {
-    await dotenv.load(fileName: ".env");
-  }
 
   // Initialize Firebase
   try {
