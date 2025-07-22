@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:goalkeeper/src/core/config/app_config.dart';
 import 'package:goalkeeper/src/features/user_profile/data/repositories/user_profile_repository.dart';
 import 'package:goalkeeper/src/features/user_profile/presentation/controllers/user_profile_controller.dart';
 import 'package:goalkeeper/src/features/user_profile/presentation/screens/profile_screen.dart';
@@ -26,7 +28,9 @@ import 'package:goalkeeper/src/features/main/presentation/screens/main_screen.da
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await dotenv.load(fileName: ".env");
+  if (!kIsWeb) {
+    await dotenv.load(fileName: ".env");
+  }
 
   // Initialize Firebase
   try {
@@ -41,8 +45,8 @@ Future<void> main() async {
   }
 
   await Supabase.initialize(
-    url: dotenv.env['SUPABASE_URL']!,
-    anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
+    url: AppConfig.supabaseUrl,
+    anonKey: AppConfig.supabaseAnonKey,
   );
 
   // Create and initialize the service before running the app

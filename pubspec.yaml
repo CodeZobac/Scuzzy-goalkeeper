@@ -79,7 +79,6 @@ flutter:
   uses-material-design: true
 
   assets:
-    - .env
     - assets/goalkeeper_fields.geojson
     - assets/goalkeeper_mapbox_style.json
 
