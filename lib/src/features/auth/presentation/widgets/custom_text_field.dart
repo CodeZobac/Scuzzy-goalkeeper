@@ -15,6 +15,7 @@ class CustomTextField extends StatefulWidget {
   final bool enabled;
   final int maxLines;
   final String? errorText;
+  final FloatingLabelBehavior? floatingLabelBehavior;
 
   const CustomTextField({
     super.key,
@@ -31,6 +32,7 @@ class CustomTextField extends StatefulWidget {
     this.enabled = true,
     this.maxLines = 1,
     this.errorText,
+    this.floatingLabelBehavior,
   });
 
   @override
@@ -114,6 +116,7 @@ class _CustomTextFieldState extends State<CustomTextField>
               style: AppTheme.bodyLarge,
               cursorColor: AppTheme.accentColor,
               decoration: InputDecoration(
+                floatingLabelBehavior: widget.floatingLabelBehavior,
                 hintText: widget.hintText,
                 labelText: widget.labelText,
                 errorText: widget.errorText,
