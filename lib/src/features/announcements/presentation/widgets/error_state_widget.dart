@@ -174,7 +174,7 @@ class InlineErrorWidget extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFFFEBEE),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE57373).withValues(alpha: 0.3)),
+        border: Border.all(color: const Color(0xFFE57373).withAlpha((255 * 0.3).toInt())),
       ),
       child: Row(
         children: [
