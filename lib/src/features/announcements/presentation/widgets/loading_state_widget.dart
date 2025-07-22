@@ -52,7 +52,9 @@ class LoadingStateWidget extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withAlpha(25),
+
+              color: Colors.black.withOpacity(0.1),
+
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),

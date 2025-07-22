@@ -39,27 +39,20 @@ class AnnouncementController extends ChangeNotifier {
   bool isAnnouncementLoading(int announcementId) => _announcementLoadingStates[announcementId] ?? false;
 
   Future<void> fetchAnnouncements() async {
-    await AnnouncementErrorHandler.handleNetworkOperation(
-      () => _announcementRepository.getAnnouncements(),
-      onLoadingStart: () {
-        _isLoading = true;
-        _errorMessage = null;
-        notifyListeners();
-      },
-      onLoadingEnd: () {
-        _isLoading = false;
-        notifyListeners();
-      },
-    ).then((result) {
-      if (result != null) {
-        _announcements = result;
-        _errorMessage = null;
-      } else {
-        _announcements = [];
-        _errorMessage = 'Failed to load announcements';
-      }
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    
+    try {
+      _announcements = await _announcementRepository.getAnnouncements();
+      _errorMessage = null;
+    } catch (e) {
+      _errorMessage = AnnouncementErrorHandler.getErrorMessage(e);
+      _announcements = [];
+    } finally {
+      _isLoading = false;
       notifyListeners();
-    });
+    }
   }
 
   Future<void> createAnnouncement(Announcement announcement) async {
