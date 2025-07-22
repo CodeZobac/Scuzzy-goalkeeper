@@ -20,9 +20,9 @@ class StadiumCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        gradient: const LinearGradient(
+      decoration: const BoxDecoration(
+        borderRadius: BorderRadius.all(Radius.circular(16)),
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [Color(0xFF4CAF50), Color(0xFF45A049)],
@@ -62,7 +62,9 @@ class StadiumCard extends StatelessWidget {
                 
                 // Map button
                 Material(
+
                   color: Colors.white.withOpacity(0.2),
+
                   borderRadius: BorderRadius.circular(12),
                   child: InkWell(
                     onTap: onMapTap,
@@ -101,7 +103,9 @@ class StadiumCard extends StatelessWidget {
               height: 120,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
+
                 color: Colors.white.withOpacity(0.1),
+
               ),
               child: Stack(
                 children: [
@@ -140,7 +144,9 @@ class StadiumCard extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
+
                           color: Colors.black.withOpacity(0.6),
+
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Row(
