@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../features/auth/presentation/theme/app_theme.dart';
 import '../../features/map/data/repositories/field_repository.dart';
 import '../../features/map/domain/models/map_field.dart';
 import '../../features/announcements/presentation/controllers/announcement_controller.dart';
+import '../../features/notifications/services/notification_service.dart';
+import '../../features/notifications/presentation/controllers/notification_badge_controller.dart';
 
 enum NavbarItem { home, map, notifications, profile }
 
@@ -96,12 +99,16 @@ class _AppNavbarState extends State<AppNavbar>
                       onTap: () => _onItemTap(NavbarItem.map),
                       currentScreen: widget.selectedItem,
                     ),
-                    _NavbarIcon(
-                      icon: Icons.notifications,
-                      isSelected:
-                          widget.selectedItem == NavbarItem.notifications,
-                      onTap: () => _onItemTap(NavbarItem.notifications),
-                      currentScreen: widget.selectedItem,
+                    Consumer<NotificationBadgeController>(
+                      builder: (context, badgeController, child) {
+                        return _NavbarIcon(
+                          icon: Icons.notifications,
+                          isSelected: widget.selectedItem == NavbarItem.notifications,
+                          onTap: () => _onItemTap(NavbarItem.notifications),
+                          badgeCount: badgeController.hasUnreadNotifications ? badgeController.unreadCount : null,
+                          currentScreen: widget.selectedItem,
+                        );
+                      },
                     ),
                     _NavbarIcon(
                       icon: Icons.person,
