@@ -10,17 +10,87 @@ class NotificationRepository {
   /// Gets all notifications for a user
   Future<List<AppNotification>> getUserNotifications(String userId) async {
     try {
-      final response = await _supabase
+      return await getUserNotificationsNonArchived(userId);
+    } catch (e) {
+      throw Exception('Erro ao carregar notificações: $e');
+    }
+  }
+
+  /// Gets paginated notifications for a user
+  Future<List<AppNotification>> getUserNotificationsPaginated(
+    String userId, {
+    int limit = 20,
+    int offset = 0,
+    String? searchQuery,
+    NotificationCategory? category,
+    bool includeArchived = false,
+  }) async {
+    try {
+      var query = _supabase
           .from('notifications')
           .select('*')
-          .eq('user_id', userId)
-          .order('sent_at', ascending: false);
+          .eq('user_id', userId);
+
+      // Filter by archived status
+      if (!includeArchived) {
+        query = query.isFilter('archived_at', null);
+      }
+
+      // Filter by category
+      if (category != null) {
+        query = query.eq('category', category.value);
+      }
+
+      // Search functionality
+      if (searchQuery != null && searchQuery.isNotEmpty) {
+        query = query.or('title.ilike.%$searchQuery%,body.ilike.%$searchQuery%');
+      }
+
+      // Apply pagination and ordering
+      final response = await query
+          .order('sent_at', ascending: false)
+          .range(offset, offset + limit - 1);
 
       return response
           .map<AppNotification>((data) => AppNotification.fromMap(data))
           .toList();
     } catch (e) {
-      throw Exception('Erro ao carregar notificações: $e');
+      throw Exception('Erro ao carregar notificações paginadas: $e');
+    }
+  }
+
+  /// Gets total count of notifications for pagination
+  Future<int> getUserNotificationsCount(
+    String userId, {
+    String? searchQuery,
+    NotificationCategory? category,
+    bool includeArchived = false,
+  }) async {
+    try {
+      var query = _supabase
+          .from('notifications')
+          .select('id', const FetchOptions(count: CountOption.exact))
+          .eq('user_id', userId);
+
+      // Filter by archived status
+      if (!includeArchived) {
+        query = query.isFilter('archived_at', null);
+      }
+
+      // Filter by category
+      if (category != null) {
+        query = query.eq('category', category.value);
+      }
+
+      // Search functionality
+      if (searchQuery != null && searchQuery.isNotEmpty) {
+        query = query.or('title.ilike.%$searchQuery%,body.ilike.%$searchQuery%');
+      }
+
+      final response = await query;
+      return response.count ?? 0;
+    } catch (e) {
+      throw Exception('Erro ao contar notificações: $e');
     }
   }
 
@@ -31,7 +101,7 @@ class NotificationRepository {
           .from('notifications')
           .select('id')
           .eq('user_id', userId)
-          .isFilter('read_at', null);
+          .eq('read_at', null);
 
       return response.length;
     } catch (e) {
@@ -58,9 +128,87 @@ class NotificationRepository {
           .from('notifications')
           .update({'read_at': DateTime.now().toIso8601String()})
           .eq('user_id', userId)
-          .isFilter('read_at', null);
+          .eq('read_at', null);
     } catch (e) {
       throw Exception('Erro ao marcar todas notificações como lidas: $e');
+    }
+  }
+
+  /// Mark all notifications as read for a specific category
+  Future<void> markAllNotificationsAsReadByCategory(String userId, NotificationCategory category) async {
+    try {
+      await _supabase
+          .from('notifications')
+          .update({'read_at': DateTime.now().toIso8601String()})
+          .eq('user_id', userId)
+          .eq('category', category.value)
+          .eq('read_at', null);
+    } catch (e) {
+      throw Exception('Erro ao marcar notificações da categoria como lidas: $e');
+    }
+  }
+
+  /// Get unread notifications count for a specific category
+  Future<int> getUnreadNotificationsCountByCategory(String userId, NotificationCategory category) async {
+    try {
+      final response = await _supabase
+          .from('notifications')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('category', category.value)
+          .eq('read_at', null);
+
+      return response.length;
+    } catch (e) {
+      throw Exception('Erro ao contar notificações não lidas da categoria: $e');
+    }
+  }
+
+  /// Archive old notifications (older than 30 days)
+  Future<void> archiveOldNotifications(String userId) async {
+    try {
+      final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
+      
+      await _supabase
+          .from('notifications')
+          .update({'archived_at': DateTime.now().toIso8601String()})
+          .eq('user_id', userId)
+          .lt('created_at', thirtyDaysAgo.toIso8601String())
+          .eq('archived_at', null);
+    } catch (e) {
+      throw Exception('Erro ao arquivar notificações antigas: $e');
+    }
+  }
+
+  /// Get non-archived notifications for a user
+  Future<List<AppNotification>> getUserNotificationsNonArchived(String userId) async {
+    try {
+      final response = await _supabase
+          .from('notifications')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('archived_at', null)
+          .order('sent_at', ascending: false);
+
+      return response
+          .map<AppNotification>((data) => AppNotification.fromMap(data))
+          .toList();
+    } catch (e) {
+      throw Exception('Erro ao carregar notificações: $e');
+    }
+  }
+
+  /// Automatically mark notification as read when viewed
+  Future<void> markNotificationAsReadOnView(String notificationId) async {
+    try {
+      // Only update if not already read
+      await _supabase
+          .from('notifications')
+          .update({'read_at': DateTime.now().toIso8601String()})
+          .eq('id', notificationId)
+          .eq('read_at', null);
+    } catch (e) {
+      throw Exception('Erro ao marcar notificação como lida: $e');
     }
   }
 
@@ -93,7 +241,7 @@ class NotificationRepository {
     }
   }
 
-  /// Listen to real-time notifications for a user
+  /// Listen to real-time notifications for a user (deprecated - use NotificationRealtimeService)
   Stream<AppNotification> listenToUserNotifications(String userId) {
     return _supabase
         .from('notifications')
@@ -102,6 +250,34 @@ class NotificationRepository {
         .order('sent_at', ascending: false)
         .map((List<Map<String, dynamic>> data) {
           return data.map((item) => AppNotification.fromMap(item)).first;
+        });
+  }
+
+  /// Get real-time notifications stream with better error handling
+  Stream<List<AppNotification>> getNotificationsStream(String userId) {
+    return _supabase
+        .from('notifications')
+        .stream(primaryKey: ['id'])
+        .eq('user_id', userId)
+        .order('sent_at', ascending: false)
+        .map((List<Map<String, dynamic>> data) {
+          return data.map((item) => AppNotification.fromMap(item)).toList();
+        })
+        .handleError((error) {
+          throw Exception('Erro no stream de notificações: $error');
+        });
+  }
+
+  /// Get real-time unread count stream
+  Stream<int> getUnreadCountStream(String userId) {
+    return _supabase
+        .from('notifications')
+        .stream(primaryKey: ['id'])
+        .eq('user_id', userId)
+        .eq('read_at', null)
+        .map((List<Map<String, dynamic>> data) => data.length)
+        .handleError((error) {
+          throw Exception('Erro no stream de contagem não lida: $error');
         });
   }
 
@@ -300,6 +476,135 @@ class NotificationRepository {
     }
   }
 
+  /// Get notifications with advanced filtering and sorting options
+  Future<List<AppNotification>> getNotificationsAdvanced(
+    String userId, {
+    int limit = 20,
+    int offset = 0,
+    String? searchQuery,
+    NotificationCategory? category,
+    bool includeArchived = false,
+    String sortBy = 'sent_at',
+    bool ascending = false,
+    DateTime? dateFrom,
+    DateTime? dateTo,
+    bool? readStatus, // null = all, true = read only, false = unread only
+  }) async {
+    try {
+      var query = _supabase
+          .from('notifications')
+          .select('*')
+          .eq('user_id', userId);
+
+      // Filter by archived status
+      if (!includeArchived) {
+        query = query.isFilter('archived_at', null);
+      }
+
+      // Filter by category
+      if (category != null) {
+        query = query.eq('category', category.value);
+      }
+
+      // Filter by read status
+      if (readStatus != null) {
+        if (readStatus) {
+          query = query.not('read_at', 'is', null);
+        } else {
+          query = query.isFilter('read_at', null);
+        }
+      }
+
+      // Date range filtering
+      if (dateFrom != null) {
+        query = query.gte('sent_at', dateFrom.toIso8601String());
+      }
+      if (dateTo != null) {
+        query = query.lte('sent_at', dateTo.toIso8601String());
+      }
+
+      // Search functionality with improved matching
+      if (searchQuery != null && searchQuery.isNotEmpty) {
+        // Search in title, body, and data fields
+        query = query.or(
+          'title.ilike.%$searchQuery%,'
+          'body.ilike.%$searchQuery%,'
+          'data->>contractor_name.ilike.%$searchQuery%,'
+          'data->>announcement_title.ilike.%$searchQuery%,'
+          'data->>stadium.ilike.%$searchQuery%'
+        );
+      }
+
+      // Apply sorting and pagination
+      final response = await query
+          .order(sortBy, ascending: ascending)
+          .range(offset, offset + limit - 1);
+
+      return response
+          .map<AppNotification>((data) => AppNotification.fromMap(data))
+          .toList();
+    } catch (e) {
+      throw Exception('Erro ao carregar notificações avançadas: $e');
+    }
+  }
+
+  /// Get total count with advanced filtering
+  Future<int> getNotificationsCountAdvanced(
+    String userId, {
+    String? searchQuery,
+    NotificationCategory? category,
+    bool includeArchived = false,
+    DateTime? dateFrom,
+    DateTime? dateTo,
+    bool? readStatus,
+  }) async {
+    try {
+      var query = _supabase
+          .from('notifications')
+          .select('id', const FetchOptions(count: CountOption.exact))
+          .eq('user_id', userId);
+
+      // Apply same filters as getNotificationsAdvanced
+      if (!includeArchived) {
+        query = query.isFilter('archived_at', null);
+      }
+
+      if (category != null) {
+        query = query.eq('category', category.value);
+      }
+
+      if (readStatus != null) {
+        if (readStatus) {
+          query = query.not('read_at', 'is', null);
+        } else {
+          query = query.isFilter('read_at', null);
+        }
+      }
+
+      if (dateFrom != null) {
+        query = query.gte('sent_at', dateFrom.toIso8601String());
+      }
+      if (dateTo != null) {
+        query = query.lte('sent_at', dateTo.toIso8601String());
+      }
+
+      if (searchQuery != null && searchQuery.isNotEmpty) {
+        query = query.or(
+          'title.ilike.%$searchQuery%,'
+          'body.ilike.%$searchQuery%,'
+          'data->>contractor_name.ilike.%$searchQuery%,'
+          'data->>announcement_title.ilike.%$searchQuery%,'
+          'data->>stadium.ilike.%$searchQuery%'
+        );
+      }
+
+      final response = await query;
+      return response.count ?? 0;
+    } catch (e) {
+      throw Exception('Erro ao contar notificações avançadas: $e');
+    }
+  }
+
   /// Create watchNotifications stream for real-time updates
   Stream<List<AppNotification>> watchNotifications(String userId) {
     return _supabase
@@ -310,5 +615,108 @@ class NotificationRepository {
         .map((List<Map<String, dynamic>> data) {
           return data.map((item) => AppNotification.fromMap(item)).toList();
         });
+  }
+
+  /// Delete multiple notifications by IDs
+  Future<void> deleteNotifications(List<String> notificationIds) async {
+    try {
+      await _supabase
+          .from('notifications')
+          .delete()
+          .inFilter('id', notificationIds);
+    } catch (e) {
+      throw Exception('Erro ao eliminar notificações: $e');
+    }
+  }
+
+  /// Delete all notifications for a user (with confirmation)
+  Future<void> deleteAllNotifications(String userId) async {
+    try {
+      await _supabase
+          .from('notifications')
+          .delete()
+          .eq('user_id', userId);
+    } catch (e) {
+      throw Exception('Erro ao eliminar todas as notificações: $e');
+    }
+  }
+
+  /// Delete notifications by category
+  Future<void> deleteNotificationsByCategory(String userId, NotificationCategory category) async {
+    try {
+      await _supabase
+          .from('notifications')
+          .delete()
+          .eq('user_id', userId)
+          .eq('category', category.value);
+    } catch (e) {
+      throw Exception('Erro ao eliminar notificações da categoria: $e');
+    }
+  }
+
+  /// Get archived notifications for history view
+  Future<List<AppNotification>> getArchivedNotifications(
+    String userId, {
+    int limit = 20,
+    int offset = 0,
+    String? searchQuery,
+    NotificationCategory? category,
+  }) async {
+    try {
+      var query = _supabase
+          .from('notifications')
+          .select('*')
+          .eq('user_id', userId)
+          .not('archived_at', 'is', null);
+
+      // Filter by category
+      if (category != null) {
+        query = query.eq('category', category.value);
+      }
+
+      // Search functionality
+      if (searchQuery != null && searchQuery.isNotEmpty) {
+        query = query.or('title.ilike.%$searchQuery%,body.ilike.%$searchQuery%');
+      }
+
+      // Apply pagination and ordering
+      final response = await query
+          .order('archived_at', ascending: false)
+          .range(offset, offset + limit - 1);
+
+      return response
+          .map<AppNotification>((data) => AppNotification.fromMap(data))
+          .toList();
+    } catch (e) {
+      throw Exception('Erro ao carregar notificações arquivadas: $e');
+    }
+  }
+
+  /// Permanently delete archived notifications older than specified days
+  Future<void> cleanupArchivedNotifications(String userId, {int olderThanDays = 90}) async {
+    try {
+      final cutoffDate = DateTime.now().subtract(Duration(days: olderThanDays));
+      
+      await _supabase
+          .from('notifications')
+          .delete()
+          .eq('user_id', userId)
+          .not('archived_at', 'is', null)
+          .lt('archived_at', cutoffDate.toIso8601String());
+    } catch (e) {
+      throw Exception('Erro ao limpar notificações arquivadas: $e');
+    }
+  }
+
+  /// Restore archived notification
+  Future<void> restoreArchivedNotification(String notificationId) async {
+    try {
+      await _supabase
+          .from('notifications')
+          .update({'archived_at': null})
+          .eq('id', notificationId);
+    } catch (e) {
+      throw Exception('Erro ao restaurar notificação: $e');
+    }
   }
 }
