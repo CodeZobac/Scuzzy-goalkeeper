@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:goalkeeper/src/core/config/firebase_config.dart';
 import 'package:goalkeeper/src/features/user_profile/data/repositories/user_profile_repository.dart';
 import 'package:goalkeeper/src/features/user_profile/presentation/controllers/user_profile_controller.dart';
 import 'package:goalkeeper/src/features/user_profile/presentation/screens/profile_screen.dart';
@@ -33,17 +34,8 @@ Future<void> main() async {
 
   await dotenv.load(fileName: ".env");
 
-  // Initialize Firebase
-  try {
-    await Firebase.initializeApp(
-      // Firebase configuration will be read from google-services.json/GoogleService-Info.plist
-      // For now, we'll initialize without options and handle the configuration later
-    );
-    debugPrint('Firebase initialized successfully');
-  } catch (e) {
-    debugPrint('Firebase initialization failed: $e');
-    // Continue without Firebase for now - FCM notifications won't work
-  }
+  // Initialize Firebase (optional - only if configuration files exist)
+  final firebaseInitialized = await FirebaseConfig.initialize();
 
   await Supabase.initialize(
     url: dotenv.env['SUPABASE_URL']!,
