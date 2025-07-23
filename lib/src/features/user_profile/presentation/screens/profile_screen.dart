@@ -817,10 +817,19 @@ class _ProfileScreenState extends State<ProfileScreen>
                   _buildSettingsOption(
                     icon: Icons.notifications_outlined,
                     title: 'Notificações',
-                    subtitle: 'Gerir notificações push',
+                    subtitle: 'Ver notificações recebidas',
                     onTap: () {
                       Navigator.of(context).pop();
                       Navigator.of(context).pushNamed('/notifications');
+                    },
+                  ),
+                  _buildSettingsOption(
+                    icon: Icons.tune,
+                    title: 'Preferências de Notificação',
+                    subtitle: 'Gerir tipos de notificações',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pushNamed('/notification-preferences');
                     },
                   ),
                   _buildSettingsOption(
