@@ -69,7 +69,7 @@ class NotificationRepository {
     try {
       var query = _supabase
           .from('notifications')
-          .select('id', const FetchOptions(count: CountOption.exact))
+          .select('id')
           .eq('user_id', userId);
 
       // Filter by archived status
@@ -88,7 +88,7 @@ class NotificationRepository {
       }
 
       final response = await query;
-      return response.count ?? 0;
+      return response.length;
     } catch (e) {
       throw Exception('Erro ao contar notificações: $e');
     }
@@ -101,7 +101,7 @@ class NotificationRepository {
           .from('notifications')
           .select('id')
           .eq('user_id', userId)
-          .eq('read_at', null);
+          .isFilter('read_at', null);
 
       return response.length;
     } catch (e) {
@@ -128,7 +128,7 @@ class NotificationRepository {
           .from('notifications')
           .update({'read_at': DateTime.now().toIso8601String()})
           .eq('user_id', userId)
-          .eq('read_at', null);
+          .isFilter('read_at', null);
     } catch (e) {
       throw Exception('Erro ao marcar todas notificações como lidas: $e');
     }
@@ -142,7 +142,7 @@ class NotificationRepository {
           .update({'read_at': DateTime.now().toIso8601String()})
           .eq('user_id', userId)
           .eq('category', category.value)
-          .eq('read_at', null);
+          .isFilter('read_at', null);
     } catch (e) {
       throw Exception('Erro ao marcar notificações da categoria como lidas: $e');
     }
@@ -156,7 +156,7 @@ class NotificationRepository {
           .select('id')
           .eq('user_id', userId)
           .eq('category', category.value)
-          .eq('read_at', null);
+          .isFilter('read_at', null);
 
       return response.length;
     } catch (e) {
@@ -174,7 +174,7 @@ class NotificationRepository {
           .update({'archived_at': DateTime.now().toIso8601String()})
           .eq('user_id', userId)
           .lt('created_at', thirtyDaysAgo.toIso8601String())
-          .eq('archived_at', null);
+          .isFilter('archived_at', null);
     } catch (e) {
       throw Exception('Erro ao arquivar notificações antigas: $e');
     }
@@ -187,7 +187,7 @@ class NotificationRepository {
           .from('notifications')
           .select('*')
           .eq('user_id', userId)
-          .eq('archived_at', null)
+          .isFilter('archived_at', null)
           .order('sent_at', ascending: false);
 
       return response
@@ -206,7 +206,7 @@ class NotificationRepository {
           .from('notifications')
           .update({'read_at': DateTime.now().toIso8601String()})
           .eq('id', notificationId)
-          .eq('read_at', null);
+          .isFilter('read_at', null);
     } catch (e) {
       throw Exception('Erro ao marcar notificação como lida: $e');
     }
@@ -274,8 +274,10 @@ class NotificationRepository {
         .from('notifications')
         .stream(primaryKey: ['id'])
         .eq('user_id', userId)
-        .eq('read_at', null)
-        .map((List<Map<String, dynamic>> data) => data.length)
+        .map((List<Map<String, dynamic>> data) {
+          // Filter unread notifications in memory since stream doesn't support isFilter
+          return data.where((item) => item['read_at'] == null).length;
+        })
         .handleError((error) {
           throw Exception('Erro no stream de contagem não lida: $error');
         });
@@ -561,7 +563,7 @@ class NotificationRepository {
     try {
       var query = _supabase
           .from('notifications')
-          .select('id', const FetchOptions(count: CountOption.exact))
+          .select('id')
           .eq('user_id', userId);
 
       // Apply same filters as getNotificationsAdvanced
@@ -599,7 +601,7 @@ class NotificationRepository {
       }
 
       final response = await query;
-      return response.count ?? 0;
+      return response.length;
     } catch (e) {
       throw Exception('Erro ao contar notificações avançadas: $e');
     }
