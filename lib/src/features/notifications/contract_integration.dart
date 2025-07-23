@@ -12,9 +12,9 @@ class ContractIntegration {
   
   ContractIntegration._();
 
-  late final ContractManagementService _contractService;
-  late final ContractExpirationHandler _expirationHandler;
-  late final NotificationRepository _notificationRepository;
+  ContractManagementService? _contractService;
+  ContractExpirationHandler? _expirationHandler;
+  NotificationRepository? _notificationRepository;
   
   bool _initialized = false;
 
@@ -27,7 +27,7 @@ class ContractIntegration {
     _notificationRepository = NotificationRepository();
     
     // Start the expiration handler
-    _expirationHandler.start();
+    _expirationHandler?.start();
     
     _initialized = true;
   }
@@ -35,19 +35,19 @@ class ContractIntegration {
   /// Get contract management service
   ContractManagementService get contractService {
     if (!_initialized) initialize();
-    return _contractService;
+    return _contractService!;
   }
 
   /// Get expiration handler
   ContractExpirationHandler get expirationHandler {
     if (!_initialized) initialize();
-    return _expirationHandler;
+    return _expirationHandler!;
   }
 
   /// Get notification repository
   NotificationRepository get notificationRepository {
     if (!_initialized) initialize();
-    return _notificationRepository;
+    return _notificationRepository!;
   }
 
   /// Create a new contract controller
@@ -60,15 +60,15 @@ class ContractIntegration {
   void dispose() {
     if (!_initialized) return;
     
-    _expirationHandler.dispose();
-    _contractService.dispose();
+    _expirationHandler?.dispose();
+    _contractService?.dispose();
     _initialized = false;
   }
 
   /// Perform manual cleanup of expired contracts
   Future<void> performCleanup() async {
     if (!_initialized) initialize();
-    await _expirationHandler.performManualCleanup();
+    await _expirationHandler?.performManualCleanup();
   }
 }
 
