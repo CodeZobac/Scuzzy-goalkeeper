@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../theme/app_theme.dart';
+import '../../../../shared/widgets/web_svg_asset.dart';
 
 class ModernAuthLayout extends StatefulWidget {
   final Widget child;
@@ -160,41 +162,34 @@ class _ModernAuthLayoutState extends State<ModernAuthLayout>
           opacity: _headerFadeAnimation,
           child: SlideTransition(
             position: _headerSlideAnimation,
-            child: Container(
-              height: isTablet ? 280 : 240, // Reduzido para evitar sobreposição
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    AppTheme.authPrimaryGreen,
-                    AppTheme.authSecondaryGreen,
-                  ],
-                  stops: const [0.0, 1.0],
-                ),
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(32), // Reduzido ligeiramente
-                  bottomRight: Radius.circular(32),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppTheme.authPrimaryGreen.withOpacity(0.25),
-                    blurRadius: 25,
-                    offset: const Offset(0, 12),
-                  ),
-                ],
-              ),
-              child: Stack(
-                children: [
-                  // Animated background pattern
-                  Positioned.fill(
-                    child: CustomPaint(
-                      painter: BackgroundPatternPainter(),
+            child: Stack(
+              children: [
+                // SVG Header taking full width and proportional height
+                WebSvgAsset(
+                  assetPath: 'assets/auth-header.svg',
+                  width: MediaQuery.of(context).size.width,
+                  fit: BoxFit.fitWidth,
+                  placeholder: Container(
+                    height: isTablet ? 280 : 240,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          AppTheme.authPrimaryGreen,
+                          AppTheme.authSecondaryGreen,
+                        ],
+                      ),
                     ),
                   ),
-                  
-                  // Main content
-                  Padding(
+                ),
+                
+                // Overlay content
+                Container(
+                  height: isTablet ? 280 : 240,
+                  width: double.infinity,
+                  child: Padding(
                     padding: EdgeInsets.fromLTRB(
                       32, 
                       isTablet ? 50 : 40, // top ajustado
@@ -230,35 +225,6 @@ class _ModernAuthLayoutState extends State<ModernAuthLayout>
                         
                         const Spacer(),
                         
-                        // App logo/icon with modern design
-                        Container(
-                          width: 72,
-                          height: 72,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 20,
-                                offset: const Offset(0, 8),
-                              ),
-                              BoxShadow(
-                                color: Colors.white.withOpacity(0.1),
-                                blurRadius: 10,
-                                offset: const Offset(0, -2),
-                              ),
-                            ],
-                          ),
-                          child: Icon(
-                            Icons.sports_soccer_rounded,
-                            size: 36,
-                            color: AppTheme.authPrimaryGreen,
-                          ),
-                        ),
-                        
-                        const SizedBox(height: 24),
-                        
                         // Title with better typography
                         Text(
                           widget.title,
@@ -289,8 +255,8 @@ class _ModernAuthLayoutState extends State<ModernAuthLayout>
                       ],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         );
@@ -302,10 +268,10 @@ class _ModernAuthLayoutState extends State<ModernAuthLayout>
     return AnimatedBuilder(
       animation: _cardController,
       builder: (context, child) {
-        return Padding(
+        return SingleChildScrollView(
           padding: EdgeInsets.fromLTRB(
             isTablet ? 40 : 24, // left
-            20, // top - reduzido para menos espaçamento
+            12, // top - minimal spacing
             isTablet ? 40 : 24, // right
             24, // bottom
           ),
@@ -313,43 +279,48 @@ class _ModernAuthLayoutState extends State<ModernAuthLayout>
             opacity: _cardFadeAnimation,
             child: ScaleTransition(
               scale: _cardScaleAnimation,
-              child: Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: AppTheme.authCardBackground,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
-                      blurRadius: 25,
-                      offset: const Offset(0, 10),
+              child: Material(
+                elevation: 12,
+                shadowColor: AppTheme.authPrimaryGreen.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(24),
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: AppTheme.authCardBackground,
+                    borderRadius: BorderRadius.circular(24),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        AppTheme.authCardBackground,
+                        AppTheme.authCardBackground.withOpacity(0.98),
+                      ],
                     ),
-                    BoxShadow(
-                      color: AppTheme.authPrimaryGreen.withOpacity(0.04),
-                      blurRadius: 40,
-                      offset: const Offset(0, 20),
+                    border: Border.all(
+                      color: AppTheme.authPrimaryGreen.withOpacity(0.1),
+                      width: 1,
                     ),
-                  ],
-                ),
-                child: AnimatedBuilder(
-                  animation: _contentController,
-                  builder: (context, child) {
-                    return FadeTransition(
-                      opacity: _contentFadeAnimation,
-                      child: SlideTransition(
-                        position: _contentSlideAnimation,
-                        child: Padding(
-                          padding: EdgeInsets.fromLTRB(
-                            isTablet ? 32 : 24, // left
-                            isTablet ? 28 : 24, // top
-                            isTablet ? 32 : 24, // right
-                            isTablet ? 24 : 20, // bottom - reduzido para menos espaço em branco
+                  ),
+                  child: AnimatedBuilder(
+                    animation: _contentController,
+                    builder: (context, child) {
+                      return FadeTransition(
+                        opacity: _contentFadeAnimation,
+                        child: SlideTransition(
+                          position: _contentSlideAnimation,
+                          child: Padding(
+                            padding: EdgeInsets.fromLTRB(
+                              isTablet ? 32 : 28, // left - more padding
+                              isTablet ? 32 : 28, // top - more padding
+                              isTablet ? 32 : 28, // right - more padding
+                              isTablet ? 32 : 28, // bottom - consistent padding
+                            ),
+                            child: widget.child,
                           ),
-                          child: widget.child,
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
               ),
             ),

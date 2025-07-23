@@ -191,12 +191,27 @@ class _SignUpScreenState extends State<SignUpScreen> {
       child: StaggeredFadeInSlideUp(
         baseDelay: const Duration(milliseconds: 400),
         children: [
-          Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 4), // Reduzido
+          // Compact form container
+          Container(
+            constraints: const BoxConstraints(maxWidth: 400),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                // Welcome message
+                Center(
+                  child: Text(
+                    'Criar nova conta',
+                    style: AppTheme.authHeadingSmall.copyWith(
+                      color: AppTheme.authPrimaryGreen,
+                      fontSize: 20,
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(height: 24),
                 
                 // Campo de Nome
                 ModernTextField(
@@ -418,7 +433,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
 
                 const SizedBox(height: 12), // Reduzido significativamente
-              ],
+                ],
+              ),
             ),
           ),
         ],

@@ -140,12 +140,27 @@ class _SignInScreenState extends State<SignInScreen> {
       child: StaggeredFadeInSlideUp(
         baseDelay: const Duration(milliseconds: 400),
         children: [
-          Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 4), // Reduzido
+          // Compact form container
+          Container(
+            constraints: const BoxConstraints(maxWidth: 400),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                // Welcome message
+                Center(
+                  child: Text(
+                    'Acesse sua conta',
+                    style: AppTheme.authHeadingSmall.copyWith(
+                      color: AppTheme.authPrimaryGreen,
+                      fontSize: 20,
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(height: 24),
                 
                 // Campo de Email
                 ModernTextField(
@@ -166,7 +181,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   },
                 ),
 
-                const SizedBox(height: 18), // Reduzido
+                const SizedBox(height: 20),
 
                 // Campo de Palavra-passe
                 ModernTextField(
@@ -187,13 +202,12 @@ class _SignInScreenState extends State<SignInScreen> {
                   },
                 ),
 
-                const SizedBox(height: 10), // Reduzido
+                const SizedBox(height: 12),
 
                 // Link "Esqueceu a palavra-passe?"
                 Align(
                   alignment: Alignment.centerRight,
-                  child: ModernLinkButton(
-                    text: 'Esqueceu a palavra-passe?',
+                  child: TextButton(
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
@@ -206,71 +220,116 @@ class _SignInScreenState extends State<SignInScreen> {
                         ),
                       );
                     },
+                    child: Text(
+                      'Esqueceu a palavra-passe?',
+                      style: AppTheme.authLinkText.copyWith(
+                        fontSize: 13,
+                      ),
+                    ),
                   ),
                 ),
 
-                const SizedBox(height: 28), // Reduzido
+                const SizedBox(height: 32),
 
                 // Botão de Login
-                ModernButton(
-                  text: 'Entrar',
-                  onPressed: _isLoading ? null : _handleSignIn,
-                  isLoading: _isLoading,
-                  icon: Icons.login,
+                SizedBox(
+                  width: double.infinity,
+                  height: 54,
+                  child: FilledButton(
+                    onPressed: _isLoading ? null : _handleSignIn,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppTheme.authPrimaryGreen,
+                      foregroundColor: Colors.white,
+                      elevation: 2,
+                      shadowColor: AppTheme.authPrimaryGreen.withOpacity(0.4),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: _isLoading 
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.login, size: 20),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Entrar',
+                                style: AppTheme.authButtonText,
+                              ),
+                            ],
+                          ),
+                  ),
                 ),
 
-                const SizedBox(height: 20), // Reduzido
+                const SizedBox(height: 28),
 
                 // Divisor "OU"
                 Row(
                   children: [
                     Expanded(
-                      child: Container(
-                        height: 1,
-                        color: AppTheme.authInputBorder,
+                      child: Divider(
+                        color: AppTheme.authInputBorder.withOpacity(0.6),
+                        thickness: 1,
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Text(
-                        'OU',
+                        'ou',
                         style: AppTheme.authBodyMedium.copyWith(
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 13,
+                          color: AppTheme.authTextSecondary.withOpacity(0.8),
                         ),
                       ),
                     ),
                     Expanded(
-                      child: Container(
-                        height: 1,
-                        color: AppTheme.authInputBorder,
+                      child: Divider(
+                        color: AppTheme.authInputBorder.withOpacity(0.6),
+                        thickness: 1,
                       ),
                     ),
                   ],
                 ),
 
-                const SizedBox(height: 20), // Reduzido
+                const SizedBox(height: 28),
 
                 // Link para Registo
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Ainda não tem conta? ',
+                Center(
+                  child: RichText(
+                    text: TextSpan(
+                      text: 'Ainda não tem conta? ',
                       style: AppTheme.authBodyMedium,
+                      children: [
+                        WidgetSpan(
+                          child: GestureDetector(
+                            onTap: _navigateToSignUp,
+                            child: Text(
+                              'Crie uma aqui',
+                              style: AppTheme.authLinkText.copyWith(
+                                fontWeight: FontWeight.w700,
+                                decoration: TextDecoration.underline,
+                                decorationColor: AppTheme.authPrimaryGreen,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    ModernLinkButton(
-                      text: 'Crie uma',
-                      onPressed: _navigateToSignUp,
-                      style: AppTheme.authLinkText.copyWith(
-                        fontWeight: FontWeight.w700,
-                        decoration: TextDecoration.underline,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
 
-                const SizedBox(height: 12), // Reduzido significativamente
-              ],
+                const SizedBox(height: 16),
+                ],
+              ),
             ),
           ),
         ],

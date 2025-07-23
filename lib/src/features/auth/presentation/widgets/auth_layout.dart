@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import '../../../../shared/widgets/web_svg_asset.dart';
 import '../theme/app_theme.dart';
 
 class AuthLayout extends StatelessWidget {
@@ -61,25 +63,10 @@ class AuthLayout extends StatelessWidget {
 
                       // Logo ou ícone (placeholder)
                       Center(
-                        child: Container(
-                          width: 80,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            gradient: AppTheme.buttonGradient,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppTheme.accentColor.withOpacity(0.3),
-                                blurRadius: 20,
-                                offset: const Offset(0, 10),
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.sports_soccer,
-                            size: 40,
-                            color: Colors.white,
-                          ),
+                        child: WebSvgAsset(
+                          assetPath: 'assets/auth-header.svg',
+                          width: MediaQuery.of(context).size.width,
+                          fit: BoxFit.contain,
                         ),
                       ),
 
