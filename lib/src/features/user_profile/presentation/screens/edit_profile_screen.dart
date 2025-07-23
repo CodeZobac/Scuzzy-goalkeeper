@@ -133,10 +133,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
     final controller = Provider.of<UserProfileController>(context);
 
     return Scaffold(
-      backgroundColor: AppTheme.primaryBackground,
+      backgroundColor: const Color(0xFFFFFFFF),
       body: Container(
         decoration: const BoxDecoration(
-          gradient: AppTheme.primaryGradient,
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFFFFFFFF),
+              Color(0xFF4CAF50),
+            ],
+          ),
         ),
         child: SafeArea(
           child: Column(
@@ -188,17 +195,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
             onPressed: () => Navigator.of(context).pop(),
             icon: const Icon(
               Icons.arrow_back_ios_new,
-              color: AppTheme.primaryText,
+              color: Color(0xFF000000),
             ),
             style: IconButton.styleFrom(
-              backgroundColor: AppTheme.secondaryBackground.withOpacity(0.3),
+              backgroundColor: const Color(0xFF4CAF50).withOpacity(0.3),
               padding: const EdgeInsets.all(12),
             ),
           ),
           const SizedBox(width: 16),
           Text(
             'Editar Perfil',
-            style: AppTheme.headingMedium,
+            style: AppTheme.headingMedium.copyWith(color: const Color(0xFF000000)),
           ),
         ],
       ),
@@ -225,7 +232,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
                       borderRadius: BorderRadius.circular(30),
                       boxShadow: [
                         BoxShadow(
-                          color: AppTheme.accentColor.withOpacity(0.3),
+                          color: const Color(0xFF1B5E20).withOpacity(0.3),
                           blurRadius: 20,
                           offset: const Offset(0, 10),
                         ),
@@ -241,6 +248,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
                             style: AppTheme.headingLarge.copyWith(
                               fontSize: 36,
                               fontWeight: FontWeight.bold,
+                              color: const Color(0xFF000000),
                             ),
                           ),
                         ),
@@ -251,16 +259,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
                             width: 30,
                             height: 30,
                             decoration: BoxDecoration(
-                              color: AppTheme.primaryBackground,
+                              color: const Color(0xFFFFFFFF),
                               borderRadius: BorderRadius.circular(15),
                               border: Border.all(
-                                color: AppTheme.accentColor,
+                                color: const Color(0xFF1B5E20),
                                 width: 2,
                               ),
                             ),
                             child: const Icon(
                               Icons.edit,
-                              color: AppTheme.accentColor,
+                              color: Color(0xFF1B5E20),
                               size: 16,
                             ),
                           ),
@@ -274,6 +282,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
                   'Personalize seu perfil',
                   style: AppTheme.bodyMedium.copyWith(
                     fontSize: 16,
+                    color: Colors.grey[600],
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -290,28 +299,94 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
       'Informações Pessoais',
       Icons.person_outline,
       [
-        CustomTextField(
-          hintText: 'Digite seu nome completo',
-          labelText: 'Nome',
-          prefixIcon: Icons.person_outline,
-          controller: _nameController,
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Nome é obrigatório';
-            }
-            return null;
-          },
+        Theme(
+          data: Theme.of(context).copyWith(
+            inputDecorationTheme: InputDecorationTheme(
+              filled: true,
+              fillColor: const Color(0xFF4CAF50).withOpacity(0.8),
+              hintStyle: TextStyle(
+                color: Colors.grey[800],
+                fontSize: 14,
+              ),
+              labelStyle: const TextStyle(
+                color: Color(0xFF000000),
+                fontSize: 16,
+              ),
+              prefixIconColor: const Color(0xFF000000),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+                borderSide: const BorderSide(
+                  color: Color(0xFF1B5E20),
+                  width: 2,
+                ),
+              ),
+            ),
+          ),
+          child: CustomTextField(
+            floatingLabelBehavior: FloatingLabelBehavior.never,
+            hintText: 'Digite seu nome completo',
+            labelText: 'Nome',
+            prefixIcon: Icons.person_outline,
+            controller: _nameController,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Nome é obrigatório';
+              }
+              return null;
+            },
+          ),
         ),
         const SizedBox(height: AppTheme.spacing),
         _buildGenderDropdown(),
         const SizedBox(height: AppTheme.spacing),
         _buildDateField(),
         const SizedBox(height: AppTheme.spacing),
-        CustomTextField(
-          hintText: 'Digite sua nacionalidade',
-          labelText: 'Nacionalidade',
-          prefixIcon: Icons.flag_outlined,
-          controller: _nationalityController,
+        Theme(
+          data: Theme.of(context).copyWith(
+            inputDecorationTheme: InputDecorationTheme(
+              filled: true,
+              fillColor: const Color(0xFF4CAF50).withOpacity(0.8),
+              hintStyle: TextStyle(
+                color: Colors.grey[800],
+                fontSize: 14,
+              ),
+              labelStyle: const TextStyle(
+                color: Color(0xFF000000),
+                fontSize: 16,
+              ),
+              prefixIconColor: const Color(0xFF000000),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+                borderSide: const BorderSide(
+                  color: Color(0xFF1B5E20),
+                  width: 2,
+                ),
+              ),
+            ),
+          ),
+          child: CustomTextField(
+            floatingLabelBehavior: FloatingLabelBehavior.never,
+            hintText: 'Digite sua nacionalidade',
+            labelText: 'Nacionalidade',
+            prefixIcon: Icons.flag_outlined,
+            controller: _nationalityController,
+          ),
         ),
       ],
     );
@@ -324,20 +399,86 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
       [
         _buildGoalkeeperSwitch(),
         const SizedBox(height: AppTheme.spacing),
-        CustomTextField(
-          hintText: 'Digite o nome do seu clube',
-          labelText: 'Clube',
-          prefixIcon: Icons.groups_outlined,
-          controller: _clubController,
+        Theme(
+          data: Theme.of(context).copyWith(
+            inputDecorationTheme: InputDecorationTheme(
+              filled: true,
+              fillColor: const Color(0xFF4CAF50).withOpacity(0.8),
+              hintStyle: TextStyle(
+                color: Colors.grey[800],
+                fontSize: 14,
+              ),
+              labelStyle: const TextStyle(
+                color: Color(0xFF000000),
+                fontSize: 16,
+              ),
+              prefixIconColor: const Color(0xFF000000),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+                borderSide: const BorderSide(
+                  color: Color(0xFF1B5E20),
+                  width: 2,
+                ),
+              ),
+            ),
+          ),
+          child: CustomTextField(
+            floatingLabelBehavior: FloatingLabelBehavior.never,
+            hintText: 'Digite o nome do seu clube',
+            labelText: 'Clube',
+            prefixIcon: Icons.groups_outlined,
+            controller: _clubController,
+          ),
         ),
         if (_isGoalkeeper) ...[
           const SizedBox(height: AppTheme.spacing),
-          CustomTextField(
-            hintText: 'Digite o preço por jogo (€)',
-            labelText: 'Preço por Jogo',
-            prefixIcon: Icons.euro_outlined,
-            controller: _priceController,
-            keyboardType: TextInputType.number,
+          Theme(
+            data: Theme.of(context).copyWith(
+              inputDecorationTheme: InputDecorationTheme(
+                filled: true,
+                fillColor: const Color(0xFF4CAF50).withOpacity(0.8),
+                hintStyle: TextStyle(
+                  color: Colors.grey[800],
+                  fontSize: 14,
+                ),
+                labelStyle: const TextStyle(
+                  color: Color(0xFF000000),
+                  fontSize: 16,
+                ),
+                prefixIconColor: const Color(0xFF000000),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+                  borderSide: const BorderSide(
+                    color: Color(0xFF1B5E20),
+                    width: 2,
+                  ),
+                ),
+              ),
+            ),
+            child: CustomTextField(
+              floatingLabelBehavior: FloatingLabelBehavior.never,
+              hintText: 'Digite o preço por jogo (€)',
+              labelText: 'Preço por Jogo',
+              prefixIcon: Icons.euro_outlined,
+              controller: _priceController,
+              keyboardType: TextInputType.number,
+            ),
           ),
         ],
       ],
@@ -349,18 +490,84 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
       'Localização',
       Icons.location_on_outlined,
       [
-        CustomTextField(
-          hintText: 'Digite sua cidade',
-          labelText: 'Cidade',
-          prefixIcon: Icons.location_city_outlined,
-          controller: _cityController,
+        Theme(
+          data: Theme.of(context).copyWith(
+            inputDecorationTheme: InputDecorationTheme(
+              filled: true,
+              fillColor: const Color(0xFF4CAF50).withOpacity(0.8),
+              hintStyle: TextStyle(
+                color: Colors.grey[800],
+                fontSize: 14,
+              ),
+              labelStyle: const TextStyle(
+                color: Color(0xFF000000),
+                fontSize: 16,
+              ),
+              prefixIconColor: const Color(0xFF000000),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+                borderSide: const BorderSide(
+                  color: Color(0xFF1B5E20),
+                  width: 2,
+                ),
+              ),
+            ),
+          ),
+          child: CustomTextField(
+            floatingLabelBehavior: FloatingLabelBehavior.never,
+            hintText: 'Digite sua cidade',
+            labelText: 'Cidade',
+            prefixIcon: Icons.location_city_outlined,
+            controller: _cityController,
+          ),
         ),
         const SizedBox(height: AppTheme.spacing),
-        CustomTextField(
-          hintText: 'Digite seu país',
-          labelText: 'País',
-          prefixIcon: Icons.public_outlined,
-          controller: _countryController,
+        Theme(
+          data: Theme.of(context).copyWith(
+            inputDecorationTheme: InputDecorationTheme(
+              filled: true,
+              fillColor: const Color(0xFF4CAF50).withOpacity(0.8),
+              hintStyle: TextStyle(
+                color: Colors.grey[800],
+                fontSize: 14,
+              ),
+              labelStyle: const TextStyle(
+                color: Color(0xFF000000),
+                fontSize: 16,
+              ),
+              prefixIconColor: const Color(0xFF000000),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+                borderSide: const BorderSide(
+                  color: Color(0xFF1B5E20),
+                  width: 2,
+                ),
+              ),
+            ),
+          ),
+          child: CustomTextField(
+            floatingLabelBehavior: FloatingLabelBehavior.never,
+            hintText: 'Digite seu país',
+            labelText: 'País',
+            prefixIcon: Icons.public_outlined,
+            controller: _countryController,
+          ),
         ),
       ],
     );
@@ -377,7 +584,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
             child: Container(
               width: double.infinity,
               decoration: BoxDecoration(
-                color: AppTheme.secondaryBackground,
+                color: const Color(0xFF4CAF50),
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
@@ -386,7 +593,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
                     offset: const Offset(0, 10),
                   ),
                   BoxShadow(
-                    color: AppTheme.accentColor.withOpacity(0.05),
+                    color: const Color(0xFF1B5E20).withOpacity(0.05),
                     blurRadius: 40,
                     offset: const Offset(0, 20),
                   ),
@@ -417,6 +624,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
                           style: AppTheme.headingMedium.copyWith(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
+                            color: const Color(0xFF000000),
                           ),
                         ),
                       ],
@@ -434,24 +642,45 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
   }
   
   Widget _buildGenderDropdown() {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppTheme.secondaryBackground,
-        borderRadius: BorderRadius.circular(AppTheme.borderRadius),
-        border: Border.all(
-          color: AppTheme.secondaryText.withOpacity(0.3),
+    return Theme(
+      data: Theme.of(context).copyWith(
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: const Color(0xFF283c44),
+          hintStyle: TextStyle(
+            color: Colors.grey[800],
+            fontSize: 14,
+          ),
+          labelStyle: const TextStyle(
+            color: Color(0xFFFFFFFF),
+            fontSize: 16,
+          ),
+          prefixIconColor: const Color(0xFFFFFFFF),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+            borderSide: const BorderSide(
+              color: Color(0xFF283c44),
+              width: 2,
+            ),
+          ),
         ),
       ),
       child: DropdownButtonFormField<String>(
         value: _selectedGender,
-        decoration: const InputDecoration(
-          labelText: 'Género',
-          prefixIcon: Icon(Icons.wc, color: AppTheme.accentColor),
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: InputDecoration(
+          hintText: 'Genero',
+          prefixIcon: Icon(Icons.wc, color: const Color(0xFFFFFFFF).withOpacity(0.6)),
         ),
-        dropdownColor: AppTheme.secondaryBackground,
-        style: AppTheme.bodyLarge,
+        dropdownColor: const Color(0xFF283c44),
+        style: AppTheme.bodyLarge.copyWith(color: const Color(0xFFFFFFFF)),
         items: _genderOptions.map((String value) {
           return DropdownMenuItem<String>(
             value: value,
@@ -472,11 +701,44 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
     return GestureDetector(
       onTap: _selectDate,
       child: AbsorbPointer(
-        child: CustomTextField(
-          hintText: 'Selecione sua data de nascimento',
-          labelText: 'Data de Nascimento',
-          prefixIcon: Icons.calendar_today_outlined,
-          controller: _birthDateController,
+        child: Theme(
+          data: Theme.of(context).copyWith(
+            inputDecorationTheme: InputDecorationTheme(
+              filled: true,
+              fillColor: const Color(0xFF4CAF50).withOpacity(0.8),
+              hintStyle: TextStyle(
+                color: Colors.grey[800],
+                fontSize: 14,
+              ),
+              labelStyle: const TextStyle(
+                color: Color(0xFF000000),
+                fontSize: 16,
+              ),
+              prefixIconColor: const Color(0xFF000000),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+                borderSide: const BorderSide(
+                  color: Color(0xFF1B5E20),
+                  width: 2,
+                ),
+              ),
+            ),
+          ),
+          child: CustomTextField(
+            floatingLabelBehavior: FloatingLabelBehavior.never,
+            hintText: 'Selecione sua data de nascimento',
+            labelText: 'Data de Nascimento',
+            prefixIcon: Icons.calendar_today_outlined,
+            controller: _birthDateController,
+          ),
         ),
       ),
     );
@@ -486,10 +748,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.primaryBackground.withOpacity(0.3),
+        color: const Color(0xFFFFFFFF).withOpacity(0.3),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: _isGoalkeeper ? AppTheme.successColor : AppTheme.secondaryText.withOpacity(0.3),
+          color: _isGoalkeeper ? Colors.purple : Colors.grey[600]!.withOpacity(0.3),
           width: 2,
         ),
       ),
@@ -497,7 +759,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
         children: [
           Icon(
             Icons.sports_soccer,
-            color: _isGoalkeeper ? AppTheme.successColor : AppTheme.secondaryText,
+            color: _isGoalkeeper ? Colors.purple : Colors.grey[600],
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -508,13 +770,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
                   'Sou Guarda-Redes',
                   style: AppTheme.bodyLarge.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: _isGoalkeeper ? AppTheme.successColor : AppTheme.primaryText,
+                    color: _isGoalkeeper ? Colors.purple : const Color(0xFF000000),
                   ),
                 ),
                 Text(
                   'Ative se você é um guarda-redes',
                   style: AppTheme.bodyMedium.copyWith(
                     fontSize: 12,
+                    color: Colors.grey[600],
                   ),
                 ),
               ],
@@ -527,8 +790,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
                 _isGoalkeeper = value;
               });
             },
-            activeColor: AppTheme.successColor,
-            inactiveTrackColor: AppTheme.secondaryText.withOpacity(0.3),
+            activeColor: Colors.purple,
+            inactiveTrackColor: Colors.grey[600]!.withOpacity(0.3),
           ),
         ],
       ),
@@ -561,11 +824,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: AppTheme.accentColor,
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF1B5E20),
               onPrimary: Colors.white,
-              surface: AppTheme.secondaryBackground,
-              onSurface: AppTheme.primaryText,
+              surface: Color(0xFF4CAF50),
+              onSurface: Color(0xFF000000),
             ),
           ),
           child: child!,
