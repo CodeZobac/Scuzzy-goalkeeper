@@ -11,6 +11,10 @@ class UserProfile {
   String? country;
   bool isGoalkeeper;
   double? pricePerGame;
+  List<int>? reflexes;
+  List<int>? positioning;
+  List<int>? distribution;
+  List<int>? communication;
 
   UserProfile({
     required this.id,
@@ -23,6 +27,10 @@ class UserProfile {
     this.country,
     this.isGoalkeeper = false,
     this.pricePerGame,
+    this.reflexes,
+    this.positioning,
+    this.distribution,
+    this.communication,
   });
 
   Map<String, dynamic> toMap() {
@@ -37,6 +45,10 @@ class UserProfile {
       'country': country,
       'is_goalkeeper': isGoalkeeper,
       'price_per_game': pricePerGame,
+      'reflexes': reflexes,
+      'positioning': positioning,
+      'distribution': distribution,
+      'communication': communication,
     };
   }
 
@@ -54,6 +66,10 @@ class UserProfile {
       country: map['country'],
       isGoalkeeper: map['is_goalkeeper'] ?? false,
       pricePerGame: map['price_per_game']?.toDouble(),
+      reflexes: map['reflexes'] != null ? List<int>.from(map['reflexes']) : null,
+      positioning: map['positioning'] != null ? List<int>.from(map['positioning']) : null,
+      distribution: map['distribution'] != null ? List<int>.from(map['distribution']) : null,
+      communication: map['communication'] != null ? List<int>.from(map['communication']) : null,
     );
   }
 

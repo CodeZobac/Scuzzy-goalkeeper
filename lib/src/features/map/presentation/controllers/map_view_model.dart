@@ -1,298 +1,315 @@
-import 'dart:async';
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter/scheduler.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../data/repositories/field_repository.dart';
 import '../../domain/models/map_field.dart';
-import '../widgets/field_marker.dart';
 import '../providers/field_selection_provider.dart';
 
 class MapViewModel extends ChangeNotifier {
-  final FieldRepository _fieldRepository = FieldRepository();
+  final FieldRepository _fieldRepository;
   final FieldSelectionProvider _fieldSelectionProvider;
+  MapController? _mapController;
 
-  GoogleMapController? _mapController;
-  final Set<Marker> _markers = {};
-  final Set<Marker> _allMarkers = {};
-  bool _isMapReady = false;
-  LatLng? _userPosition;
-  String? _mapStyle;
-  List<MapField> _allFields = [];
+  List<MapField> _fields = [];
   List<MapField> _filteredFields = [];
+  Position? _userLocation;
+  bool _isLoading = false;
+  String? _error;
+  
+  // Filter properties
+  List<String> _selectedSurfaces = [];
+  List<String> _selectedSizes = [];
+  double _maxDistance = 50.0; // km
+  
+  // Additional filter properties for compatibility
   String? _selectedCity;
   String? _selectedAvailability;
   List<String> _availableCities = [];
   
-  MapViewModel(this._fieldSelectionProvider);
+  MapViewModel(this._fieldRepository, this._fieldSelectionProvider);
 
   // Getters
-  Set<Marker> get markers => _markers;
-  bool get isMapReady => _isMapReady;
-  LatLng? get userPosition => _userPosition;
-  MapField? get selectedField => _fieldSelectionProvider.selectedField;
-  GoogleMapController? get mapController => _mapController;
-  String? get mapStyle => _mapStyle;
-  List<String> get availableCities => _availableCities;
+  List<MapField> get fields => _filteredFields;
+  Position? get userLocation => _userLocation;
+  bool get isLoading => _isLoading;
+  String? get error => _error;
+  MapController? get mapController => _mapController;
+  List<String> get selectedSurfaces => _selectedSurfaces;
+  List<String> get selectedSizes => _selectedSizes;
+  double get maxDistance => _maxDistance;
   String? get selectedCity => _selectedCity;
   String? get selectedAvailability => _selectedAvailability;
-  List<MapField> get filteredFields => _filteredFields;
+  List<String> get availableCities => _availableCities;
 
-  void setMapStyle(String style) {
-    _mapStyle = style;
-    _mapController?.setMapStyle(style);
-    notifyListeners();
-  }
-
-  void onMapCreated(GoogleMapController controller) {
+  // Set the map controller from the map screen
+  void setMapController(MapController controller) {
     _mapController = controller;
-    if (_mapStyle != null) {
-      _mapController?.setMapStyle(_mapStyle);
-    }
-    _isMapReady = true;
-    _loadFields();
-    _determinePosition();
-    notifyListeners();
   }
 
+  // Initialize the map
+  Future<void> initialize() async {
+    _setLoading(true);
+    try {
+      await _loadFields();
+      await _getCurrentLocation();
+      _applyFilters();
+    } catch (e) {
+      _setError('Failed to initialize map: $e');
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  // Load fields from repository
   Future<void> _loadFields() async {
     try {
-      _allFields = await _fieldRepository.getApprovedFields();
-      _filteredFields = _allFields;
-      
-      // Extract unique cities from fields
-      _availableCities = _allFields
-          .where((field) => field.city != null && field.city!.isNotEmpty)
-          .map((field) => field.city!)
-          .toSet()
-          .toList();
-      _availableCities.sort();
-      
-      await _updateMarkers();
-      notifyListeners();
+      _fields = await _fieldRepository.getApprovedFields();
     } catch (e) {
-      print('Error loading fields: $e');
+      throw Exception('Failed to load fields: $e');
     }
   }
 
-  void clearSelectedField() {
-    _fieldSelectionProvider.clearSelection();
-  }
-
-  // Filtering methods
-  void filterByCity(String city) {
-    _selectedCity = city;
-    _applyFilters();
-    notifyListeners();
-  }
-
-  void filterByAvailability(String availability) {
-    _selectedAvailability = availability;
-    _applyFilters();
-    notifyListeners();
-  }
-
-  void clearCityFilter() {
-    _selectedCity = null;
-    _applyFilters();
-    notifyListeners();
-  }
-
-  void clearAvailabilityFilter() {
-    _selectedAvailability = null;
-    _applyFilters();
-    notifyListeners();
-  }
-
-  void clearAllFilters() {
-    _selectedCity = null;
-    _selectedAvailability = null;
-    _applyFilters();
-    notifyListeners();
-  }
-
-  void _applyFilters() {
-    _filteredFields = _allFields.where((field) {
-      bool cityMatch = _selectedCity == null || field.city == _selectedCity;
-      bool availabilityMatch = _selectedAvailability == null || _matchesAvailability(field, _selectedAvailability!);
-      return cityMatch && availabilityMatch;
-    }).toList();
-    _updateMarkers();
-  }
-
-  bool _matchesAvailability(MapField field, String availability) {
-    // For now, we'll simulate availability matching
-    // In a real implementation, this would check against actual booking data
-    switch (availability) {
-      case 'Disponível agora':
-        return true; // Simulate that some fields are available now
-      case 'Disponível hoje':
-        return field.name.contains('Municipal') || field.name.contains('Complexo');
-      case 'Disponível esta semana':
-        return !field.name.contains('Estádio');
-      case 'Sempre disponível':
-        return field.name.contains('Campo');
-      default:
-        return true;
-    }
-  }
-
-  Future<void> _updateMarkers() async {
-    // Clear existing field markers (keep user location marker)
-    _markers.removeWhere((marker) => marker.markerId.value != 'user_location');
-    
-    final customIcon = await _createStadiumMarker();
-    
-    final newMarkers = _filteredFields.map((field) {
-      return Marker(
-        markerId: MarkerId(field.id),
-        position: LatLng(field.latitude, field.longitude),
-        infoWindow: InfoWindow(
-          title: field.name,
-          snippet: field.city != null ? '${field.city} - ${field.description ?? "Campo de futebol"}' : field.description ?? 'Campo de futebol',
-        ),
-        icon: customIcon,
-        onTap: () {
-          _fieldSelectionProvider.selectField(field);
-        },
-      );
-    }).toSet();
-
-    _markers.addAll(newMarkers);
-  }
-
-  Future<BitmapDescriptor> _createStadiumMarker() async {
-    // Create a simple but distinctive marker for football fields
-    final pictureRecorder = ui.PictureRecorder();
-    final canvas = Canvas(pictureRecorder);
-    final size = 60.0;
-    
-    final rect = Rect.fromLTWH(0, 0, size, size);
-    final centerX = size / 2;
-    final centerY = size / 2;
-    
-    // Create gradient paint
-    final gradientPaint = Paint()
-      ..shader = ui.Gradient.radial(
-        Offset(centerX, centerY),
-        size / 2,
-        [const Color(0xFF6C5CE7), const Color(0xFF74B9FF)],
-        [0.0, 1.0],
-      );
-    
-    // Draw main circle
-    canvas.drawCircle(Offset(centerX, centerY), size / 2 - 2, gradientPaint);
-    
-    // Draw white border
-    final borderPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3;
-    
-    canvas.drawCircle(Offset(centerX, centerY), size / 2 - 2, borderPaint);
-    
-    // Draw stadium icon (simplified)
-    final iconPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-    
-    // Draw stadium shape (rectangle with rounded corners)
-    final stadiumRect = Rect.fromCenter(
-      center: Offset(centerX, centerY),
-      width: size * 0.5,
-      height: size * 0.35,
-    );
-    
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(stadiumRect, const Radius.circular(4)),
-      iconPaint,
-    );
-    
-    // Draw field lines
-    final linePaint = Paint()
-      ..color = const Color(0xFF6C5CE7)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
-    
-    // Center line
-    canvas.drawLine(
-      Offset(centerX, stadiumRect.top + 2),
-      Offset(centerX, stadiumRect.bottom - 2),
-      linePaint,
-    );
-    
-    // Goal areas
-    final goalWidth = stadiumRect.width * 0.3;
-    final goalHeight = stadiumRect.height * 0.4;
-    
-    canvas.drawRect(
-      Rect.fromCenter(
-        center: Offset(stadiumRect.left + goalWidth / 2, centerY),
-        width: goalWidth,
-        height: goalHeight,
-      ),
-      linePaint,
-    );
-    
-    canvas.drawRect(
-      Rect.fromCenter(
-        center: Offset(stadiumRect.right - goalWidth / 2, centerY),
-        width: goalWidth,
-        height: goalHeight,
-      ),
-      linePaint,
-    );
-    
-    final picture = pictureRecorder.endRecording();
-    final image = await picture.toImage(size.toInt(), size.toInt());
-    final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-    
-    return BitmapDescriptor.fromBytes(bytes!.buffer.asUint8List());
-  }
-
-  Future<void> _determinePosition() async {
+  // Get user's current location
+  Future<void> _getCurrentLocation() async {
     try {
-      bool serviceEnabled;
-      LocationPermission permission;
-
-      serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        return;
+        throw Exception('Location services are disabled');
       }
 
-      permission = await Geolocator.checkPermission();
+      LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
-          return;
+          throw Exception('Location permissions are denied');
         }
       }
 
       if (permission == LocationPermission.deniedForever) {
-        return;
+        throw Exception('Location permissions are permanently denied');
       }
 
-      final position = await Geolocator.getCurrentPosition();
-      _userPosition = LatLng(position.latitude, position.longitude);
-      _markers.add(
+      _userLocation = await Geolocator.getCurrentPosition();
+    } catch (e) {
+      // Don't throw, just log - map can work without location
+      debugPrint('Failed to get location: $e');
+    }
+  }
+
+  // Apply filters to fields
+  void _applyFilters() {
+    _filteredFields = _fields.where((field) {
+      // Surface filter
+      if (_selectedSurfaces.isNotEmpty && 
+          (field.surfaceType == null || !_selectedSurfaces.contains(field.surfaceType!))) {
+        return false;
+      }
+
+      // Size filter
+      if (_selectedSizes.isNotEmpty && 
+          (field.dimensions == null || !_selectedSizes.contains(field.dimensions!))) {
+        return false;
+      }
+
+      // City filter
+      if (_selectedCity != null && 
+          (field.city == null || field.city != _selectedCity)) {
+        return false;
+      }
+
+      // Availability filter (placeholder - would need availability data in MapField)
+      if (_selectedAvailability != null) {
+        // This would need actual availability logic
+        // For now, just pass through
+      }
+
+      // Distance filter
+      if (_userLocation != null) {
+        double distance = Geolocator.distanceBetween(
+          _userLocation!.latitude,
+          _userLocation!.longitude,
+          field.latitude,
+          field.longitude,
+        ) / 1000; // Convert to km
+
+        if (distance > _maxDistance) {
+          return false;
+        }
+      }
+
+      return true;
+    }).toList();
+    
+    // Update available cities based on current fields
+    _availableCities = _fields
+        .where((field) => field.city != null)
+        .map((field) => field.city!)
+        .toSet()
+        .toList();
+    
+    notifyListeners();
+  }
+
+  // Update surface filter
+  void updateSurfaceFilter(List<String> surfaces) {
+    _selectedSurfaces = surfaces;
+    _applyFilters();
+  }
+
+  // Update size filter
+  void updateSizeFilter(List<String> sizes) {
+    _selectedSizes = sizes;
+    _applyFilters();
+  }
+
+  // Update distance filter
+  void updateDistanceFilter(double distance) {
+    _maxDistance = distance;
+    _applyFilters();
+  }
+
+  // Clear all filters
+  void clearFilters() {
+    _selectedSurfaces.clear();
+    _selectedSizes.clear();
+    _maxDistance = 50.0;
+    _selectedCity = null;
+    _selectedAvailability = null;
+    _applyFilters();
+  }
+
+  // Additional filter methods for compatibility
+  void filterByCity(String? city) {
+    _selectedCity = city;
+    _applyFilters();
+  }
+
+  void filterByAvailability(String? availability) {
+    _selectedAvailability = availability;
+    _applyFilters();
+  }
+
+  void clearAllFilters() {
+    clearFilters();
+  }
+
+  void centerOnUserLocation() {
+    centerOnUser();
+  }
+
+  // Select a field
+  void selectField(MapField field) {
+    _fieldSelectionProvider.selectField(field);
+    
+    // Move map to field location - but only if map is ready
+    _moveMapToLocation(field.latitude, field.longitude);
+  }
+
+  // Safely move map to a location
+  void _moveMapToLocation(double latitude, double longitude) {
+    if (_mapController == null) {
+      debugPrint('MapController not set yet');
+      return;
+    }
+    
+    // Use post frame callback to ensure map is rendered
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      try {
+        _mapController!.move(
+          LatLng(latitude, longitude),
+          15.0, // zoom level
+        );
+      } catch (e) {
+        // If map controller isn't ready, silently fail
+        debugPrint('Map controller not ready: $e');
+      }
+    });
+  }
+
+  // Build markers for flutter_map
+  List<Marker> buildMarkers() {
+    List<Marker> markers = [];
+
+    // Add field markers
+    for (MapField field in _filteredFields) {
+      markers.add(
         Marker(
-          markerId: const MarkerId('user_location'),
-          position: _userPosition!,
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
-          infoWindow: const InfoWindow(title: 'Sua Localização'),
+          point: LatLng(field.latitude, field.longitude),
+          width: 40,
+          height: 40,
+          child: GestureDetector(
+            onTap: () => selectField(field),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.green,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2),
+              ),
+              child: const Icon(
+                Icons.sports_soccer,
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
+          ),
         ),
       );
-      _mapController?.animateCamera(CameraUpdate.newLatLngZoom(_userPosition!, 15));
-      notifyListeners();
-    } catch (e) {
-      print("Error getting user location: $e");
     }
+
+    // Add user location marker if available
+    if (_userLocation != null) {
+      markers.add(
+        Marker(
+          point: LatLng(_userLocation!.latitude, _userLocation!.longitude),
+          width: 30,
+          height: 30,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.blue,
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 2),
+            ),
+            child: const Icon(
+              Icons.person,
+              color: Colors.white,
+              size: 15,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return markers;
+  }
+
+  // Center map on user location
+  void centerOnUser() {
+    if (_userLocation != null) {
+      _moveMapToLocation(_userLocation!.latitude, _userLocation!.longitude);
+    }
+  }
+
+  // Refresh data
+  Future<void> refresh() async {
+    await initialize();
+  }
+
+  // Private helper methods
+  void _setLoading(bool loading) {
+    _isLoading = loading;
+    notifyListeners();
+  }
+
+  void _setError(String? error) {
+    _error = error;
+    notifyListeners();
   }
 
   @override
   void dispose() {
-    _mapController?.dispose();
+    // Don't dispose the map controller since it's managed by the map screen
     super.dispose();
   }
 }

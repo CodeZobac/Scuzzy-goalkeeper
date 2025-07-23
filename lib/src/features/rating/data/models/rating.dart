@@ -8,6 +8,10 @@ class Rating {
   final int rating;
   final String? comment;
   final DateTime createdAt;
+  final int? reflexes;
+  final int? positioning;
+  final int? distribution;
+  final int? communication;
 
   Rating({
     required this.id,
@@ -17,6 +21,10 @@ class Rating {
     required this.rating,
     this.comment,
     required this.createdAt,
+    this.reflexes,
+    this.positioning,
+    this.distribution,
+    this.communication,
   });
 
   Map<String, dynamic> toMap() {
@@ -28,6 +36,10 @@ class Rating {
       'rating': rating,
       'comment': comment,
       'created_at': createdAt.toIso8601String(),
+      'reflexes': reflexes,
+      'positioning': positioning,
+      'distribution': distribution,
+      'communication': communication,
     };
   }
 
@@ -40,6 +52,10 @@ class Rating {
       rating: map['rating'] as int,
       comment: map['comment'],
       createdAt: DateTime.parse(map['created_at']),
+      reflexes: map['reflexes'],
+      positioning: map['positioning'],
+      distribution: map['distribution'],
+      communication: map['communication'],
     );
   }
 
@@ -72,6 +88,10 @@ class Rating {
       'goalkeeper_id': goalkeeperId,
       'rating': rating,
       'comment': comment,
+      'reflexes': reflexes,
+      'positioning': positioning,
+      'distribution': distribution,
+      'communication': communication,
     };
   }
 }

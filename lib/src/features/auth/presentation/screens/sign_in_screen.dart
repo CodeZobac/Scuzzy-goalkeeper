@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import '../widgets/auth_layout.dart';
-import '../widgets/custom_text_field.dart';
-import '../widgets/primary_button.dart';
+import '../widgets/modern_auth_layout.dart';
+import '../widgets/modern_text_field.dart';
+import '../widgets/modern_button.dart';
+import '../widgets/animation_widgets.dart';
 import '../theme/app_theme.dart';
 import '../../data/auth_repository.dart';
 
@@ -99,7 +100,11 @@ class _SignInScreenState extends State<SignInScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMessage),
-            backgroundColor: AppTheme.errorColor,
+            backgroundColor: AppTheme.authError,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
         );
       }
@@ -109,7 +114,8 @@ class _SignInScreenState extends State<SignInScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Ocorreu um erro inesperado. Tente novamente.'),
-            backgroundColor: AppTheme.errorColor,
+            backgroundColor: AppTheme.authError,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
@@ -128,151 +134,146 @@ class _SignInScreenState extends State<SignInScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return AuthLayout(
+    return ModernAuthLayout(
       title: 'Bem-vindo de volta!',
-      subtitle: 'Faça login para continuar',
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Campo de Email
-            FadeInSlideUp(
-              delay: const Duration(milliseconds: 100),
-              child: EmailTextField(
-                controller: _emailController,
-                focusNode: _emailFocusNode,
-                validator: _validateEmail,
-                errorText: _emailError,
-                onChanged: (value) {
-                  // Limpar erro quando o usuário começar a digitar
-                  if (_emailError != null) {
-                    setState(() {
-                      _emailError = null;
-                    });
-                  }
-                },
-              ),
-            ),
-
-            const SizedBox(height: AppTheme.spacing),
-
-            // Campo de Palavra-passe
-            FadeInSlideUp(
-              delay: const Duration(milliseconds: 200),
-              child: PasswordTextField(
-                controller: _passwordController,
-                focusNode: _passwordFocusNode,
-                validator: _validatePassword,
-                errorText: _passwordError,
-                onChanged: (value) {
-                  // Limpar erro quando o usuário começar a digitar
-                  if (_passwordError != null) {
-                    setState(() {
-                      _passwordError = null;
-                    });
-                  }
-                },
-              ),
-            ),
-
-            const SizedBox(height: AppTheme.spacingSmall),
-
-            // Link "Esqueceu a palavra-passe?"
-            FadeInSlideUp(
-              delay: const Duration(milliseconds: 250),
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: LinkButton(
-                  text: 'Esqueceu a palavra-passe?',
-                  onPressed: () {
-                    // TODO: Implementar navegação para recuperação de senha
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Funcionalidade em desenvolvimento'),
-                        backgroundColor: AppTheme.accentColor,
-                      ),
-                    );
+      subtitle: 'Acesse a sua conta para encontrar o guarda-redes perfeito',
+      child: StaggeredFadeInSlideUp(
+        baseDelay: const Duration(milliseconds: 400),
+        children: [
+          Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: 4), // Reduzido
+                
+                // Campo de Email
+                ModernTextField(
+                  hintText: 'Digite o seu email',
+                  prefixIcon: Icons.email_outlined,
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+                  controller: _emailController,
+                  focusNode: _emailFocusNode,
+                  validator: _validateEmail,
+                  errorText: _emailError,
+                  onChanged: (value) {
+                    if (_emailError != null) {
+                      setState(() {
+                        _emailError = null;
+                      });
+                    }
                   },
-                  style: AppTheme.bodyMedium.copyWith(
-                    color: AppTheme.accentColor,
-                    decoration: TextDecoration.underline,
+                ),
+
+                const SizedBox(height: 18), // Reduzido
+
+                // Campo de Palavra-passe
+                ModernTextField(
+                  hintText: 'Digite a sua palavra-passe',
+                  prefixIcon: Icons.lock_outline,
+                  isPassword: true,
+                  textInputAction: TextInputAction.done,
+                  controller: _passwordController,
+                  focusNode: _passwordFocusNode,
+                  validator: _validatePassword,
+                  errorText: _passwordError,
+                  onChanged: (value) {
+                    if (_passwordError != null) {
+                      setState(() {
+                        _passwordError = null;
+                      });
+                    }
+                  },
+                ),
+
+                const SizedBox(height: 10), // Reduzido
+
+                // Link "Esqueceu a palavra-passe?"
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: ModernLinkButton(
+                    text: 'Esqueceu a palavra-passe?',
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text('Funcionalidade em desenvolvimento'),
+                          backgroundColor: AppTheme.authPrimaryGreen,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
-              ),
-            ),
 
-            const SizedBox(height: AppTheme.spacingLarge),
+                const SizedBox(height: 28), // Reduzido
 
-            // Botão de Login
-            FadeInSlideUp(
-              delay: const Duration(milliseconds: 300),
-              child: PrimaryButton(
-                text: 'Entrar',
-                onPressed: _isLoading ? null : _handleSignIn,
-                isLoading: _isLoading,
-                icon: Icons.login,
-              ),
-            ),
+                // Botão de Login
+                ModernButton(
+                  text: 'Entrar',
+                  onPressed: _isLoading ? null : _handleSignIn,
+                  isLoading: _isLoading,
+                  icon: Icons.login,
+                ),
 
-            const SizedBox(height: AppTheme.spacingLarge),
+                const SizedBox(height: 20), // Reduzido
 
-            // Divisor "OU"
-            FadeInSlideUp(
-              delay: const Duration(milliseconds: 350),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      height: 1,
-                      color: AppTheme.secondaryText.withOpacity(0.3),
+                // Divisor "OU"
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        height: 1,
+                        color: AppTheme.authInputBorder,
+                      ),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      'OU',
-                      style: AppTheme.bodyMedium,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        'OU',
+                        style: AppTheme.authBodyMedium.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
-                  ),
-                  Expanded(
-                    child: Container(
-                      height: 1,
-                      color: AppTheme.secondaryText.withOpacity(0.3),
+                    Expanded(
+                      child: Container(
+                        height: 1,
+                        color: AppTheme.authInputBorder,
+                      ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
+
+                const SizedBox(height: 20), // Reduzido
+
+                // Link para Registo
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Ainda não tem conta? ',
+                      style: AppTheme.authBodyMedium,
+                    ),
+                    ModernLinkButton(
+                      text: 'Crie uma',
+                      onPressed: _navigateToSignUp,
+                      style: AppTheme.authLinkText.copyWith(
+                        fontWeight: FontWeight.w700,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 12), // Reduzido significativamente
+              ],
             ),
-
-            const SizedBox(height: AppTheme.spacingLarge),
-
-            // Link para Registo
-            FadeInSlideUp(
-              delay: const Duration(milliseconds: 400),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Ainda não tem conta? ',
-                    style: AppTheme.bodyMedium,
-                  ),
-                  LinkButton(
-                    text: 'Crie uma',
-                    onPressed: _navigateToSignUp,
-                    style: AppTheme.bodyMedium.copyWith(
-                      color: AppTheme.accentColor,
-                      fontWeight: FontWeight.w600,
-                      decoration: TextDecoration.underline,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: AppTheme.spacingLarge),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

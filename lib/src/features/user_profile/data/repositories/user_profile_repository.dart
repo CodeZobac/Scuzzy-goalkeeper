@@ -13,7 +13,7 @@ class UserProfileRepository {
 
     final response = await _supabase
         .from('users')
-        .select()
+        .select('*, reflexes, positioning, distribution, communication')
         .eq('id', user.id)
         .single();
 
