@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
-import '../widgets/modern_auth_layout.dart';
+import 'package:flutter/services.dart';
+import '../widgets/responsive_auth_layout.dart';
 import '../widgets/modern_text_field.dart';
 import '../widgets/modern_button.dart';
 import '../widgets/animation_widgets.dart';
 import '../theme/app_theme.dart';
 import '../../data/auth_repository.dart';
+import '../../../../shared/utils/responsive_utils.dart';
+import '../../../../core/error_handling/error_boundary.dart';
+import '../../../../core/error_handling/network_error_handler.dart';
+import '../../../../core/error_handling/comprehensive_error_handler.dart';
+import '../../../../core/logging/error_logger.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -16,7 +22,7 @@ class SignInScreen extends StatefulWidget {
   State<SignInScreen> createState() => _SignInScreenState();
 }
 
-class _SignInScreenState extends State<SignInScreen> {
+class _SignInScreenState extends State<SignInScreen> with ErrorHandlingMixin {
   final _authRepository = AuthRepository();
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
@@ -62,14 +68,25 @@ class _SignInScreenState extends State<SignInScreen> {
     return null;
   }
 
+  void _handleFieldSubmitted(String value) {
+    if (_emailFocusNode.hasFocus) {
+      _passwordFocusNode.requestFocus();
+    } else if (_passwordFocusNode.hasFocus) {
+      _handleSignIn();
+    }
+  }
+
   Future<void> _handleSignIn() async {
-    // Limpar erros anteriores
+    // Dismiss keyboard
+    FocusScope.of(context).unfocus();
+    
+    // Clear previous errors
     setState(() {
       _emailError = null;
       _passwordError = null;
     });
 
-    // Validar formulário
+    // Validate form
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -79,45 +96,54 @@ class _SignInScreenState extends State<SignInScreen> {
     });
 
     try {
-      await _authRepository.signInWithPassword(
-        email: _emailController.text,
-        password: _passwordController.text,
+      // Use network error handler with retry mechanism
+      await NetworkErrorHandler.retryOperation(
+        () => _authRepository.signInWithPassword(
+          email: _emailController.text,
+          password: _passwordController.text,
+        ),
+        context: 'SIGN_IN',
+        maxRetries: 2,
+        shouldRetry: (error) {
+          // Don't retry user credential errors
+          if (error is AuthException) {
+            return !error.message.toLowerCase().contains('invalid login credentials') &&
+                   !error.message.toLowerCase().contains('email not confirmed');
+          }
+          return true;
+        },
       );
 
       if (mounted) {
-        Navigator.of(context).pushReplacementNamed('/home');
-      }
-    } on AuthException catch (e) {
-      if (mounted) {
-        debugPrint('Sign in error: ${e.message}');
-        String errorMessage = 'Ocorreu um erro ao fazer login. Tente novamente.';
-        if (e.message.contains('Invalid login credentials')) {
-          errorMessage = 'Credenciais inválidas. Verifique o seu email e palavra-passe.';
-        } else if (e.message.contains('Email not confirmed')) {
-          errorMessage = 'Email não confirmado. Verifique a sua caixa de entrada.';
-        }
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            backgroundColor: AppTheme.authError,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
+        // Log successful sign-in
+        ErrorLogger.logInfo(
+          'User signed in successfully',
+          context: 'AUTH_SUCCESS',
+          additionalData: {'email_domain': _emailController.text.split('@').last},
         );
+        
+        Navigator.of(context).pushReplacementNamed('/home');
       }
     } catch (e) {
       if (mounted) {
-        debugPrint('Sign in error: $e');
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Ocorreu um erro inesperado. Tente novamente.'),
-            backgroundColor: AppTheme.authError,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        final errorMessage = NetworkErrorHandler.handleAuthError(e);
+        
+        // Show user-friendly error message
+        _showErrorSnackBar(errorMessage);
+        
+        // Set field-specific errors if applicable
+        if (e is AuthException) {
+          if (e.message.toLowerCase().contains('invalid login credentials')) {
+            setState(() {
+              _emailError = 'Credenciais inválidas';
+              _passwordError = 'Credenciais inválidas';
+            });
+          } else if (e.message.toLowerCase().contains('email not confirmed')) {
+            setState(() {
+              _emailError = 'Email não confirmado';
+            });
+          }
+        }
       }
     } finally {
       if (mounted) {
@@ -128,39 +154,81 @@ class _SignInScreenState extends State<SignInScreen> {
     }
   }
 
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(
+              Icons.error_outline,
+              color: Colors.white,
+              size: 20,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(fontSize: 14),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: AppTheme.authError,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        duration: const Duration(seconds: 4),
+        action: SnackBarAction(
+          label: 'Tentar novamente',
+          textColor: Colors.white,
+          onPressed: _handleSignIn,
+        ),
+      ),
+    );
+  }
+
   void _navigateToSignUp() {
     Navigator.of(context).pushNamed('/signup');
   }
 
   @override
   Widget build(BuildContext context) {
-    return ModernAuthLayout(
-      title: 'Bem-vindo de volta!',
-      subtitle: 'Acesse a sua conta para encontrar o guarda-redes perfeito',
-      child: StaggeredFadeInSlideUp(
-        baseDelay: const Duration(milliseconds: 400),
-        children: [
-          // Compact form container
-          Container(
-            constraints: const BoxConstraints(maxWidth: 400),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                // Welcome message
+    return AuthErrorBoundary(
+      onAuthError: () {
+        // Clear sensitive data on auth error
+        _emailController.clear();
+        _passwordController.clear();
+      },
+      child: ResponsiveAuthLayout(
+        title: 'Bem-vindo de volta!',
+        subtitle: 'Acesse a sua conta para encontrar o guarda-redes perfeito',
+        child: StaggeredFadeInSlideUp(
+          baseDelay: const Duration(milliseconds: 400),
+          children: [
+          Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Welcome message with responsive font size
                 Center(
                   child: Text(
                     'Acesse sua conta',
                     style: AppTheme.authHeadingSmall.copyWith(
                       color: AppTheme.authPrimaryGreen,
-                      fontSize: 20,
+                      fontSize: ResponsiveUtils.getResponsiveFontSize(
+                        context,
+                        mobile: 20,
+                        tablet: 22,
+                        desktop: 24,
+                      ),
                     ),
                   ),
                 ),
                 
-                const SizedBox(height: 24),
+                SizedBox(height: ResponsiveUtils.getResponsiveSpacing(context, mobile: 28)),
                 
                 // Campo de Email
                 ModernTextField(
@@ -172,6 +240,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   focusNode: _emailFocusNode,
                   validator: _validateEmail,
                   errorText: _emailError,
+                  showValidationIcon: true,
                   onChanged: (value) {
                     if (_emailError != null) {
                       setState(() {
@@ -179,9 +248,10 @@ class _SignInScreenState extends State<SignInScreen> {
                       });
                     }
                   },
+                  onFieldSubmitted: _handleFieldSubmitted,
                 ),
 
-                const SizedBox(height: 20),
+                SizedBox(height: ResponsiveUtils.getResponsiveSpacing(context, mobile: 24)),
 
                 // Campo de Palavra-passe
                 ModernTextField(
@@ -193,6 +263,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   focusNode: _passwordFocusNode,
                   validator: _validatePassword,
                   errorText: _passwordError,
+                  showValidationIcon: true,
                   onChanged: (value) {
                     if (_passwordError != null) {
                       setState(() {
@@ -200,9 +271,10 @@ class _SignInScreenState extends State<SignInScreen> {
                       });
                     }
                   },
+                  onFieldSubmitted: (_) => _handleSignIn(),
                 ),
 
-                const SizedBox(height: 12),
+                SizedBox(height: ResponsiveUtils.getResponsiveSpacing(context, mobile: 16)),
 
                 // Link "Esqueceu a palavra-passe?"
                 Align(
@@ -223,91 +295,115 @@ class _SignInScreenState extends State<SignInScreen> {
                     child: Text(
                       'Esqueceu a palavra-passe?',
                       style: AppTheme.authLinkText.copyWith(
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 32),
-
-                // Botão de Login
-                SizedBox(
-                  width: double.infinity,
-                  height: 54,
-                  child: FilledButton(
-                    onPressed: _isLoading ? null : _handleSignIn,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppTheme.authPrimaryGreen,
-                      foregroundColor: Colors.white,
-                      elevation: 2,
-                      shadowColor: AppTheme.authPrimaryGreen.withOpacity(0.4),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    child: _isLoading 
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
-                        : Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.login, size: 20),
-                              const SizedBox(width: 12),
-                              Text(
-                                'Entrar',
-                                style: AppTheme.authButtonText,
-                              ),
-                            ],
-                          ),
-                  ),
-                ),
-
-                const SizedBox(height: 28),
-
-                // Divisor "OU"
-                Row(
-                  children: [
-                    Expanded(
-                      child: Divider(
-                        color: AppTheme.authInputBorder.withOpacity(0.6),
-                        thickness: 1,
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Text(
-                        'ou',
-                        style: AppTheme.authBodyMedium.copyWith(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 13,
-                          color: AppTheme.authTextSecondary.withOpacity(0.8),
+                        fontSize: ResponsiveUtils.getResponsiveFontSize(
+                          context,
+                          mobile: 13,
+                          tablet: 14,
+                          desktop: 15,
                         ),
                       ),
                     ),
-                    Expanded(
-                      child: Divider(
-                        color: AppTheme.authInputBorder.withOpacity(0.6),
-                        thickness: 1,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
 
-                const SizedBox(height: 28),
+                SizedBox(height: ResponsiveUtils.getResponsiveSpacing(context, mobile: 32)),
+
+                // Botão de Login
+                ModernButton(
+                  text: 'Entrar',
+                  icon: Icons.login,
+                  onPressed: _isLoading ? null : _handleSignIn,
+                  isLoading: _isLoading,
+                  loadingText: 'Entrando...',
+                  width: double.infinity,
+                  height: ResponsiveUtils.getResponsiveValue(
+                    context,
+                    mobile: 54.0,
+                    tablet: 56.0,
+                    desktop: 58.0,
+                  ),
+                  elevation: 3,
+                ),
+
+                SizedBox(height: ResponsiveUtils.getResponsiveSpacing(context, mobile: 28)),
+
+                // Divisor "OU"
+                Container(
+                  margin: const EdgeInsets.symmetric(vertical: 8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          height: 1,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                              colors: [
+                                Colors.transparent,
+                                AppTheme.authInputBorder.withOpacity(0.4),
+                                AppTheme.authInputBorder.withOpacity(0.6),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 20),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: AppTheme.authBackground.withOpacity(0.8),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppTheme.authInputBorder.withOpacity(0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: Text(
+                          'ou',
+                          style: AppTheme.authBodyMedium.copyWith(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                            color: AppTheme.authTextSecondary.withOpacity(0.8),
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Container(
+                          height: 1,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                              colors: [
+                                AppTheme.authInputBorder.withOpacity(0.6),
+                                AppTheme.authInputBorder.withOpacity(0.4),
+                                Colors.transparent,
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                SizedBox(height: ResponsiveUtils.getResponsiveSpacing(context, mobile: 28)),
 
                 // Link para Registo
                 Center(
                   child: RichText(
                     text: TextSpan(
                       text: 'Ainda não tem conta? ',
-                      style: AppTheme.authBodyMedium,
+                      style: AppTheme.authBodyMedium.copyWith(
+                        fontSize: ResponsiveUtils.getResponsiveFontSize(
+                          context,
+                          mobile: 14,
+                          tablet: 15,
+                          desktop: 16,
+                        ),
+                      ),
                       children: [
                         WidgetSpan(
                           child: GestureDetector(
@@ -318,6 +414,12 @@ class _SignInScreenState extends State<SignInScreen> {
                                 fontWeight: FontWeight.w700,
                                 decoration: TextDecoration.underline,
                                 decorationColor: AppTheme.authPrimaryGreen,
+                                fontSize: ResponsiveUtils.getResponsiveFontSize(
+                                  context,
+                                  mobile: 14,
+                                  tablet: 15,
+                                  desktop: 16,
+                                ),
                               ),
                             ),
                           ),
@@ -327,12 +429,12 @@ class _SignInScreenState extends State<SignInScreen> {
                   ),
                 ),
 
-                const SizedBox(height: 16),
+                SizedBox(height: ResponsiveUtils.getResponsiveSpacing(context, mobile: 16)),
                 ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

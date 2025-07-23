@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
-import 'package:flutter_svg/flutter_svg.dart';
 import '../theme/app_theme.dart';
-import '../../../../shared/widgets/web_svg_asset.dart';
+import '../../../../shared/widgets/svg_asset_manager.dart';
 
 class ModernAuthLayout extends StatefulWidget {
   final Widget child;
@@ -164,29 +163,11 @@ class _ModernAuthLayoutState extends State<ModernAuthLayout>
             position: _headerSlideAnimation,
             child: Stack(
               children: [
-                // SVG Header taking full width and proportional height
-                WebSvgAsset(
-                  assetPath: 'assets/auth-header.svg',
-                  width: MediaQuery.of(context).size.width,
-                  fit: BoxFit.fitWidth,
-                  placeholder: Container(
-                    height: isTablet ? 280 : 240,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          AppTheme.authPrimaryGreen,
-                          AppTheme.authSecondaryGreen,
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+                // SVG Header with enhanced integration and responsive sizing
+                _buildResponsiveAuthHeader(context, isTablet),
                 
                 // Overlay content
-                Container(
+                SizedBox(
                   height: isTablet ? 280 : 240,
                   width: double.infinity,
                   child: Padding(
@@ -206,10 +187,10 @@ class _ModernAuthLayoutState extends State<ModernAuthLayout>
                             child: Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.15),
+                                color: Colors.white.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
-                                  color: Colors.white.withOpacity(0.1),
+                                  color: Colors.white.withValues(alpha: 0.1),
                                   width: 1,
                                 ),
                               ),
@@ -245,7 +226,7 @@ class _ModernAuthLayoutState extends State<ModernAuthLayout>
                           style: TextStyle(
                             fontSize: isTablet ? 18 : 16,
                             fontWeight: FontWeight.w400,
-                            color: Colors.white.withOpacity(0.9),
+                            color: Colors.white.withValues(alpha: 0.9),
                             height: 1.5,
                             letterSpacing: 0.1,
                           ),
@@ -261,6 +242,61 @@ class _ModernAuthLayoutState extends State<ModernAuthLayout>
           ),
         );
       },
+    );
+  }
+
+  /// Builds a responsive authentication header with proper SVG integration
+  /// Handles different screen sizes and provides graceful fallback
+  Widget _buildResponsiveAuthHeader(BuildContext context, bool isTablet) {
+    final screenSize = MediaQuery.of(context).size;
+    final headerHeight = isTablet ? 280.0 : 240.0;
+    
+    return SizedBox(
+      height: headerHeight,
+      width: double.infinity,
+      child: SvgAssetManager.getAsset(
+        'auth_header',
+        width: screenSize.width,
+        height: headerHeight,
+        fit: BoxFit.cover,
+        fallback: _buildHeaderFallback(headerHeight),
+        onError: () {
+          debugPrint('Auth header SVG failed to load, using fallback');
+        },
+      ),
+    );
+  }
+
+  /// Builds a graceful fallback when auth-header.svg fails to load
+  Widget _buildHeaderFallback(double height) {
+    return Container(
+      height: height,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppTheme.authPrimaryGreen,
+            AppTheme.authSecondaryGreen,
+          ],
+        ),
+      ),
+      child: CustomPaint(
+        painter: BackgroundPatternPainter(),
+        child: const DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.transparent,
+                Color(0x1A4CAF50), // AppTheme.authPrimaryGreen with 0.1 alpha
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -281,7 +317,7 @@ class _ModernAuthLayoutState extends State<ModernAuthLayout>
               scale: _cardScaleAnimation,
               child: Material(
                 elevation: 12,
-                shadowColor: AppTheme.authPrimaryGreen.withOpacity(0.2),
+                shadowColor: AppTheme.authPrimaryGreen.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(24),
                 child: Container(
                   width: double.infinity,
@@ -293,11 +329,11 @@ class _ModernAuthLayoutState extends State<ModernAuthLayout>
                       end: Alignment.bottomRight,
                       colors: [
                         AppTheme.authCardBackground,
-                        AppTheme.authCardBackground.withOpacity(0.98),
+                        AppTheme.authCardBackground.withValues(alpha: 0.98),
                       ],
                     ),
                     border: Border.all(
-                      color: AppTheme.authPrimaryGreen.withOpacity(0.1),
+                      color: AppTheme.authPrimaryGreen.withValues(alpha: 0.1),
                       width: 1,
                     ),
                   ),
@@ -336,7 +372,7 @@ class BackgroundPatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withOpacity(0.08)
+      ..color = Colors.white.withValues(alpha: 0.08)
       ..style = PaintingStyle.fill;
 
     // Draw subtle geometric pattern
@@ -347,7 +383,7 @@ class BackgroundPatternPainter extends CustomPainter {
         
         // Draw hexagon pattern
         final path = Path();
-        final radius = 15.0;
+        const radius = 15.0;
         for (int k = 0; k < 6; k++) {
           final angle = (k * 60) * (3.14159 / 180);
           final px = x + radius * cos(angle);
