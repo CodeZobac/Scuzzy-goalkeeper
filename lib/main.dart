@@ -28,26 +28,60 @@ import 'package:goalkeeper/src/features/auth/presentation/screens/sign_up_screen
 import 'package:goalkeeper/src/features/auth/presentation/theme/app_theme.dart';
 import 'package:goalkeeper/src/features/map/presentation/screens/map_screen.dart';
 import 'package:goalkeeper/src/features/main/presentation/screens/main_screen.dart';
+import 'package:goalkeeper/src/core/error_handling/error_monitoring_service.dart';
+import 'package:goalkeeper/src/core/logging/error_logger.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await dotenv.load(fileName: ".env");
+  // Initialize error monitoring service first
+  await ErrorMonitoringService.instance.initialize();
 
-  // Initialize Firebase (optional - only if configuration files exist)
-  final firebaseInitialized = await FirebaseConfig.initialize();
+  late final NotificationService notificationService;
 
-  await Supabase.initialize(
-    url: dotenv.env['SUPABASE_URL']!,
-    anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
-  );
+  try {
+    await dotenv.load(fileName: ".env");
 
-  // Initialize the enhanced notification service manager
-  final notificationServiceManager = NotificationServiceManager.instance;
-  await notificationServiceManager.initialize();
-  
-  // Get the core notification service for provider
-  final notificationService = notificationServiceManager.notificationService;
+    // Initialize Firebase (optional - only if configuration files exist)
+    final firebaseInitialized = await FirebaseConfig.initialize();
+
+    await Supabase.initialize(
+      url: dotenv.env['SUPABASE_URL']!,
+      anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
+    );
+
+    // Initialize the enhanced notification service manager
+    final notificationServiceManager = NotificationServiceManager.instance;
+    await notificationServiceManager.initialize();
+    
+    // Get the core notification service for provider
+    notificationService = notificationServiceManager.notificationService;
+
+    ErrorLogger.logInfo(
+      'Application initialized successfully',
+      context: 'APP_STARTUP',
+      additionalData: {
+        'firebase_initialized': firebaseInitialized,
+        'supabase_url': dotenv.env['SUPABASE_URL'] != null ? 'configured' : 'missing',
+      },
+    );
+  } catch (error, stackTrace) {
+    ErrorLogger.logError(
+      error,
+      stackTrace,
+      context: 'APP_STARTUP_ERROR',
+      severity: ErrorSeverity.error,
+    );
+    
+    ErrorMonitoringService.instance.reportError(
+      'startup_failure',
+      context: 'APP_STARTUP',
+      severity: ErrorSeverity.error,
+    );
+    
+    // Re-throw to prevent app from starting in broken state
+    rethrow;
+  }
 
   runApp(
     MultiProvider(
