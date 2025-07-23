@@ -76,7 +76,7 @@ class NotificationError implements Exception {
   final String? operationId;
   final Exception? originalException;
 
-  const NotificationError({
+  NotificationError({
     required this.type,
     required this.severity,
     required this.message,
@@ -88,9 +88,7 @@ class NotificationError implements Exception {
     DateTime? timestamp,
     this.operationId,
     this.originalException,
-  }) : timestamp = timestamp ?? const Duration().inMicroseconds != 0 
-         ? DateTime.now() 
-         : DateTime.fromMicrosecondsSinceEpoch(0);
+  }) : timestamp = timestamp ?? DateTime.now();
 
   /// Create a network error
   factory NotificationError.network({

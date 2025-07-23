@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../data/models/notification_error.dart';
 
@@ -177,7 +178,7 @@ class NotificationErrorHandler {
     // State errors (service not initialized)
     if (exception is StateError) {
       return NotificationError.serviceInitialization(
-        message: 'Service state error: ${exception.message}',
+        message: 'Service state error: ${exception.toString()}',
         technicalDetails: exception.toString(),
         context: context,
         stackTrace: stackTrace,
@@ -188,7 +189,7 @@ class NotificationErrorHandler {
     // Argument errors (validation)
     if (exception is ArgumentError) {
       return NotificationError.validation(
-        message: 'Invalid argument: ${exception.message}',
+        message: 'Invalid argument: ${exception.toString()}',
         technicalDetails: exception.toString(),
         context: context,
         stackTrace: stackTrace,

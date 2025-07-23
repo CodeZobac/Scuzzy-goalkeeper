@@ -126,7 +126,6 @@ class NotificationRetryManager {
     return NotificationResult.failure(
       lastError ?? NotificationError.unknown(
         message: 'Operation failed without specific error',
-        operationId: retryOperation.operationId,
         context: retryOperation.context,
       ),
     );
