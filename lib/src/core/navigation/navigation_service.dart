@@ -178,4 +178,151 @@ class NavigationService {
       ),
     );
   }
+
+  // Enhanced notification navigation methods
+
+  /// Navigate to notifications screen with optional category selection
+  static Future<T?> pushToNotifications<T extends Object?>(
+    BuildContext context, {
+    String? category,
+  }) {
+    return Navigator.of(context).pushNamed<T>(
+      '/notifications',
+      arguments: category != null ? {'category': category} : null,
+    );
+  }
+
+  /// Navigate to contract details screen
+  static Future<T?> pushToContractDetails<T extends Object?>(
+    BuildContext context,
+    Map<String, dynamic> contractData,
+  ) {
+    return Navigator.of(context).pushNamed<T>(
+      '/contract-details',
+      arguments: contractData,
+    );
+  }
+
+  /// Handle notification deep link navigation
+  static Future<T?> handleNotificationDeepLink<T extends Object?>(
+    BuildContext context,
+    Map<String, dynamic> notificationData,
+  ) {
+    return Navigator.of(context).pushNamed<T>(
+      '/notification-deep-link',
+      arguments: notificationData,
+    );
+  }
+
+  /// Navigate to main screen with specific tab selected
+  static Future<T?> pushToMainWithTab<T extends Object?>(
+    BuildContext context,
+    int tabIndex,
+  ) {
+    return Navigator.of(context).pushNamedAndRemoveUntil<T>(
+      '/home',
+      (route) => false,
+      arguments: {'selectedTab': tabIndex},
+    );
+  }
+
+  /// Navigate to notifications tab in main screen
+  static Future<T?> pushToNotificationsTab<T extends Object?>(
+    BuildContext context,
+  ) {
+    return pushToMainWithTab<T>(context, 2); // Notifications is index 2 in navbar
+  }
+
+  /// Navigate from push notification tap
+  static Future<void> handlePushNotificationTap(
+    Map<String, dynamic> notificationData,
+  ) async {
+    final context = navigatorKey.currentContext;
+    if (context == null) return;
+
+    final type = notificationData['type'] as String?;
+    
+    try {
+      switch (type) {
+        case 'contract_request':
+          await handleNotificationDeepLink(context, notificationData);
+          break;
+        case 'full_lobby':
+          await handleNotificationDeepLink(context, notificationData);
+          break;
+        case 'booking_request':
+        case 'booking_confirmed':
+        case 'booking_cancelled':
+          await pushToNotifications(context);
+          break;
+        default:
+          await pushToNotifications(context);
+      }
+    } catch (e) {
+      debugPrint('Error handling push notification tap: $e');
+      // Fallback to notifications screen
+      await pushToNotifications(context);
+    }
+  }
+
+  /// Navigate back to main screen from any screen
+  static Future<T?> backToMain<T extends Object?>(BuildContext context) {
+    return Navigator.of(context).pushNamedAndRemoveUntil<T>(
+      '/home',
+      (route) => false,
+    );
+  }
+
+  /// Check if current route is main screen
+  static bool isOnMainScreen(BuildContext context) {
+    final currentRoute = getCurrentRouteName(context);
+    return currentRoute == '/home';
+  }
+
+  /// Navigate with proper back stack management for notifications
+  static Future<T?> pushFromNotification<T extends Object?>(
+    BuildContext context,
+    String routeName, {
+    Object? arguments,
+    bool clearStack = false,
+  }) {
+    if (clearStack) {
+      return Navigator.of(context).pushNamedAndRemoveUntil<T>(
+        routeName,
+        (route) => route.settings.name == '/home',
+        arguments: arguments,
+      );
+    } else {
+      return Navigator.of(context).pushNamed<T>(
+        routeName,
+        arguments: arguments,
+      );
+    }
+  }
+
+  /// Get navigation context safely
+  static BuildContext? getNavigationContext() {
+    return navigatorKey.currentContext;
+  }
+
+  /// Check if navigator is ready
+  static bool get isNavigatorReady => navigatorKey.currentState != null;
+
+  /// Safe navigation method that checks if navigator is ready
+  static Future<T?> safeNavigate<T extends Object?>(
+    Future<T?> Function(BuildContext) navigationFunction,
+  ) async {
+    final context = getNavigationContext();
+    if (context == null || !isNavigatorReady) {
+      debugPrint('Navigator not ready for navigation');
+      return null;
+    }
+    
+    try {
+      return await navigationFunction(context);
+    } catch (e) {
+      debugPrint('Navigation error: $e');
+      return null;
+    }
+  }
 }

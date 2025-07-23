@@ -189,6 +189,7 @@ class AppTheme {
 
   // Theme Data
   static ThemeData get darkTheme => ThemeData(
+    useMaterial3: true,
     brightness: Brightness.dark,
     primarySwatch: Colors.pink,
     primaryColor: accentColor,

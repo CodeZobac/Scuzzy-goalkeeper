@@ -8,7 +8,9 @@ import 'package:goalkeeper/src/features/user_profile/presentation/screens/enhanc
 import '../../../../shared/widgets/app_navbar.dart';
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+  final int? initialTabIndex;
+  
+  const MainScreen({super.key, this.initialTabIndex});
 
   @override
   State<MainScreen> createState() => _MainScreenState();
@@ -16,6 +18,42 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   NavbarItem _selectedItem = NavbarItem.home;
+
+  @override
+  void initState() {
+    super.initState();
+    
+    // Set initial tab if provided
+    if (widget.initialTabIndex != null) {
+      _selectedItem = _getNavbarItemFromIndex(widget.initialTabIndex!);
+    }
+    
+    // Handle route arguments for tab selection
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+      if (args != null && args['selectedTab'] != null) {
+        final tabIndex = args['selectedTab'] as int;
+        setState(() {
+          _selectedItem = _getNavbarItemFromIndex(tabIndex);
+        });
+      }
+    });
+  }
+
+  NavbarItem _getNavbarItemFromIndex(int index) {
+    switch (index) {
+      case 0:
+        return NavbarItem.home;
+      case 1:
+        return NavbarItem.map;
+      case 2:
+        return NavbarItem.notifications;
+      case 3:
+        return NavbarItem.profile;
+      default:
+        return NavbarItem.home;
+    }
+  }
 
   Widget _getSelectedScreen() {
     switch (_selectedItem) {
