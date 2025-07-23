@@ -1,7 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:goalkeeper/src/core/config/firebase_config.dart'
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:goalkeeper/src/core/config/firebase_config.dart';
 import 'package:goalkeeper/src/core/config/app_config.dart';
 import 'package:goalkeeper/src/features/user_profile/data/repositories/user_profile_repository.dart';
 import 'package:goalkeeper/src/features/user_profile/presentation/controllers/user_profile_controller.dart';
@@ -50,11 +51,14 @@ Future<void> main() async {
     // Initialize Firebase (optional - only if configuration files exist)
     final firebaseInitialized = await FirebaseConfig.initialize();
 
+    // Initialize Supabase with environment variables or fallback to AppConfig
+    final supabaseUrl = dotenv.env['SUPABASE_URL'] ?? AppConfig.supabaseUrl;
+    final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY'] ?? AppConfig.supabaseAnonKey;
+    
     await Supabase.initialize(
-      url: dotenv.env['SUPABASE_URL']!,
-      anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
+      url: supabaseUrl,
+      anonKey: supabaseAnonKey,
     );
-
 
     // Initialize the enhanced notification service manager
     final notificationServiceManager = NotificationServiceManager.instance;
@@ -62,11 +66,6 @@ Future<void> main() async {
     
     // Get the core notification service for provider
     notificationService = notificationServiceManager.notificationService;
-
-  await Supabase.initialize(
-    url: AppConfig.supabaseUrl,
-    anonKey: AppConfig.supabaseAnonKey,
-  );
 
 
     ErrorLogger.logInfo(
