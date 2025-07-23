@@ -51,13 +51,11 @@ class NotificationService with ChangeNotifier {
     return await _retryManager.executeWithRetry(
       'notification_service_init',
       () async {
-        // Firebase must be initialized before this point
+        // Check if Firebase is available
         if (Firebase.apps.isEmpty) {
-          throw NotificationError.serviceInitialization(
-            message: 'Firebase not initialized',
-            userMessage: 'Serviço de notificações não configurado.',
-            technicalDetails: 'Firebase.initializeApp() must be called before NotificationService.initialize()',
-          );
+          debugPrint('Firebase not initialized - push notifications will be disabled');
+          _isInitialized = true;
+          return;
         }
 
         _firebaseMessaging = FirebaseMessaging.instance;
@@ -109,6 +107,11 @@ class NotificationService with ChangeNotifier {
 
         try {
           // Request notification permission from Firebase
+          if (_firebaseMessaging == null) {
+            debugPrint('Firebase messaging not available - skipping permission request');
+            return;
+          }
+          
           final settings = await _firebaseMessaging!.requestPermission(
             alert: true,
             announcement: false,
@@ -223,9 +226,11 @@ class NotificationService with ChangeNotifier {
           FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap);
 
           // Handle notification tap when app is terminated
-          RemoteMessage? initialMessage = await _firebaseMessaging!.getInitialMessage();
-          if (initialMessage != null) {
-            _handleNotificationTap(initialMessage);
+          if (_firebaseMessaging != null) {
+            RemoteMessage? initialMessage = await _firebaseMessaging!.getInitialMessage();
+            if (initialMessage != null) {
+              _handleNotificationTap(initialMessage);
+            }
           }
 
           debugPrint('Firebase messaging handlers initialized successfully');
@@ -255,6 +260,11 @@ class NotificationService with ChangeNotifier {
         }
 
         try {
+          if (_firebaseMessaging == null) {
+            debugPrint('Firebase messaging not available - skipping FCM token retrieval');
+            return;
+          }
+          
           _fcmToken = await _firebaseMessaging!.getToken();
           if (_fcmToken != null) {
             debugPrint('FCM Token: $_fcmToken');
@@ -701,8 +711,13 @@ class NotificationService with ChangeNotifier {
   /// Check if notifications are enabled
   Future<bool> areNotificationsEnabled() async {
     if (_firebaseMessaging == null) return false;
-    final settings = await _firebaseMessaging!.getNotificationSettings();
-    return settings.authorizationStatus == AuthorizationStatus.authorized;
+    try {
+      final settings = await _firebaseMessaging!.getNotificationSettings();
+      return settings.authorizationStatus == AuthorizationStatus.authorized;
+    } catch (e) {
+      debugPrint('Error checking notification settings: $e');
+      return false;
+    }
   }
 
   /// Disable FCM token (when user logs out)
@@ -727,6 +742,10 @@ class NotificationService with ChangeNotifier {
 /// Background message handler (must be top-level function)
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp();
-  debugPrint('Background message received: ${message.notification?.title}');
+  try {
+    await Firebase.initializeApp();
+    debugPrint('Background message received: ${message.notification?.title}');
+  } catch (e) {
+    debugPrint('Firebase not available in background handler: $e');
+  }
 }

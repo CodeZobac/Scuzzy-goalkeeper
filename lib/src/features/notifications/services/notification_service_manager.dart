@@ -20,11 +20,11 @@ class NotificationServiceManager {
   NotificationServiceManager._();
 
   // Services
-  late final NotificationRepository _notificationRepository;
-  late final NotificationService _notificationService;
-  late final FullLobbyDetectionService _fullLobbyDetectionService;
-  late final ContractManagementService _contractManagementService;
-  late final ContractExpirationHandler _contractExpirationHandler;
+  NotificationRepository? _notificationRepository;
+  NotificationService? _notificationService;
+  FullLobbyDetectionService? _fullLobbyDetectionService;
+  ContractManagementService? _contractManagementService;
+  ContractExpirationHandler? _contractExpirationHandler;
   final NotificationErrorHandler _errorHandler = NotificationErrorHandler.instance;
   final NotificationRetryManager _retryManager = NotificationRetryManager.instance;
 
@@ -41,20 +41,22 @@ class NotificationServiceManager {
       () async {
         debugPrint('Initializing NotificationServiceManager...');
 
-        // Initialize repositories
-        _notificationRepository = NotificationRepository();
+        // Initialize repositories (only if not already initialized)
+        _notificationRepository ??= NotificationRepository();
 
-        // Initialize core notification service
-        _notificationService = NotificationService();
-        final initResult = await _notificationService.initialize();
-        if (!initResult.isSuccess) {
-          throw initResult.error!;
+        // Initialize core notification service (only if not already initialized)
+        if (_notificationService == null) {
+          _notificationService = NotificationService();
+          final initResult = await _notificationService!.initialize();
+          if (!initResult.isSuccess) {
+            throw initResult.error!;
+          }
         }
 
-        // Initialize specialized services
-        _fullLobbyDetectionService = FullLobbyDetectionService(_notificationRepository, Supabase.instance.client);
-        _contractManagementService = ContractManagementService(_notificationRepository);
-        _contractExpirationHandler = ContractExpirationHandler(_notificationRepository);
+        // Initialize specialized services (only if not already initialized)
+        _fullLobbyDetectionService ??= FullLobbyDetectionService(_notificationRepository, Supabase.instance.client);
+        _contractManagementService ??= ContractManagementService();
+        _contractExpirationHandler ??= ContractExpirationHandler();
 
         _isInitialized = true;
         _lastError = null;
@@ -82,16 +84,13 @@ class NotificationServiceManager {
       _currentUserId = userId;
 
       // Initialize core notification service for user
-      await _notificationService.onUserSignIn();
+      await _notificationService?.onUserSignIn();
 
       // Initialize full lobby detection service
-      await _fullLobbyDetectionService.initialize();
+      await _fullLobbyDetectionService?.initialize();
 
-      // Initialize contract management service
-      await _contractManagementService.initialize();
-
-      // Initialize contract expiration handler
-      await _contractExpirationHandler.initialize();
+      // Contract management service and expiration handler are ready to use
+      debugPrint('Contract management services initialized');
 
       debugPrint('All notification services initialized for user: $userId');
     } catch (e) {
@@ -108,11 +107,11 @@ class NotificationServiceManager {
       debugPrint('Cleaning up notification services for user: $_currentUserId');
 
       // Disable FCM token
-      await _notificationService.disableToken();
+      await _notificationService?.disableToken();
 
       // Dispose services
-      _fullLobbyDetectionService.dispose();
-      _contractExpirationHandler.dispose();
+      _fullLobbyDetectionService?.dispose();
+      _contractExpirationHandler?.dispose();
 
       _currentUserId = null;
       debugPrint('Notification services cleaned up successfully');
@@ -123,34 +122,34 @@ class NotificationServiceManager {
 
   /// Get the notification repository
   NotificationRepository get notificationRepository {
-    if (!_isInitialized) {
+    if (!_isInitialized || _notificationRepository == null) {
       throw StateError('NotificationServiceManager not initialized. Call initialize() first.');
     }
-    return _notificationRepository;
+    return _notificationRepository!;
   }
 
   /// Get the notification service
   NotificationService get notificationService {
-    if (!_isInitialized) {
+    if (!_isInitialized || _notificationService == null) {
       throw StateError('NotificationServiceManager not initialized. Call initialize() first.');
     }
-    return _notificationService;
+    return _notificationService!;
   }
 
   /// Get the full lobby detection service
   FullLobbyDetectionService get fullLobbyDetectionService {
-    if (!_isInitialized) {
+    if (!_isInitialized || _fullLobbyDetectionService == null) {
       throw StateError('NotificationServiceManager not initialized. Call initialize() first.');
     }
-    return _fullLobbyDetectionService;
+    return _fullLobbyDetectionService!;
   }
 
   /// Get the contract management service
   ContractManagementService get contractManagementService {
-    if (!_isInitialized) {
+    if (!_isInitialized || _contractManagementService == null) {
       throw StateError('NotificationServiceManager not initialized. Call initialize() first.');
     }
-    return _contractManagementService;
+    return _contractManagementService!;
   }
 
   /// Send contract request notification (database + push)
@@ -162,7 +161,7 @@ class NotificationServiceManager {
   }) async {
     try {
       // Create database notification through repository
-      await _notificationRepository.createContractNotification(
+      await _notificationRepository?.createContractNotification(
         goalkeeperUserId: goalkeeperUserId,
         contractorUserId: contractorUserId,
         announcementId: announcementId,
@@ -170,12 +169,12 @@ class NotificationServiceManager {
       );
 
       // Send push notification
-      final pushResult = await _notificationService.sendContractNotification(
+      final pushResult = await _notificationService?.sendContractNotification(
         goalkeeperUserId: goalkeeperUserId,
         data: contractData,
       );
 
-      if (!pushResult.isSuccess) {
+      if (pushResult != null && !pushResult.isSuccess) {
         // Log push notification failure but don't fail the entire operation
         // since the database notification was created successfully
         _lastError = pushResult.error;
@@ -207,14 +206,14 @@ class NotificationServiceManager {
   }) async {
     try {
       // Create database notification through repository
-      await _notificationRepository.createFullLobbyNotification(
+      await _notificationRepository?.createFullLobbyNotification(
         creatorUserId: creatorUserId,
         announcementId: announcementId,
         data: lobbyData,
       );
 
       // Send push notification
-      await _notificationService.sendFullLobbyNotification(
+      await _notificationService?.sendFullLobbyNotification(
         creatorUserId: creatorUserId,
         data: lobbyData,
       );
@@ -228,10 +227,10 @@ class NotificationServiceManager {
 
   /// Get the contract expiration handler
   ContractExpirationHandler get contractExpirationHandler {
-    if (!_isInitialized) {
+    if (!_isInitialized || _contractExpirationHandler == null) {
       throw StateError('NotificationServiceManager not initialized. Call initialize() first.');
     }
-    return _contractExpirationHandler;
+    return _contractExpirationHandler!;
   }
 
   /// Check if services are initialized
@@ -242,22 +241,22 @@ class NotificationServiceManager {
 
   /// Get full lobby detection statistics
   Map<String, dynamic> getFullLobbyStatistics() {
-    return _fullLobbyDetectionService.getStatistics();
+    return _fullLobbyDetectionService?.getStatistics() ?? {};
   }
 
   /// Manually trigger full lobby check for an announcement
   Future<void> checkAnnouncementFullLobby(int announcementId) async {
-    await _fullLobbyDetectionService.checkAnnouncement(announcementId);
+    await _fullLobbyDetectionService?.checkAnnouncement(announcementId);
   }
 
   /// Check if an announcement has been processed for full lobby notification
   bool isAnnouncementProcessed(int announcementId) {
-    return _fullLobbyDetectionService.isAnnouncementProcessed(announcementId);
+    return _fullLobbyDetectionService?.isAnnouncementProcessed(announcementId) ?? false;
   }
 
   /// Get announcement status
   AnnouncementStatus? getAnnouncementStatus(int announcementId) {
-    return _fullLobbyDetectionService.getAnnouncementStatus(announcementId);
+    return _fullLobbyDetectionService?.getAnnouncementStatus(announcementId);
   }
 
   /// Dispose all services
@@ -265,8 +264,8 @@ class NotificationServiceManager {
     if (!_isInitialized) return;
 
     try {
-      _fullLobbyDetectionService.dispose();
-      _contractExpirationHandler.dispose();
+      _fullLobbyDetectionService?.dispose();
+      _contractExpirationHandler?.dispose();
       _isInitialized = false;
       _currentUserId = null;
       debugPrint('NotificationServiceManager disposed');
