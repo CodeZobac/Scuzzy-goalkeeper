@@ -83,14 +83,14 @@ class _NotificationPreferencesScreenState extends State<NotificationPreferencesS
   }
 
   Widget _buildLoadingState() {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(
+          const CircularProgressIndicator(
             valueColor: AlwaysStoppedAnimation<Color>(AppTheme.accentColor),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Text(
             'Carregando preferências...',
             style: AppTheme.bodyMedium,

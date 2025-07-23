@@ -387,6 +387,7 @@ class NotificationController extends ChangeNotifier {
           readAt: DateTime.now(),
         );
         _unreadCount = _notifications.where((n) => n.isUnread).length;
+        _syncBadgeController();
         notifyListeners();
       }
     } catch (e) {
@@ -406,6 +407,7 @@ class NotificationController extends ChangeNotifier {
           .map((notification) => notification.copyWith(readAt: now))
           .toList();
       _unreadCount = 0;
+      _syncBadgeController();
       notifyListeners();
     } catch (e) {
       _error = e.toString();
@@ -429,6 +431,7 @@ class NotificationController extends ChangeNotifier {
       
       // Recalculate unread count
       _unreadCount = _notifications.where((n) => n.isUnread).length;
+      _syncBadgeController();
       notifyListeners();
     } catch (e) {
       _error = e.toString();
@@ -1104,116 +1107,7 @@ class NotificationController extends ChangeNotifier {
     }
   }
 
-  /// Set action loading state
-  void _setActionLoading(String notificationId, bool loading) {
-    _actionLoadingStates[notificationId] = loading;
-    notifyListeners();
-  }
 
-  /// Show success message
-  void _showSuccessMessage(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: const Color(0xFF4CAF50),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        duration: const Duration(seconds: 3),
-      ),
-    );
-  }
-
-  /// Show error message
-  void _showErrorMessage(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: const Color(0xFFFF6B6B),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        duration: const Duration(seconds: 4),
-      ),
-    );
-  }
-
-  /// Show info message
-  void _showInfoMessage(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: const Color(0xFF2196F3),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        duration: const Duration(seconds: 3),
-      ),
-    );
-  }
-
-  /// Show confirmation dialog
-  Future<bool> _showConfirmationDialog(
-    BuildContext context, {
-    required String title,
-    required String message,
-    required String confirmText,
-    required String cancelText,
-  }) async {
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Text(
-            title,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF2C2C2C),
-            ),
-          ),
-          content: Text(
-            message,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Color(0xFF757575),
-              height: 1.4,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: Text(
-                cancelText,
-                style: const TextStyle(
-                  color: Color(0xFF757575),
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            Container(
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFFF6B6B), Color(0xFFE94560)],
-                ),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: TextButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                child: Text(
-                  confirmText,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-
-    return result ?? false;
-  }
 
   /// Get archiving service statistics
   Map<String, dynamic> getArchivingStatistics() {
@@ -1226,131 +1120,6 @@ class NotificationController extends ChangeNotifier {
     if (user != null) {
       await _archivingService.archiveOldNotifications(user.id);
       await loadNotifications(user.id);
-    }
-  }
-
-  // Bulk selection methods
-  
-  /// Toggle selection mode
-  void toggleSelectionMode() {
-    _selectionMode = !_selectionMode;
-    if (!_selectionMode) {
-      _selectedNotificationIds.clear();
-    }
-    notifyListeners();
-  }
-
-  /// Select or deselect a notification
-  void toggleNotificationSelection(String notificationId) {
-    if (_selectedNotificationIds.contains(notificationId)) {
-      _selectedNotificationIds.remove(notificationId);
-    } else {
-      _selectedNotificationIds.add(notificationId);
-    }
-    
-    // Exit selection mode if no notifications are selected
-    if (_selectedNotificationIds.isEmpty) {
-      _selectionMode = false;
-    }
-    
-    notifyListeners();
-  }
-
-  /// Select all visible notifications
-  void selectAllNotifications() {
-    _selectedNotificationIds.clear();
-    _selectedNotificationIds.addAll(_notifications.map((n) => n.id));
-    notifyListeners();
-  }
-
-  /// Clear all selections
-  void clearSelection() {
-    _selectedNotificationIds.clear();
-    _selectionMode = false;
-    notifyListeners();
-  }
-
-  /// Check if a notification is selected
-  bool isNotificationSelected(String notificationId) {
-    return _selectedNotificationIds.contains(notificationId);
-  }
-
-  /// Mark selected notifications as read
-  Future<void> markSelectedAsRead() async {
-    if (_selectedNotificationIds.isEmpty) return;
-
-    try {
-      final selectedIds = _selectedNotificationIds.toList();
-      
-      // Mark each notification as read
-      for (final id in selectedIds) {
-        await _repository.markNotificationAsRead(id);
-      }
-
-      // Update local state
-      final now = DateTime.now();
-      int markedCount = 0;
-      
-      for (int i = 0; i < _notifications.length; i++) {
-        if (selectedIds.contains(_notifications[i].id) && _notifications[i].isUnread) {
-          _notifications[i] = _notifications[i].copyWith(readAt: now);
-          markedCount++;
-        }
-      }
-      
-      _unreadCount -= markedCount;
-      clearSelection();
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
-    }
-  }
-
-  /// Delete selected notifications
-  Future<void> deleteSelectedNotifications() async {
-    if (_selectedNotificationIds.isEmpty) return;
-
-    try {
-      final selectedIds = _selectedNotificationIds.toList();
-      await deleteNotifications(selectedIds);
-      clearSelection();
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
-    }
-  }
-
-  /// Archive selected notifications
-  Future<void> archiveSelectedNotifications() async {
-    if (_selectedNotificationIds.isEmpty) return;
-
-    try {
-      final selectedIds = _selectedNotificationIds.toList();
-      final now = DateTime.now();
-      
-      // Archive each notification
-      for (final id in selectedIds) {
-        await _supabase
-            .from('notifications')
-            .update({'archived_at': now.toIso8601String()})
-            .eq('id', id);
-      }
-
-      // Update local state
-      int unreadArchived = 0;
-      _notifications.removeWhere((notification) {
-        if (selectedIds.contains(notification.id)) {
-          if (notification.isUnread) unreadArchived++;
-          return true;
-        }
-        return false;
-      });
-      
-      _unreadCount -= unreadArchived;
-      clearSelection();
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
     }
   }
 
