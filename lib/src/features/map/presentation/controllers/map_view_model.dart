@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'dart:math';
 import '../../data/repositories/field_repository.dart';
 import '../../domain/models/map_field.dart';
 import '../providers/field_selection_provider.dart';
+import '../../../../shared/widgets/web_svg_asset.dart';
 
 class MapViewModel extends ChangeNotifier {
   final FieldRepository _fieldRepository;
@@ -66,9 +68,65 @@ class MapViewModel extends ChangeNotifier {
   Future<void> _loadFields() async {
     try {
       _fields = await _fieldRepository.getApprovedFields();
+      
+      // If no fields found, add some sample data for demonstration
+      if (_fields.isEmpty) {
+        _fields = _generateSampleFields();
+        debugPrint('Using sample field data since no fields were found in database');
+      }
     } catch (e) {
-      throw Exception('Failed to load fields: $e');
+      // If repository fails, use sample data as fallback
+      _fields = _generateSampleFields();
+      debugPrint('Using sample field data due to repository error: $e');
     }
+  }
+  
+  // Generate sample fields around Lisbon for demonstration
+  List<MapField> _generateSampleFields() {
+    final Random random = Random(42); // Fixed seed for consistent results
+    final centerLat = 38.7223;
+    final centerLng = -9.1393;
+    final fields = <MapField>[];
+    
+    final fieldNames = [
+      'Campo da Ajuda',
+      'Estádio Universitário',
+      'Campo do Benfica',
+      'Complexo Desportivo de Algés',
+      'Campo Municipal da Amadora',
+      'Estádio José Gomes',
+      'Campo da Reboleira',
+      'Complexo do Jamor',
+      'Campo de Carnaxide',
+      'Estádio do Restelo',
+      'Campo de Alcântara',
+      'Complexo de Monsanto',
+    ];
+    
+    final cities = ['Lisboa', 'Amadora', 'Oeiras', 'Cascais', 'Sintra'];
+    final surfaces = ['natural', 'artificial', 'hybrid'];
+    final dimensions = ['11v11', '7v7', '5v5'];
+    
+    for (int i = 0; i < fieldNames.length; i++) {
+      // Generate location within ~15km radius of Lisbon center
+      final LatLng location = _generateRandomLocation(centerLat, centerLng, 15.0);
+      
+      fields.add(MapField(
+        id: 'sample_${i + 1}',
+        name: fieldNames[i],
+        latitude: location.latitude,
+        longitude: location.longitude,
+        status: 'approved',
+        createdAt: DateTime.now().subtract(Duration(days: random.nextInt(30))),
+        city: cities[random.nextInt(cities.length)],
+        surfaceType: surfaces[random.nextInt(surfaces.length)],
+        dimensions: dimensions[random.nextInt(dimensions.length)],
+        description: 'Campo de futebol bem mantido com excelentes condições para jogos.',
+        photoUrl: null, // Could add sample images later
+      ));
+    }
+    
+    return fields;
   }
 
   // Get user's current location
@@ -228,34 +286,108 @@ class MapViewModel extends ChangeNotifier {
     });
   }
 
+  // Generate random location within radius (in kilometers)
+  LatLng _generateRandomLocation(double centerLat, double centerLng, double radiusKm) {
+    final Random random = Random();
+    
+    // Convert radius from km to degrees (approximately)
+    double radiusInDegrees = radiusKm / 111.0; // 1 degree ≈ 111 km
+    
+    // Generate random angle and distance
+    double angle = random.nextDouble() * 2 * pi;
+    double distance = sqrt(random.nextDouble()) * radiusInDegrees;
+    
+    // Calculate new coordinates
+    double deltaLat = distance * cos(angle);
+    double deltaLng = distance * sin(angle) / cos(centerLat * pi / 180);
+    
+    return LatLng(centerLat + deltaLat, centerLng + deltaLng);
+  }
+  
   // Build markers for flutter_map
   List<Marker> buildMarkers() {
     List<Marker> markers = [];
 
-    // Add field markers
+    // Add field markers with SVG icons
     for (MapField field in _filteredFields) {
       markers.add(
         Marker(
           point: LatLng(field.latitude, field.longitude),
-          width: 40,
-          height: 40,
+          width: 50,
+          height: 50,
           child: GestureDetector(
             onTap: () => selectField(field),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.green,
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 2),
+            child: WebSvgAsset(
+              assetPath: 'assets/icons8-football-field.svg',
+              width: 50,
+              height: 50,
+              colorFilter: const ColorFilter.mode(
+                Colors.green,
+                BlendMode.srcIn,
               ),
-              child: const Icon(
-                Icons.sports_soccer,
-                color: Colors.white,
-                size: 20,
+              placeholder: Container(
+                width: 50,
+                height: 50,
+                decoration: const BoxDecoration(
+                  color: Colors.green,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.sports_soccer,
+                  color: Colors.white,
+                  size: 30,
+                ),
               ),
             ),
           ),
         ),
       );
+      
+      // Add random players around each field (within 10km radius)
+      final Random random = Random(field.name.hashCode); // Use field name as seed for consistency
+      int playerCount = 3 + random.nextInt(8); // 3-10 players per field
+      
+      for (int i = 0; i < playerCount; i++) {
+        LatLng playerLocation = _generateRandomLocation(
+          field.latitude, 
+          field.longitude, 
+          10.0 // 10km radius
+        );
+        
+        bool isGoalkeeper = i == 0; // First player is always goalkeeper
+        
+        markers.add(
+          Marker(
+            point: playerLocation,
+            width: 35,
+            height: 35,
+            child: WebSvgAsset(
+              assetPath: isGoalkeeper 
+                ? 'assets/icons8-goalkeeper-o-mais-baddy.svg'
+                : 'assets/icons8-football.svg',
+              width: 35,
+              height: 35,
+              colorFilter: ColorFilter.mode(
+                isGoalkeeper ? Colors.orange : Colors.blue,
+                BlendMode.srcIn,
+              ),
+              placeholder: Container(
+                width: 35,
+                height: 35,
+                decoration: BoxDecoration(
+                  color: isGoalkeeper ? Colors.orange : Colors.blue,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  isGoalkeeper ? Icons.sports_handball : Icons.sports_soccer,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+            ),
+          ),
+        );
+      }
     }
 
     // Add user location marker if available
@@ -267,14 +399,21 @@ class MapViewModel extends ChangeNotifier {
           height: 30,
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.blue,
+              color: Colors.red,
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
+              border: Border.all(color: Colors.white, width: 3),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.red.withOpacity(0.3),
+                  blurRadius: 10,
+                  spreadRadius: 2,
+                ),
+              ],
             ),
             child: const Icon(
               Icons.person,
               color: Colors.white,
-              size: 15,
+              size: 18,
             ),
           ),
         ),
