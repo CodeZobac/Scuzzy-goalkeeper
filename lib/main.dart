@@ -7,6 +7,7 @@ import 'package:goalkeeper/src/core/config/app_config.dart';
 import 'package:goalkeeper/src/features/user_profile/data/repositories/user_profile_repository.dart';
 import 'package:goalkeeper/src/features/user_profile/presentation/controllers/user_profile_controller.dart';
 import 'package:goalkeeper/src/features/user_profile/presentation/screens/profile_screen.dart';
+import 'package:goalkeeper/src/features/user_profile/presentation/screens/complete_profile_screen.dart';
 import 'package:goalkeeper/src/features/goalkeeper_search/data/repositories/goalkeeper_search_repository.dart';
 import 'package:goalkeeper/src/features/goalkeeper_search/presentation/controllers/goalkeeper_search_controller.dart';
 import 'package:goalkeeper/src/features/notifications/services/notification_service.dart';
@@ -30,6 +31,7 @@ import 'package:goalkeeper/src/features/auth/presentation/screens/sign_up_screen
 import 'package:goalkeeper/src/features/auth/presentation/theme/app_theme.dart';
 import 'package:goalkeeper/src/features/map/presentation/screens/map_screen.dart';
 import 'package:goalkeeper/src/features/main/presentation/screens/main_screen.dart';
+import 'package:goalkeeper/src/shared/screens/splash_screen.dart';
 import 'package:goalkeeper/src/core/error_handling/error_monitoring_service.dart';
 import 'package:goalkeeper/src/core/logging/error_logger.dart';
 
@@ -137,58 +139,73 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    
+    _handleAuthStateChanges();
+  }
+
+  void _handleAuthStateChanges() {
     // Handle user authentication state changes
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userProfileController = context.read<UserProfileController>();
       final notificationService = context.read<NotificationService>();
       final announcementController = context.read<AnnouncementController>();
       final notificationServiceManager = NotificationServiceManager.instance;
-      
-      Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+
+      Supabase.instance.client.auth.onAuthStateChange.listen((data) async {
         final event = data.event;
         final user = data.session?.user;
-        
+
+        // The splash screen handles the initial navigation. This listener handles auth changes while the app is running.
+        if (event == AuthChangeEvent.initialSession) {
+          return;
+        }
+
         if (event == AuthChangeEvent.signedIn && user != null) {
           // Initialize enhanced notification services for user
           notificationServiceManager.onUserSignIn(user.id).catchError((error) {
             debugPrint('Failed to initialize enhanced notification services: $error');
           });
-          
+
           // Legacy notification service initialization
           notificationService.onUserSignIn().catchError((error) {
             debugPrint('Failed to handle user sign-in for notifications: $error');
           });
-          
+
           // Initialize notification badge controller
           final badgeController = context.read<NotificationBadgeController>();
           badgeController.initialize(user.id).catchError((error) {
             debugPrint('Failed to initialize notification badge controller: $error');
           });
-          
-          // Fetch announcements when user signs in
-          announcementController.fetchAnnouncements().catchError((error) {
-            debugPrint('Failed to fetch announcements on sign-in: $error');
-          });
-          
-          if (mounted) {
-            Navigator.of(context).pushReplacementNamed('/home');
+
+          // Check user profile completion on sign-in
+          await userProfileController.getUserProfile();
+          final profile = userProfileController.userProfile;
+          // Use the global navigator key to avoid context issues
+          final navigator = NavigationService.navigator;
+          if (navigator != null && navigator.mounted) {
+            if (profile != null && !profile.profileCompleted) {
+              navigator.pushReplacementNamed('/complete-profile');
+            } else {
+              navigator.pushReplacementNamed('/home');
+            }
           }
         } else if (event == AuthChangeEvent.signedOut) {
           // Cleanup enhanced notification services
           notificationServiceManager.onUserSignOut().catchError((error) {
             debugPrint('Failed to cleanup enhanced notification services: $error');
           });
-          
+
           // Legacy notification service cleanup
           notificationService.disableToken().catchError((error) {
             debugPrint('Failed to disable notification token: $error');
           });
-          
+
           // Clear announcement cache when user signs out
           announcementController.clearParticipationCache();
-          
-          if (mounted) {
-            Navigator.of(context).pushReplacementNamed('/signin');
+
+          // Use the global navigator key to avoid context issues
+          final navigator = NavigationService.navigator;
+          if (navigator != null && navigator.mounted) {
+            navigator.pushReplacementNamed('/signin');
           }
         }
       });
@@ -201,12 +218,14 @@ class _MyAppState extends State<MyApp> {
       title: 'Goalkeeper-Finder',
       theme: AppTheme.darkTheme,
       navigatorKey: NavigationService.navigatorKey,
-      initialRoute: Supabase.instance.client.auth.currentSession == null ? '/signin' : '/home',
+      initialRoute: '/',
       onGenerateRoute: _generateRoute,
       routes: {
+        '/': (context) => const SplashScreen(),
         '/signin': (context) => const SignInScreen(),
         '/signup': (context) => const SignUpScreen(),
         '/home': (context) => const MainScreen(),
+        '/complete-profile': (context) => const CompleteProfileScreen(),
         '/profile': (context) => const ProfileScreen(),
         '/notifications': (context) => const NotificationsScreen(),
         '/notification-preferences': (context) => const NotificationPreferencesScreen(),
