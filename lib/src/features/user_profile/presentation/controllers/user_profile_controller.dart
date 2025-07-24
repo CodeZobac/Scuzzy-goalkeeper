@@ -33,8 +33,10 @@ class UserProfileController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await _repository.updateUserProfile(userProfile);
-      _userProfile = userProfile;
+      // Ensure profileCompleted is set to true when the profile is updated.
+      final updatedProfile = userProfile..profileCompleted = true;
+      await _repository.updateUserProfile(updatedProfile);
+      _userProfile = updatedProfile;
     } catch (e) {
       // Handle error
     } finally {

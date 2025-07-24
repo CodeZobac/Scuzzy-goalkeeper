@@ -868,6 +868,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> with Tick
         pricePerGame: _priceController.text.isNotEmpty
             ? double.tryParse(_priceController.text)
             : null,
+        profileCompleted: true,
       );
       
       await controller.updateUserProfile(updatedProfile);

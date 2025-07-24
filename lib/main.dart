@@ -5,6 +5,7 @@ import 'package:goalkeeper/src/core/config/app_config.dart';
 import 'package:goalkeeper/src/features/user_profile/data/repositories/user_profile_repository.dart';
 import 'package:goalkeeper/src/features/user_profile/presentation/controllers/user_profile_controller.dart';
 import 'package:goalkeeper/src/features/user_profile/presentation/screens/profile_screen.dart';
+import 'package:goalkeeper/src/features/user_profile/presentation/screens/complete_profile_screen.dart';
 import 'package:goalkeeper/src/features/goalkeeper_search/data/repositories/goalkeeper_search_repository.dart';
 import 'package:goalkeeper/src/features/goalkeeper_search/presentation/controllers/goalkeeper_search_controller.dart';
 import 'package:goalkeeper/src/features/notifications/services/notification_service.dart';
@@ -86,36 +87,33 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     
-    // Handle user authentication state changes
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final notificationService = context.read<NotificationService>();
-      final announcementController = context.read<AnnouncementController>();
-      
-      Supabase.instance.client.auth.onAuthStateChange.listen((data) {
-        final event = data.event;
-        
-        if (event == AuthChangeEvent.signedIn) {
-          notificationService.onUserSignIn().catchError((error) {
-            debugPrint('Failed to handle user sign-in for notifications: $error');
-          });
-          // Fetch announcements when user signs in
-          announcementController.fetchAnnouncements().catchError((error) {
-            debugPrint('Failed to fetch announcements on sign-in: $error');
-          });
-          if (mounted) {
-            Navigator.of(context).pushReplacementNamed('/home');
-          }
-        } else if (event == AuthChangeEvent.signedOut) {
-          notificationService.disableToken().catchError((error) {
-            debugPrint('Failed to disable notification token: $error');
-          });
-          // Clear announcement cache when user signs out
-          announcementController.clearParticipationCache();
-          if (mounted) {
-            Navigator.of(context).pushReplacementNamed('/signin');
-          }
+    _handleAuthStateChanges();
+  }
+
+  void _handleAuthStateChanges() {
+    final userProfileController = context.read<UserProfileController>();
+    final notificationService = context.read<NotificationService>();
+    final announcementController = context.read<AnnouncementController>();
+    Supabase.instance.client.auth.onAuthStateChange.listen((data) async {
+      final event = data.event;
+      if (event == AuthChangeEvent.signedIn) {
+        await userProfileController.getUserProfile();
+        final profile = userProfileController.userProfile;
+        if (profile != null && !profile.profileCompleted) {
+          Navigator.of(context).pushReplacementNamed('/complete-profile');
+        } else {
+          Navigator.of(context).pushReplacementNamed('/home');
         }
-      });
+      } else if (event == AuthChangeEvent.signedOut) {
+        notificationService.disableToken().catchError((error) {
+          debugPrint('Failed to disable notification token: $error');
+        });
+        // Clear announcement cache when user signs out
+        announcementController.clearParticipationCache();
+        if (mounted) {
+          Navigator.of(context).pushReplacementNamed('/signin');
+        }
+      }
     });
   }
 
@@ -131,6 +129,7 @@ class _MyAppState extends State<MyApp> {
         '/signin': (context) => const SignInScreen(),
         '/signup': (context) => const SignUpScreen(),
         '/home': (context) => const MainScreen(),
+        '/complete-profile': (context) => const CompleteProfileScreen(),
         '/profile': (context) => const ProfileScreen(),
         '/notifications': (context) => const NotificationsScreen(),
         '/map': (context) => const MapScreen(),

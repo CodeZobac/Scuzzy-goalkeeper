@@ -15,6 +15,7 @@ class UserProfile {
   List<int>? positioning;
   List<int>? distribution;
   List<int>? communication;
+  bool profileCompleted;
 
   UserProfile({
     required this.id,
@@ -31,6 +32,7 @@ class UserProfile {
     this.positioning,
     this.distribution,
     this.communication,
+    this.profileCompleted = false,
   });
 
   Map<String, dynamic> toMap() {
@@ -49,6 +51,7 @@ class UserProfile {
       'positioning': positioning,
       'distribution': distribution,
       'communication': communication,
+      'profile_completed': profileCompleted,
     };
   }
 
@@ -70,6 +73,7 @@ class UserProfile {
       positioning: map['positioning'] != null ? List<int>.from(map['positioning']) : null,
       distribution: map['distribution'] != null ? List<int>.from(map['distribution']) : null,
       communication: map['communication'] != null ? List<int>.from(map['communication']) : null,
+      profileCompleted: map['profile_completed'] ?? false,
     );
   }
 
