@@ -18,14 +18,27 @@ class UserProfileController extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    try {
-      _userProfile = await _repository.getUserProfile();
-    } catch (e) {
-      // Handle error
-    } finally {
-      _isLoading = false;
-      notifyListeners();
+    const int maxRetries = 3;
+    const delay = Duration(seconds: 1);
+
+    for (int i = 0; i < maxRetries; i++) {
+      try {
+        _userProfile = await _repository.getUserProfile();
+        // If successful, exit the loop
+        break;
+      } catch (e) {
+        debugPrint('Attempt ${i + 1} to get user profile failed: $e');
+        if (i < maxRetries - 1) {
+          // Wait before the next retry
+          await Future.delayed(delay);
+        } else {
+          debugPrint('Failed to get user profile after all retries.');
+        }
+      }
     }
+
+    _isLoading = false;
+    notifyListeners();
   }
 
   Future<void> updateUserProfile(UserProfile userProfile) async {

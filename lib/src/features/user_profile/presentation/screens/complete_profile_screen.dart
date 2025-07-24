@@ -880,7 +880,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> with Tick
             backgroundColor: AppTheme.successColor,
           ),
         );
-        Navigator.of(context).pop();
+        Navigator.of(context).pushReplacementNamed('/home');
       }
     } catch (e) {
       if (mounted) {

@@ -31,6 +31,7 @@ import 'package:goalkeeper/src/features/auth/presentation/screens/sign_up_screen
 import 'package:goalkeeper/src/features/auth/presentation/theme/app_theme.dart';
 import 'package:goalkeeper/src/features/map/presentation/screens/map_screen.dart';
 import 'package:goalkeeper/src/features/main/presentation/screens/main_screen.dart';
+import 'package:goalkeeper/src/shared/screens/splash_screen.dart';
 import 'package:goalkeeper/src/core/error_handling/error_monitoring_service.dart';
 import 'package:goalkeeper/src/core/logging/error_logger.dart';
 
@@ -153,6 +154,11 @@ class _MyAppState extends State<MyApp> {
         final event = data.event;
         final user = data.session?.user;
 
+        // The splash screen handles the initial navigation. This listener handles auth changes while the app is running.
+        if (event == AuthChangeEvent.initialSession) {
+          return;
+        }
+
         if (event == AuthChangeEvent.signedIn && user != null) {
           // Initialize enhanced notification services for user
           notificationServiceManager.onUserSignIn(user.id).catchError((error) {
@@ -170,19 +176,16 @@ class _MyAppState extends State<MyApp> {
             debugPrint('Failed to initialize notification badge controller: $error');
           });
 
-          // Fetch announcements when user signs in
-          announcementController.fetchAnnouncements().catchError((error) {
-            debugPrint('Failed to fetch announcements on sign-in: $error');
-          });
-
-          // Check user profile completion
+          // Check user profile completion on sign-in
           await userProfileController.getUserProfile();
           final profile = userProfileController.userProfile;
-          if (mounted) {
+          // Use the global navigator key to avoid context issues
+          final navigator = NavigationService.navigator;
+          if (navigator != null && navigator.mounted) {
             if (profile != null && !profile.profileCompleted) {
-              Navigator.of(context).pushReplacementNamed('/complete-profile');
+              navigator.pushReplacementNamed('/complete-profile');
             } else {
-              Navigator.of(context).pushReplacementNamed('/home');
+              navigator.pushReplacementNamed('/home');
             }
           }
         } else if (event == AuthChangeEvent.signedOut) {
@@ -199,8 +202,10 @@ class _MyAppState extends State<MyApp> {
           // Clear announcement cache when user signs out
           announcementController.clearParticipationCache();
 
-          if (mounted) {
-            Navigator.of(context).pushReplacementNamed('/signin');
+          // Use the global navigator key to avoid context issues
+          final navigator = NavigationService.navigator;
+          if (navigator != null && navigator.mounted) {
+            navigator.pushReplacementNamed('/signin');
           }
         }
       });
@@ -213,9 +218,10 @@ class _MyAppState extends State<MyApp> {
       title: 'Goalkeeper-Finder',
       theme: AppTheme.darkTheme,
       navigatorKey: NavigationService.navigatorKey,
-      initialRoute: Supabase.instance.client.auth.currentSession == null ? '/signin' : '/home',
+      initialRoute: '/',
       onGenerateRoute: _generateRoute,
       routes: {
+        '/': (context) => const SplashScreen(),
         '/signin': (context) => const SignInScreen(),
         '/signup': (context) => const SignUpScreen(),
         '/home': (context) => const MainScreen(),
