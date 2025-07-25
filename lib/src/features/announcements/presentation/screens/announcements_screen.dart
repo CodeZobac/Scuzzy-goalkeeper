@@ -16,6 +16,8 @@ class AnnouncementsScreen extends StatefulWidget {
 }
 
 class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
+  String _selectedFilter = 'Todos os Anúncios';
+  
   @override
   void initState() {
     super.initState();
@@ -27,7 +29,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
   String _getCurrentDateString() {
     final now = DateTime.now();
     final formatter = DateFormat('dd MMMM');
-    return 'Today, ${formatter.format(now)}';
+    return 'Hoje, ${formatter.format(now)}';
   }
 
   @override
@@ -92,11 +94,20 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
                             ),
                             const SizedBox(height: 8),
                             const Text(
-                              'Recruitment',
+                              'Lobby',
                               style: TextStyle(
                                 fontSize: 32,
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            const Text(
+                              'Cria ou entra num jogo',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.white70,
+                                fontWeight: FontWeight.w400,
                               ),
                             ),
                           ],
@@ -147,7 +158,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
 
   Widget _buildLoadingState() {
     return const LoadingStateWidget(
-      message: 'Loading announcements...',
+      message: 'A carregar anúncios...',
     );
   }
 
@@ -163,7 +174,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
           ),
           const SizedBox(height: 16),
           const Text(
-            'No announcements yet',
+            'Ainda não há anúncios',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w600,
@@ -172,7 +183,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
           ),
           const SizedBox(height: 8),
           const Text(
-            'Be the first to create an announcement',
+            'Seja o primeiro a criar um anúncio',
             style: TextStyle(
               fontSize: 14,
               color: Color(0xFF757575),
@@ -193,14 +204,16 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
   }
 
   Widget _buildAnnouncementsList(AnnouncementController controller) {
+    final filteredAnnouncements = _getFilteredAnnouncements(controller.announcements);
+    
     return RefreshIndicator(
       onRefresh: () => controller.refreshAnnouncements(),
       color: const Color(0xFF4CAF50),
       child: ListView.builder(
         padding: const EdgeInsets.symmetric(vertical: 8),
-        itemCount: controller.announcements.length,
+        itemCount: filteredAnnouncements.length,
         itemBuilder: (context, index) {
-          final announcement = controller.announcements[index];
+          final announcement = filteredAnnouncements[index];
           return AnnouncementCard(
             announcement: announcement,
             onTap: () {
@@ -213,6 +226,42 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
         },
       ),
     );
+  }
+
+  List<dynamic> _getFilteredAnnouncements(List<dynamic> announcements) {
+    final now = DateTime.now();
+    
+    switch (_selectedFilter) {
+      case 'Hoje':
+        return announcements.where((announcement) {
+          final announcementDate = DateTime.parse(announcement.date.toString());
+          return announcementDate.year == now.year &&
+                 announcementDate.month == now.month &&
+                 announcementDate.day == now.day;
+        }).toList();
+      
+      case 'Esta Semana':
+        final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+        final endOfWeek = startOfWeek.add(const Duration(days: 6));
+        return announcements.where((announcement) {
+          final announcementDate = DateTime.parse(announcement.date.toString());
+          return announcementDate.isAfter(startOfWeek.subtract(const Duration(days: 1))) &&
+                 announcementDate.isBefore(endOfWeek.add(const Duration(days: 1)));
+        }).toList();
+      
+      case 'Jogos Gratuitos':
+        return announcements.where((announcement) {
+          return announcement.price == null || announcement.price == 0;
+        }).toList();
+      
+      case 'Jogos Pagos':
+        return announcements.where((announcement) {
+          return announcement.price != null && announcement.price > 0;
+        }).toList();
+      
+      default: // 'Todos os Anúncios'
+        return announcements;
+    }
   }
 
   void _showFilterBottomSheet(BuildContext context) {
@@ -248,7 +297,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
             
             // Title
             const Text(
-              'Filter Announcements',
+              'Filtrar Anúncios',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
@@ -258,11 +307,11 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
             const SizedBox(height: 24),
             
             // Filter options
-            _buildFilterOption('All Announcements', true),
-            _buildFilterOption('Today', false),
-            _buildFilterOption('This Week', false),
-            _buildFilterOption('Free Games', false),
-            _buildFilterOption('Paid Games', false),
+            _buildFilterOption('Todos os Anúncios', _selectedFilter == 'Todos os Anúncios'),
+            _buildFilterOption('Hoje', _selectedFilter == 'Hoje'),
+            _buildFilterOption('Esta Semana', _selectedFilter == 'Esta Semana'),
+            _buildFilterOption('Jogos Gratuitos', _selectedFilter == 'Jogos Gratuitos'),
+            _buildFilterOption('Jogos Pagos', _selectedFilter == 'Jogos Pagos'),
             
             const SizedBox(height: 24),
             
@@ -273,7 +322,9 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
               child: ElevatedButton(
                 onPressed: () {
                   Navigator.of(context).pop();
-                  // TODO: Apply filters
+                  setState(() {
+                    // Filter is already applied through _selectedFilter
+                  });
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF4CAF50),
@@ -284,7 +335,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
                   ),
                 ),
                 child: const Text(
-                  'Apply Filters',
+                  'Aplicar Filtros',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -306,7 +357,9 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
         onTap: () {
-          // TODO: Handle filter selection
+          setState(() {
+            _selectedFilter = title;
+          });
         },
         borderRadius: BorderRadius.circular(12),
         child: Container(
