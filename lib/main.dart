@@ -540,7 +540,7 @@ class _MyAppState extends State<MyApp> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Tela de detalhes do contrato será implementada em breve.',
+                  'Ecrã de detalhes do contrato será implementado em breve.',
                   style: AppTheme.bodyLarge,
                   textAlign: TextAlign.center,
                 ),
@@ -729,7 +729,7 @@ class _DeepLinkHandlerState extends State<_DeepLinkHandler> {
               ),
               SizedBox(height: 24),
               Text(
-                'Carregando...',
+                'A carregar...',
                 style: TextStyle(
                   color: AppTheme.primaryText,
                   fontSize: 16,
