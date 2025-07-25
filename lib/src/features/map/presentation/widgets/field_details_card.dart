@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../domain/models/map_field.dart';
 import '../../../auth/presentation/theme/app_theme.dart';
+import '../../../../core/utils/guest_mode_utils.dart';
+import '../../../../shared/widgets/registration_prompt_dialog.dart';
+import '../../../../shared/helpers/registration_prompt_helper.dart';
 
 class FieldDetailsCard extends StatelessWidget {
   final MapField field;
@@ -12,6 +15,22 @@ class FieldDetailsCard extends StatelessWidget {
     required this.field,
     this.onClose,
   }) : super(key: key);
+
+  void _handleAvailabilityPressed(BuildContext context) {
+    // Check if user is in guest mode
+    if (GuestModeUtils.isGuest) {
+      // Show registration prompt for hiring goalkeeper
+      RegistrationPromptHelper.showHireGoalkeeperPrompt(context);
+    } else {
+      // Handle authenticated user booking flow
+      // TODO: Implement booking flow for authenticated users
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Booking functionality coming soon!'),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -232,21 +251,23 @@ class FieldDetailsCard extends StatelessWidget {
               color: Colors.black,
             ),
           ),
-          ElevatedButton(
-            onPressed: () {},
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.amber,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+          Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () => _handleAvailabilityPressed(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.amber,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-            child: const Row(
-              children: [
-                Text('Availability', style: TextStyle(color: Colors.black)),
-                SizedBox(width: 8),
-                Icon(Icons.arrow_forward, size: 16, color: Colors.black),
-              ],
+              child: const Row(
+                children: [
+                  Text('Availability', style: TextStyle(color: Colors.black)),
+                  SizedBox(width: 8),
+                  Icon(Icons.arrow_forward, size: 16, color: Colors.black),
+                ],
+              ),
             ),
           ),
         ],

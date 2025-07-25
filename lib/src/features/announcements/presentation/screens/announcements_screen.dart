@@ -5,6 +5,7 @@ import '../widgets/announcement_card.dart';
 import '../widgets/loading_state_widget.dart';
 import '../widgets/error_state_widget.dart';
 import '../../../../core/navigation/navigation_service.dart';
+import '../../../auth/presentation/providers/auth_state_provider.dart';
 import 'package:intl/intl.dart';
 
 class AnnouncementsScreen extends StatefulWidget {
@@ -32,10 +33,11 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
   @override
   Widget build(BuildContext context) {
     final announcementController = Provider.of<AnnouncementController>(context);
+    final authStateProvider = Provider.of<AuthStateProvider>(context);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
-      floatingActionButton: Container(
+      floatingActionButton: authStateProvider.isGuest ? null : Container(
         margin: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 80), // Above nav bar
         child: FloatingActionButton(
           onPressed: () {

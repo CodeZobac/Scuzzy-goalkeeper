@@ -8,6 +8,9 @@ import '../../data/repositories/field_repository.dart';
 import '../../domain/models/map_field.dart';
 import '../providers/field_selection_provider.dart';
 import '../../../../shared/widgets/web_svg_asset.dart';
+import '../../../../core/utils/guest_mode_utils.dart';
+import '../../../../shared/widgets/registration_prompt_dialog.dart';
+import '../../../../shared/helpers/registration_prompt_helper.dart';
 
 class MapViewModel extends ChangeNotifier {
   final FieldRepository _fieldRepository;
@@ -305,7 +308,7 @@ class MapViewModel extends ChangeNotifier {
   }
   
   // Build markers for flutter_map
-  List<Marker> buildMarkers() {
+  List<Marker> buildMarkers({BuildContext? context}) {
     List<Marker> markers = [];
 
     // Add field markers with SVG icons
@@ -361,27 +364,32 @@ class MapViewModel extends ChangeNotifier {
             point: playerLocation,
             width: 35,
             height: 35,
-            child: WebSvgAsset(
-              assetPath: isGoalkeeper 
-                ? 'assets/icons8-goalkeeper-o-mais-baddy.svg'
-                : 'assets/icons8-football.svg',
-              width: 35,
-              height: 35,
-              colorFilter: ColorFilter.mode(
-                isGoalkeeper ? Colors.orange : Colors.blue,
-                BlendMode.srcIn,
-              ),
-              placeholder: Container(
+            child: GestureDetector(
+              onTap: isGoalkeeper && context != null 
+                ? () => handleGoalkeeperTap(context)
+                : null,
+              child: WebSvgAsset(
+                assetPath: isGoalkeeper 
+                  ? 'assets/icons8-goalkeeper-o-mais-baddy.svg'
+                  : 'assets/icons8-football.svg',
                 width: 35,
                 height: 35,
-                decoration: BoxDecoration(
-                  color: isGoalkeeper ? Colors.orange : Colors.blue,
-                  shape: BoxShape.circle,
+                colorFilter: ColorFilter.mode(
+                  isGoalkeeper ? Colors.orange : Colors.blue,
+                  BlendMode.srcIn,
                 ),
-                child: Icon(
-                  isGoalkeeper ? Icons.sports_handball : Icons.sports_soccer,
-                  color: Colors.white,
-                  size: 20,
+                placeholder: Container(
+                  width: 35,
+                  height: 35,
+                  decoration: BoxDecoration(
+                    color: isGoalkeeper ? Colors.orange : Colors.blue,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    isGoalkeeper ? Icons.sports_handball : Icons.sports_soccer,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                 ),
               ),
             ),
@@ -427,6 +435,23 @@ class MapViewModel extends ChangeNotifier {
   void centerOnUser() {
     if (_userLocation != null) {
       _moveMapToLocation(_userLocation!.latitude, _userLocation!.longitude);
+    }
+  }
+
+  // Handle goalkeeper marker tap
+  void handleGoalkeeperTap(BuildContext context) {
+    // Check if user is in guest mode
+    if (GuestModeUtils.isGuest) {
+      // Show registration prompt for hiring goalkeeper
+      RegistrationPromptHelper.showHireGoalkeeperPrompt(context);
+    } else {
+      // Handle authenticated user hiring flow
+      // TODO: Implement goalkeeper hiring flow for authenticated users
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Goalkeeper hiring functionality coming soon!'),
+        ),
+      );
     }
   }
 

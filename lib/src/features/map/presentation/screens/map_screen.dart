@@ -72,7 +72,7 @@ class _MapScreenContentState extends State<_MapScreenContent> {
                 },
               ),
               MarkerLayer(
-                markers: viewModel.buildMarkers(),
+                markers: viewModel.buildMarkers(context: context),
               ),
             ],
           ),
