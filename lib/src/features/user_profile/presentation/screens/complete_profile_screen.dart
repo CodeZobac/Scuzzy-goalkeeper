@@ -857,6 +857,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> with Tick
     try {
       final updatedProfile = UserProfile(
         id: _userProfile!.id,
+        createdAt: _userProfile!.createdAt,
         name: _nameController.text.trim(),
         gender: _selectedGender,
         city: _cityController.text.trim(),

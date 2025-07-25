@@ -256,7 +256,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: AppTheme.spacingLarge),
       decoration: BoxDecoration(
-        color: AppTheme.secondaryBackground.withValues(alpha: 0.8),
+        color: AppTheme.secondaryBackground.withOpacity(0.8),
         borderRadius: BorderRadius.circular(AppTheme.borderRadius),
       ),
       child: TabBar(
@@ -446,7 +446,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
             Icon(
               icon,
               size: 80,
-              color: AppTheme.secondaryText.withValues(alpha: 0.5),
+              color: AppTheme.secondaryText.withOpacity(0.5),
             ),
             const SizedBox(height: AppTheme.spacing),
             Text(
@@ -547,8 +547,8 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                         ? AppTheme.buttonGradient
                         : LinearGradient(
                             colors: [
-                              AppTheme.secondaryText.withValues(alpha: 0.3),
-                              AppTheme.secondaryText.withValues(alpha: 0.2),
+                              AppTheme.secondaryText.withOpacity(0.3),
+                              AppTheme.secondaryText.withOpacity(0.2),
                             ],
                           ),
                     shape: BoxShape.circle,
@@ -625,7 +625,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: AppTheme.accentColor.withValues(alpha: 0.2),
+                                color: AppTheme.accentColor.withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
@@ -708,7 +708,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
           Icon(
             Icons.error_outline,
             size: 80,
-            color: AppTheme.errorColor.withValues(alpha: 0.7),
+            color: AppTheme.errorColor.withOpacity(0.7),
           ),
           const SizedBox(height: AppTheme.spacing),
           Text(

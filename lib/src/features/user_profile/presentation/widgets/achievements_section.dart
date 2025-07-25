@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:goalkeeper/src/features/user_profile/data/models/achievement.dart';
 import 'package:goalkeeper/src/features/user_profile/data/models/user_profile.dart';
+import 'package:goalkeeper/src/features/user_profile/data/services/achievement_service.dart';
 import '../../../auth/presentation/theme/app_theme.dart';
 
 class AchievementsSection extends StatefulWidget {
@@ -18,18 +20,22 @@ class _AchievementsSectionState extends State<AchievementsSection>
     with TickerProviderStateMixin {
   late AnimationController _animationController;
   late List<Animation<double>> _badgeAnimations;
+  late final AchievementService _achievementService;
+  late List<Achievement> _achievements;
 
   @override
   void initState() {
     super.initState();
+    _achievementService = AchievementService();
+    _achievements = _achievementService.getAchievements(widget.userProfile);
+
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
 
-    final achievements = _getAchievements();
     _badgeAnimations = List.generate(
-      achievements.length,
+      _achievements.length,
       (index) => Tween<double>(
         begin: 0,
         end: 1,
@@ -55,118 +61,6 @@ class _AchievementsSectionState extends State<AchievementsSection>
   void dispose() {
     _animationController.dispose();
     super.dispose();
-  }
-
-  List<Map<String, dynamic>> _getAchievements() {
-    final achievements = <Map<String, dynamic>>[];
-    
-    // Profile completion achievement
-    if (_getProfileCompletionPercentage() >= 100) {
-      achievements.add({
-        'title': 'Perfil Completo',
-        'description': 'Completou todas as informações do perfil',
-        'icon': Icons.account_circle,
-        'color': AppTheme.successColor,
-        'isUnlocked': true,
-        'rarity': 'common',
-      });
-    }
-
-    // Goalkeeper specific achievements
-    if (widget.userProfile.isGoalkeeper) {
-      achievements.add({
-        'title': 'Guardião',
-        'description': 'Registado como guarda-redes',
-        'icon': Icons.sports_soccer,
-        'color': AppTheme.accentColor,
-        'isUnlocked': true,
-        'rarity': 'rare',
-      });
-
-      if (widget.userProfile.pricePerGame != null) {
-        achievements.add({
-          'title': 'Profissional',
-          'description': 'Definiu preço por jogo',
-          'icon': Icons.euro,
-          'color': const Color(0xFFFFD700),
-          'isUnlocked': true,
-          'rarity': 'epic',
-        });
-      }
-    }
-
-    // Club achievement
-    if (widget.userProfile.club != null) {
-      achievements.add({
-        'title': 'Membro de Clube',
-        'description': 'Associado a um clube',
-        'icon': Icons.groups,
-        'color': AppTheme.successColor,
-        'isUnlocked': true,
-        'rarity': 'common',
-      });
-    }
-
-    // Location achievement
-    if (widget.userProfile.city != null && widget.userProfile.country != null) {
-      achievements.add({
-        'title': 'Cidadão do Mundo',
-        'description': 'Informações de localização completas',
-        'icon': Icons.public,
-        'color': const Color(0xFF2196F3),
-        'isUnlocked': true,
-        'rarity': 'uncommon',
-      });
-    }
-
-    // Age verification achievement
-    if (widget.userProfile.birthDate != null) {
-      achievements.add({
-        'title': 'Verificado',
-        'description': 'Data de nascimento confirmada',
-        'icon': Icons.verified,
-        'color': AppTheme.accentColor,
-        'isUnlocked': true,
-        'rarity': 'uncommon',
-      });
-    }
-
-    // Add some locked achievements for motivation
-    achievements.addAll([
-      {
-        'title': 'Veterano',
-        'description': 'Complete 50 jogos',
-        'icon': Icons.military_tech,
-        'color': AppTheme.secondaryText,
-        'isUnlocked': false,
-        'rarity': 'legendary',
-      },
-      {
-        'title': 'Estrela',
-        'description': 'Receba 100 avaliações positivas',
-        'icon': Icons.star,
-        'color': AppTheme.secondaryText,
-        'isUnlocked': false,
-        'rarity': 'legendary',
-      },
-    ]);
-
-    return achievements;
-  }
-
-  int _getProfileCompletionPercentage() {
-    int completed = 0;
-    const total = 7;
-
-    if (widget.userProfile.name.isNotEmpty) completed++;
-    if (widget.userProfile.gender != null) completed++;
-    if (widget.userProfile.city != null) completed++;
-    if (widget.userProfile.birthDate != null) completed++;
-    if (widget.userProfile.club != null) completed++;
-    if (widget.userProfile.nationality != null) completed++;
-    if (widget.userProfile.country != null) completed++;
-
-    return ((completed / total) * 100).round();
   }
 
   @override
@@ -265,9 +159,8 @@ class _AchievementsSectionState extends State<AchievementsSection>
   }
 
   Widget _buildProgressCard() {
-    final completionPercentage = _getProfileCompletionPercentage();
-    final achievements = _getAchievements();
-    final unlockedCount = achievements.where((a) => a['isUnlocked'] as bool).length;
+    final unlockedCount = _achievements.where((a) => a.isUnlocked).length;
+    final completionPercentage = _achievementService.getProfileCompletionPercentage(widget.userProfile);
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -314,7 +207,7 @@ class _AchievementsSectionState extends State<AchievementsSection>
                       ),
                     ),
                     Text(
-                      '$unlockedCount/${achievements.length} conquistas desbloqueadas',
+                      '$unlockedCount/${_achievements.length} conquistas desbloqueadas',
                       style: AppTheme.bodyMedium.copyWith(
                         color: AppTheme.secondaryText,
                       ),
@@ -360,8 +253,6 @@ class _AchievementsSectionState extends State<AchievementsSection>
   }
 
   Widget _buildAchievementsGrid() {
-    final achievements = _getAchievements();
-
     return AnimatedBuilder(
       animation: _animationController,
       builder: (context, child) {
@@ -374,20 +265,20 @@ class _AchievementsSectionState extends State<AchievementsSection>
             mainAxisSpacing: 12,
             childAspectRatio: 0.85,
           ),
-          itemCount: achievements.length,
+          itemCount: _achievements.length,
           itemBuilder: (context, index) {
-            final achievement = achievements[index];
+            final achievement = _achievements[index];
             return Transform.scale(
-              scale: index < _badgeAnimations.length 
-                  ? _badgeAnimations[index].value 
+              scale: index < _badgeAnimations.length
+                  ? _badgeAnimations[index].value
                   : 1.0,
               child: _buildAchievementBadge(
-                achievement['title'] as String,
-                achievement['description'] as String,
-                achievement['icon'] as IconData,
-                achievement['color'] as Color,
-                achievement['isUnlocked'] as bool,
-                achievement['rarity'] as String,
+                achievement.title,
+                achievement.description,
+                achievement.icon,
+                achievement.color,
+                achievement.isUnlocked,
+                achievement.rarity,
               ),
             );
           },
@@ -402,7 +293,7 @@ class _AchievementsSectionState extends State<AchievementsSection>
     IconData icon,
     Color color,
     bool isUnlocked,
-    String rarity,
+    AchievementRarity rarity,
   ) {
     return GestureDetector(
       onTap: () => _showAchievementDetail(title, description, icon, color, isUnlocked, rarity),
@@ -487,7 +378,7 @@ class _AchievementsSectionState extends State<AchievementsSection>
     IconData icon,
     Color color,
     bool isUnlocked,
-    String rarity,
+    AchievementRarity rarity,
   ) {
     showDialog(
       context: context,
@@ -578,34 +469,34 @@ class _AchievementsSectionState extends State<AchievementsSection>
     );
   }
 
-  Color _getRarityColor(String rarity) {
+  Color _getRarityColor(AchievementRarity rarity) {
     switch (rarity) {
-      case 'common':
+      case AchievementRarity.common:
         return const Color(0xFF9E9E9E);
-      case 'uncommon':
+      case AchievementRarity.uncommon:
         return const Color(0xFF4CAF50);
-      case 'rare':
+      case AchievementRarity.rare:
         return const Color(0xFF2196F3);
-      case 'epic':
+      case AchievementRarity.epic:
         return const Color(0xFF9C27B0);
-      case 'legendary':
+      case AchievementRarity.legendary:
         return const Color(0xFFFFD700);
       default:
         return AppTheme.secondaryText;
     }
   }
 
-  String _getRarityLabel(String rarity) {
+  String _getRarityLabel(AchievementRarity rarity) {
     switch (rarity) {
-      case 'common':
+      case AchievementRarity.common:
         return 'COMUM';
-      case 'uncommon':
+      case AchievementRarity.uncommon:
         return 'INCOMUM';
-      case 'rare':
+      case AchievementRarity.rare:
         return 'RARO';
-      case 'epic':
+      case AchievementRarity.epic:
         return 'ÉPICO';
-      case 'legendary':
+      case AchievementRarity.legendary:
         return 'LENDÁRIO';
       default:
         return 'COMUM';
