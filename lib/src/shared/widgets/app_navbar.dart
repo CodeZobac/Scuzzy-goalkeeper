@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../features/auth/presentation/theme/app_theme.dart';
-import '../../features/map/data/repositories/field_repository.dart';
-import '../../features/map/domain/models/map_field.dart';
+import '../../features/auth/presentation/providers/auth_state_provider.dart';
 import '../../features/announcements/presentation/controllers/announcement_controller.dart';
-import '../../features/notifications/services/notification_service.dart';
 import '../../features/notifications/presentation/controllers/notification_badge_controller.dart';
 
 enum NavbarItem { home, map, notifications, profile }
@@ -82,39 +79,56 @@ class _AppNavbarState extends State<AppNavbar>
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    Consumer<AnnouncementController>(
-                      builder: (context, announcementController, child) {
+                    Consumer2<AnnouncementController, AuthStateProvider>(
+                      builder: (context, announcementController, authProvider, child) {
                         return _NavbarIcon(
                           icon: Icons.campaign,
                           isSelected: widget.selectedItem == NavbarItem.home,
                           onTap: () => _onItemTap(NavbarItem.home),
                           badgeCount: announcementController.announcements.length,
                           currentScreen: widget.selectedItem,
+                          isGuestMode: authProvider.isGuest,
+                          requiresAuth: false,
                         );
                       },
                     ),
-                    _NavbarIcon(
-                      icon: Icons.stadium,
-                      isSelected: widget.selectedItem == NavbarItem.map,
-                      onTap: () => _onItemTap(NavbarItem.map),
-                      currentScreen: widget.selectedItem,
+                    Consumer<AuthStateProvider>(
+                      builder: (context, authProvider, child) {
+                        return _NavbarIcon(
+                          icon: Icons.stadium,
+                          isSelected: widget.selectedItem == NavbarItem.map,
+                          onTap: () => _onItemTap(NavbarItem.map),
+                          currentScreen: widget.selectedItem,
+                          isGuestMode: authProvider.isGuest,
+                          requiresAuth: false,
+                        );
+                      },
                     ),
-                    Consumer<NotificationBadgeController>(
-                      builder: (context, badgeController, child) {
+                    Consumer2<NotificationBadgeController, AuthStateProvider>(
+                      builder: (context, badgeController, authProvider, child) {
                         return _NavbarIcon(
                           icon: Icons.notifications,
                           isSelected: widget.selectedItem == NavbarItem.notifications,
                           onTap: () => _onItemTap(NavbarItem.notifications),
-                          badgeCount: badgeController.hasUnreadNotifications ? badgeController.unreadCount : null,
+                          badgeCount: authProvider.isGuest ? null : 
+                                     (badgeController.hasUnreadNotifications ? badgeController.unreadCount : null),
                           currentScreen: widget.selectedItem,
+                          isGuestMode: authProvider.isGuest,
+                          requiresAuth: true,
                         );
                       },
                     ),
-                    _NavbarIcon(
-                      icon: Icons.person,
-                      isSelected: widget.selectedItem == NavbarItem.profile,
-                      onTap: () => _onItemTap(NavbarItem.profile),
-                      currentScreen: widget.selectedItem,
+                    Consumer<AuthStateProvider>(
+                      builder: (context, authProvider, child) {
+                        return _NavbarIcon(
+                          icon: Icons.person,
+                          isSelected: widget.selectedItem == NavbarItem.profile,
+                          onTap: () => _onItemTap(NavbarItem.profile),
+                          currentScreen: widget.selectedItem,
+                          isGuestMode: authProvider.isGuest,
+                          requiresAuth: false,
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -133,6 +147,8 @@ class _NavbarIcon extends StatelessWidget {
   final VoidCallback onTap;
   final int? badgeCount;
   final NavbarItem? currentScreen;
+  final bool isGuestMode;
+  final bool requiresAuth;
 
   const _NavbarIcon({
     required this.icon,
@@ -140,12 +156,19 @@ class _NavbarIcon extends StatelessWidget {
     required this.onTap,
     this.badgeCount,
     this.currentScreen,
+    this.isGuestMode = false,
+    this.requiresAuth = false,
   });
 
   Color _getIconColor(BuildContext context) {
     // For map screen, always use white icons (dark background)
     if (currentScreen == NavbarItem.map) {
       return Colors.white;
+    }
+    
+    // For guest mode with auth-required features, use muted color with visual feedback
+    if (isGuestMode && requiresAuth) {
+      return isSelected ? const Color(0xFF0BA95F).withOpacity(0.6) : const Color(0xFF9E9E9E);
     }
     
     // For other screens, use dark icons on light backgrounds
@@ -159,13 +182,17 @@ class _NavbarIcon extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
         decoration: isSelected ? BoxDecoration(
-          color: const Color(0xFF0BA95F).withOpacity(0.2),
+          color: isGuestMode && requiresAuth 
+              ? const Color(0xFF0BA95F).withOpacity(0.1)
+              : const Color(0xFF0BA95F).withOpacity(0.2),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: const Color(0xFF0BA95F).withOpacity(0.4),
+            color: isGuestMode && requiresAuth 
+                ? const Color(0xFF0BA95F).withOpacity(0.2)
+                : const Color(0xFF0BA95F).withOpacity(0.4),
             width: 1,
           ),
-          boxShadow: [
+          boxShadow: isGuestMode && requiresAuth ? [] : [
             BoxShadow(
               color: const Color(0xFF0BA95F).withOpacity(0.3),
               blurRadius: 8,
@@ -181,7 +208,25 @@ class _NavbarIcon extends StatelessWidget {
               size: 28,
               color: _getIconColor(context),
             ),
-            if (badgeCount != null && badgeCount! > 0)
+            // Show guest indicator for auth-required features
+            if (isGuestMode && requiresAuth && isSelected)
+              Positioned(
+                right: -4,
+                top: -4,
+                child: Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFF9800),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white,
+                      width: 1,
+                    ),
+                  ),
+                ),
+              ),
+            if (badgeCount != null && badgeCount! > 0 && !isGuestMode)
               Positioned(
                 right: -6,
                 top: -6,
