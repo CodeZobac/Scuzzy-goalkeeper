@@ -254,7 +254,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 24),
       decoration: BoxDecoration(
-        color: AppTheme.secondaryBackground.withOpacity(0.8),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(AppTheme.borderRadius),
         boxShadow: [
           BoxShadow(
@@ -550,16 +550,15 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                  gradient: notification.isUnread
-                      ? const LinearGradient(
-                          colors: [Color(0xFF4CAF50), Color(0xFF45A049)],
-                        )
-                      : LinearGradient(
-                          colors: [
-                            AppTheme.secondaryText.withOpacity(0.3),
-                            AppTheme.secondaryText.withOpacity(0.2),
-                          ],
-                        ),
+                    gradient: notification.isUnread
+                        ? const LinearGradient(
+                            colors: [Color(0xFF4CAF50), Color(0xFF45A049)],
+                          )
+                        : LinearGradient(
+                            colors: [
+                              AppTheme.secondaryText.withOpacity(0.3),
+                              AppTheme.secondaryText.withOpacity(0.2),
+                            ],
                           ),
                     shape: BoxShape.circle,
                   ),
