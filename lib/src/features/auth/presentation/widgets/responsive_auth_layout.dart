@@ -335,10 +335,10 @@ class _ResponsiveAuthLayoutState extends State<ResponsiveAuthLayout>
           desktop: const EdgeInsets.all(16),
         ),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.15),
+          color: Colors.white.withOpacity(0.15),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: Colors.white.withValues(alpha: 0.1),
+            color: Colors.white.withOpacity(0.1),
             width: 1,
           ),
         ),
@@ -386,7 +386,7 @@ class _ResponsiveAuthLayoutState extends State<ResponsiveAuthLayout>
               desktop: 20,
             ),
             fontWeight: FontWeight.w400,
-            color: Colors.white.withValues(alpha: 0.9),
+            color: Colors.white.withOpacity(0.9),
             height: 1.5,
             letterSpacing: 0.1,
           ),
@@ -405,7 +405,7 @@ class _ResponsiveAuthLayoutState extends State<ResponsiveAuthLayout>
             scale: _cardScaleAnimation,
             child: Material(
               elevation: ResponsiveUtils.getResponsiveElevation(context),
-              shadowColor: AppTheme.authPrimaryGreen.withValues(alpha: 0.2),
+              shadowColor: AppTheme.authPrimaryGreen.withOpacity(0.2),
               borderRadius: context.responsiveBorderRadius,
               child: Container(
                 width: double.infinity,
@@ -417,11 +417,11 @@ class _ResponsiveAuthLayoutState extends State<ResponsiveAuthLayout>
                     end: Alignment.bottomRight,
                     colors: [
                       AppTheme.authCardBackground,
-                      AppTheme.authCardBackground.withValues(alpha: 0.98),
+                      AppTheme.authCardBackground.withOpacity(0.98),
                     ],
                   ),
                   border: Border.all(
-                    color: AppTheme.authPrimaryGreen.withValues(alpha: 0.1),
+                    color: AppTheme.authPrimaryGreen.withOpacity(0.1),
                     width: 1,
                   ),
                 ),
@@ -458,7 +458,7 @@ class BackgroundPatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.08)
+      ..color = Colors.white.withOpacity(0.08)
       ..style = PaintingStyle.fill;
 
     for (int i = 0; i < 6; i++) {

@@ -860,6 +860,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
     try {
       final updatedProfile = UserProfile(
         id: widget.userProfile.id,
+        createdAt: widget.userProfile.createdAt,
         name: _nameController.text.trim(),
         gender: _selectedGender,
         city: _cityController.text.trim(),
