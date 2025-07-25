@@ -56,7 +56,7 @@ dependencies:
 
   # Image caching
   cached_network_image: ^3.3.1
-  
+
   # SVG support
   flutter_svg: ^2.0.7
 
@@ -86,12 +86,14 @@ flutter:
   uses-material-design: true
 
   assets:
+    - .env
     - assets/goalkeeper_fields.geojson
     - assets/goalkeeper_mapbox_style.json
     - assets/auth-header.svg
     - assets/icons8-football-field.svg
     - assets/icons8-football.svg
     - assets/icons8-goalkeeper-o-mais-baddy.svg
+    - .env
 
   # To add assets to your application, add an assets section, like this:
   # assets:
