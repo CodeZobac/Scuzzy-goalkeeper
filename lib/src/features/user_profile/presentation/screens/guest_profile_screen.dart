@@ -117,7 +117,7 @@ class _GuestProfileScreenState extends State<GuestProfileScreen>
       body: Container(
         child: _buildGuestProfileContent(size),
       ),
-      floatingActionButton: _buildAnimatedRegisterButton(),
+      floatingActionButton: _buildActionButtons(),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
@@ -140,7 +140,7 @@ class _GuestProfileScreenState extends State<GuestProfileScreen>
                 _buildFeatureCards(),
                 const SizedBox(height: AppTheme.spacingLarge),
                 _buildRegistrationCard(),
-                const SizedBox(height: 100), // Space for button
+                const SizedBox(height: 120), // Space for buttons
               ]),
             ),
           ),
@@ -634,54 +634,51 @@ class _GuestProfileScreenState extends State<GuestProfileScreen>
       builder: (context, child) {
         return Transform.scale(
           scale: _buttonScaleAnimation.value,
-          child: Transform.rotate(
-            angle: _buttonRotationAnimation.value * 0.1 * math.pi,
-            child: Container(
-              width: double.infinity,
-              margin: EdgeInsets.only(
-                bottom: MediaQuery.of(context).padding.bottom + 35,
-                left: 16,
-                right: 16,
-              ),
-              decoration: BoxDecoration(
-                gradient: AppTheme.authButtonGradient,
+          child: Container(
+            width: double.infinity,
+            margin: EdgeInsets.only(
+              bottom: MediaQuery.of(context).padding.bottom + 35,
+              left: 16,
+              right: 16,
+            ),
+            decoration: BoxDecoration(
+              gradient: AppTheme.authButtonGradient,
+              borderRadius: BorderRadius.circular(30),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.authPrimaryGreen.withOpacity(0.4),
+                  blurRadius: 15,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
                 borderRadius: BorderRadius.circular(30),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppTheme.authPrimaryGreen.withOpacity(0.4),
-                    blurRadius: 15,
-                    offset: const Offset(0, 8),
+                onTap: _navigateToRegister,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 20,
                   ),
-                ],
-              ),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(30),
-                  onTap: _navigateToRegister,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
-                      vertical: 20,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.person_add,
-                          color: Colors.white,
-                          size: 24,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.person_add,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Criar Conta',
+                        style: AppTheme.authButtonText.copyWith(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
                         ),
-                        const SizedBox(width: 12),
-                        Text(
-                          'Criar Conta',
-                          style: AppTheme.authButtonText.copyWith(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -692,7 +689,133 @@ class _GuestProfileScreenState extends State<GuestProfileScreen>
     );
   }
 
+  Widget _buildActionButtons() {
+    return AnimatedBuilder(
+      animation: _buttonAnimationController,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _buttonScaleAnimation.value,
+          child: Container(
+            width: double.infinity,
+            margin: EdgeInsets.only(
+              bottom: MediaQuery.of(context).padding.bottom + 35,
+              left: 16,
+              right: 16,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Register Button
+                Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    gradient: AppTheme.authButtonGradient,
+                    borderRadius: BorderRadius.circular(30),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.authPrimaryGreen.withOpacity(0.4),
+                        blurRadius: 15,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(30),
+                      onTap: _navigateToRegister,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 20,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.person_add,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              'Criar Conta',
+                              style: AppTheme.authButtonText.copyWith(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // Login Button
+                Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(30),
+                    border: Border.all(
+                      color: AppTheme.authPrimaryGreen,
+                      width: 2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(30),
+                      onTap: _navigateToLogin,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 20,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.login,
+                              color: AppTheme.authPrimaryGreen,
+                              size: 24,
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              'Já tenho conta',
+                              style: AppTheme.authButtonText.copyWith(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.authPrimaryGreen,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void _navigateToRegister() {
     Navigator.of(context).pushNamed('/signup');
+  }
+
+  void _navigateToLogin() {
+    Navigator.of(context).pushNamed('/signin');
   }
 }

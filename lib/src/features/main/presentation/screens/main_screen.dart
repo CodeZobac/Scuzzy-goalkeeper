@@ -149,6 +149,18 @@ class _MainScreenState extends State<MainScreen> {
         children: [
           // Main content
           _getSelectedScreen(),
+          // Floating login button for guest users
+          Consumer<AuthStateProvider>(
+            builder: (context, authProvider, child) {
+              if (!authProvider.isGuest) return const SizedBox.shrink();
+              
+              return Positioned(
+                top: MediaQuery.of(context).padding.top + 16,
+                right: 16,
+                child: _buildGuestLoginButton(),
+              );
+            },
+          ),
           // Floating transparent navbar
           Positioned(
             bottom: 0,
@@ -170,6 +182,60 @@ class _MainScreenState extends State<MainScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildGuestLoginButton() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF0BA95F),
+            Color(0xFF0A8A4F),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(25),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0BA95F).withOpacity(0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(25),
+          onTap: () {
+            Navigator.of(context).pushNamed('/signin');
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.login,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  'Entrar',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
