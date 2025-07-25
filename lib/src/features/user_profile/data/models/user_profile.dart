@@ -15,9 +15,12 @@ class UserProfile {
   List<int>? positioning;
   List<int>? distribution;
   List<int>? communication;
+  bool profileCompleted;
+  DateTime createdAt;
 
   UserProfile({
     required this.id,
+    required this.createdAt,
     required this.name,
     this.gender,
     this.city,
@@ -31,7 +34,23 @@ class UserProfile {
     this.positioning,
     this.distribution,
     this.communication,
+    this.profileCompleted = false,
   });
+
+  double getOverallRating() {
+    final allRatings = [
+      ...?reflexes,
+      ...?positioning,
+      ...?distribution,
+      ...?communication,
+    ];
+
+    if (allRatings.isEmpty) {
+      return 0.0;
+    }
+
+    return allRatings.reduce((a, b) => a + b) / allRatings.length;
+  }
 
   Map<String, dynamic> toMap() {
     return {
@@ -49,12 +68,17 @@ class UserProfile {
       'positioning': positioning,
       'distribution': distribution,
       'communication': communication,
+      'profile_completed': profileCompleted,
+      'created_at': createdAt.toIso8601String(),
     };
   }
 
   factory UserProfile.fromMap(Map<String, dynamic> map) {
     return UserProfile(
       id: map['id'],
+      createdAt: map['created_at'] != null
+          ? DateTime.parse(map['created_at'])
+          : DateTime.now(),
       name: map['name'],
       gender: map['gender'],
       city: map['city'],
@@ -70,6 +94,7 @@ class UserProfile {
       positioning: map['positioning'] != null ? List<int>.from(map['positioning']) : null,
       distribution: map['distribution'] != null ? List<int>.from(map['distribution']) : null,
       communication: map['communication'] != null ? List<int>.from(map['communication']) : null,
+      profileCompleted: map['profile_completed'] ?? false,
     );
   }
 
