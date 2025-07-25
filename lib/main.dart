@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:goalkeeper/src/core/config/firebase_config.dart';
 import 'package:goalkeeper/src/core/config/app_config.dart';
 import 'package:goalkeeper/src/features/user_profile/data/repositories/user_profile_repository.dart';
@@ -47,18 +46,13 @@ Future<void> main() async {
   // Initialize Firebase
 
   try {
-    await dotenv.load(fileName: ".env");
-
     // Initialize Firebase (optional - only if configuration files exist)
     final firebaseInitialized = await FirebaseConfig.initialize();
 
-    // Initialize Supabase with environment variables or fallback to AppConfig
-    final supabaseUrl = dotenv.env['SUPABASE_URL'] ?? AppConfig.supabaseUrl;
-    final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY'] ?? AppConfig.supabaseAnonKey;
-    
+    // Initialize Supabase with dart-define environment variables
     await Supabase.initialize(
-      url: supabaseUrl,
-      anonKey: supabaseAnonKey,
+      url: AppConfig.supabaseUrl,
+      anonKey: AppConfig.supabaseAnonKey,
     );
 
     // Initialize the enhanced notification service manager
@@ -68,13 +62,12 @@ Future<void> main() async {
     // Get the core notification service for provider
     notificationService = notificationServiceManager.notificationService;
 
-
     ErrorLogger.logInfo(
       'Application initialized successfully',
       context: 'APP_STARTUP',
       additionalData: {
         'firebase_initialized': firebaseInitialized,
-        'supabase_url': dotenv.env['SUPABASE_URL'] != null ? 'configured' : 'missing',
+        'supabase_url': AppConfig.supabaseUrl.isNotEmpty ? 'configured' : 'missing',
       },
     );
   } catch (error, stackTrace) {
