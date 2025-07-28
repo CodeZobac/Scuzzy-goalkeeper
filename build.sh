@@ -19,20 +19,19 @@ if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ] || [ -z "$MAPBOX_ACCESS
   exit 1
 fi
 
-# Escape all environment variables for safe sed replacement
-# Use a different delimiter for sed to avoid issues with forward slashes in URLs
-escaped_supabase_url=$(printf '%s' "$SUPABASE_URL" | sed -e 's/[\/&]/\\&/g')
-escaped_supabase_anon_key=$(printf '%s' "$SUPABASE_ANON_KEY" | sed -e 's/[\/&]/\\&/g')
-escaped_mapbox_access_token=$(printf '%s' "$MAPBOX_ACCESS_TOKEN" | sed -e 's/[\/&]/\\&/g')
-escaped_mapbox_downloads_token=$(printf '%s' "$MAPBOX_DOWNLOADS_TOKEN" | sed -e 's/[\/&]/\\&/g')
-
 if [ -f lib/src/core/config/app_config.template.dart ]; then
   echo "Creating app_config.dart from template..."
-  sed -e "s|{{SUPABASE_URL}}|$SUPABASE_URL|g" \
-      -e "s|{{SUPABASE_ANON_KEY}}|$SUPABASE_ANON_KEY|g" \
-      -e "s|{{MAPBOX_ACCESS_TOKEN}}|$MAPBOX_ACCESS_TOKEN|g" \
-      -e "s|{{MAPBOX_DOWNLOADS_TOKEN}}|$MAPBOX_DOWNLOADS_TOKEN|g" \
-      lib/src/core/config/app_config.template.dart > lib/src/core/config/app_config.dart
+  
+  # Use cat with here document to avoid sed escaping issues
+  cat > lib/src/core/config/app_config.dart << EOF
+class AppConfig {
+  static const String supabaseUrl = '${SUPABASE_URL}';
+  static const String supabaseAnonKey = '${SUPABASE_ANON_KEY}';
+  static const String mapboxAccessToken = '${MAPBOX_ACCESS_TOKEN}';
+  static const String mapboxDownloadsToken = '${MAPBOX_DOWNLOADS_TOKEN}';
+  static const bool isDemoMode = false;
+}
+EOF
   
   echo "Generated app_config.dart successfully"
   # Verify the file was created and has content
