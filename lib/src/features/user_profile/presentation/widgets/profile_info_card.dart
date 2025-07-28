@@ -290,7 +290,7 @@ class _ProfileInfoCardState extends State<ProfileInfoCard>
           ],
         ),
         const SizedBox(height: 16),
-        if (widget.userProfile.pricePerGame != null) ...[
+        if (widget.userProfile.isGoalkeeper && widget.userProfile.pricePerGame != null) ...[
           _buildDetailItem(
             Icons.euro_outlined,
             'Preço por Jogo',

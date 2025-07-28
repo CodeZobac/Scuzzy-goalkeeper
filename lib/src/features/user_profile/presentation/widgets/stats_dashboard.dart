@@ -124,6 +124,10 @@ class _StatsDashboardState extends State<StatsDashboard>
 
   @override
   Widget build(BuildContext context) {
+    if (!widget.userProfile.isGoalkeeper) {
+      return const SizedBox.shrink();
+    }
+
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -193,9 +197,7 @@ class _StatsDashboardState extends State<StatsDashboard>
               ),
               const SizedBox(height: 4),
               Text(
-                widget.userProfile.isGoalkeeper
-                    ? 'Habilidades de Guarda-Redes'
-                    : 'Habilidades de Jogador',
+                'Habilidades de Guarda-Redes',
                 style: AppTheme.bodyMedium.copyWith(
                   color: AppTheme.secondaryText,
                 ),

@@ -79,7 +79,7 @@ class _FUTProfileCardState extends State<FUTProfileCard>
   }
 
   String get _positionText {
-    return widget.userProfile.isGoalkeeper ? 'GK' : 'FP';
+    return widget.userProfile.isGoalkeeper ? 'GK' : '';
   }
 
   String get _overallRating {
@@ -94,13 +94,8 @@ class _FUTProfileCardState extends State<FUTProfileCard>
       final average = (reflexes + positioning + distribution + communication) / 4;
       return math.min(99, average.round()).toString();
     } else {
-      // Generate a rating based on profile completion and other factors
-      int baseRating = 65;
-      if (widget.userProfile.club != null) baseRating += 5;
-      if (widget.userProfile.nationality != null) baseRating += 5;
-      if (widget.userProfile.birthDate != null) baseRating += 5;
-      if (widget.userProfile.pricePerGame != null) baseRating += 10;
-      return math.min(99, baseRating).toString();
+      // Hardcoded level for now
+      return '2';
     }
   }
 
@@ -115,7 +110,7 @@ class _FUTProfileCardState extends State<FUTProfileCard>
           return Transform.scale(
             scale: _scaleAnimation.value,
             child: Container(
-              height: 280,
+              height: 275,
               margin: const EdgeInsets.symmetric(horizontal: 4),
               decoration: BoxDecoration(
                 boxShadow: [
@@ -161,7 +156,7 @@ class _FUTProfileCardState extends State<FUTProfileCard>
                             // Header with rating and position
                             _buildCardHeader(),
                             
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 8),
                             
                             // Player info and avatar
                             _buildPlayerSection(),
@@ -171,7 +166,7 @@ class _FUTProfileCardState extends State<FUTProfileCard>
                             // Stats section
                             _buildStatsSection(),
                             
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 8),
                             
                             // Footer with club and nationality
                             _buildCardFooter(),
@@ -220,24 +215,27 @@ class _FUTProfileCardState extends State<FUTProfileCard>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                _overallRating.toString(),
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  height: 1,
+              Center(
+                child: Text(
+                  _overallRating.toString(),
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    height: 1,
+                  ),
                 ),
               ),
-              Text(
-                _positionText,
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                  height: 1,
+              if (widget.userProfile.isGoalkeeper)
+                Text(
+                  _positionText,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                    height: 1,
+                  ),
                 ),
-              ),
             ],
           ),
         ),
@@ -349,12 +347,15 @@ class _FUTProfileCardState extends State<FUTProfileCard>
   }
 
   Widget _buildStatsSection() {
-    final stats = _getPlayerStats();
-    
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: stats.map((stat) => _buildStatItem(stat['label']!, stat['value']!)).toList(),
-    );
+    if (widget.userProfile.isGoalkeeper) {
+      final stats = _getPlayerStats();
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: stats.map((stat) => _buildStatItem(stat['label']!, stat['value']!)).toList(),
+      );
+    } else {
+      return _buildPlayerExperienceBar();
+    }
   }
 
   Widget _buildStatItem(String label, String value) {
@@ -431,7 +432,7 @@ class _FUTProfileCardState extends State<FUTProfileCard>
         const Spacer(),
         
         // Price indicator
-        if (widget.userProfile.pricePerGame != null)
+        if (widget.userProfile.isGoalkeeper && widget.userProfile.pricePerGame != null)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
@@ -496,6 +497,65 @@ class _FUTProfileCardState extends State<FUTProfileCard>
         {'label': 'PAS', 'value': '85'},
       ];
     }
+  }
+
+  Widget _buildPlayerExperienceBar() {
+    // Hardcoded data for now
+    const int gamesPlayed = 6;
+    const int level = 2;
+    const int gamesForNextLevel = 10;
+    final double progress = gamesPlayed / gamesForNextLevel;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              'Nível $level',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            const Spacer(),
+            Text(
+              '$gamesPlayed / $gamesForNextLevel Jogos',
+              style: TextStyle(
+                fontSize: 10,
+                color: Colors.white.withOpacity(0.8),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        // Progress bar
+        Container(
+          width: double.infinity,
+          height: 8,
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: FractionallySizedBox(
+            alignment: Alignment.centerLeft,
+            widthFactor: progress,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    _accentColor.withOpacity(0.8),
+                    _accentColor,
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
 
