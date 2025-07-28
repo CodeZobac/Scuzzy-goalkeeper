@@ -1,82 +1,68 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:goalkeeper/src/core/config/firebase_config.dart';
 import 'package:goalkeeper/src/core/config/app_config.dart';
 import 'package:goalkeeper/src/core/config/config_validator.dart';
-import 'package:goalkeeper/src/features/user_profile/data/repositories/user_profile_repository.dart';
-import 'package:goalkeeper/src/features/user_profile/presentation/controllers/user_profile_controller.dart';
-import 'package:goalkeeper/src/features/user_profile/presentation/screens/profile_screen.dart';
-import 'package:goalkeeper/src/features/auth/presentation/providers/auth_state_provider.dart';
-import 'package:goalkeeper/src/features/user_profile/presentation/screens/complete_profile_screen.dart';
-import 'package:goalkeeper/src/features/goalkeeper_search/data/repositories/goalkeeper_search_repository.dart';
-import 'package:goalkeeper/src/features/goalkeeper_search/presentation/controllers/goalkeeper_search_controller.dart';
-import 'package:goalkeeper/src/features/notifications/services/notification_service.dart';
-import 'package:goalkeeper/src/features/notifications/services/notification_service_manager.dart';
-import 'package:goalkeeper/src/features/notifications/presentation/screens/notifications_screen.dart';
-import 'package:goalkeeper/src/features/notifications/presentation/controllers/notification_preferences_controller.dart';
-import 'package:goalkeeper/src/features/notifications/presentation/controllers/notification_badge_controller.dart';
-import 'package:goalkeeper/src/features/notifications/presentation/screens/notification_preferences_screen.dart';
-import 'package:goalkeeper/src/features/notifications/data/repositories/notification_repository.dart';
+import 'package:goalkeeper/src/core/config/firebase_config.dart';
+import 'package:goalkeeper/src/core/error_handling/error_monitoring_service.dart';
+import 'package:goalkeeper/src/core/logging/error_logger.dart';
+import 'package:goalkeeper/src/core/navigation/navigation_service.dart';
 import 'package:goalkeeper/src/features/announcements/data/repositories/announcement_repository_impl.dart';
 import 'package:goalkeeper/src/features/announcements/presentation/controllers/announcement_controller.dart';
 import 'package:goalkeeper/src/features/announcements/presentation/screens/announcement_detail_screen.dart';
 import 'package:goalkeeper/src/features/announcements/presentation/screens/create_announcement_screen.dart';
-import 'package:goalkeeper/src/features/map/presentation/providers/field_selection_provider.dart';
-import 'package:goalkeeper/src/core/navigation/navigation_service.dart';
-import 'package:provider/provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:goalkeeper/src/features/auth/presentation/providers/auth_state_provider.dart';
 import 'package:goalkeeper/src/features/auth/presentation/screens/sign_in_screen.dart';
 import 'package:goalkeeper/src/features/auth/presentation/screens/sign_up_screen.dart';
 import 'package:goalkeeper/src/features/auth/presentation/theme/app_theme.dart';
+import 'package:goalkeeper/src/features/goalkeeper_search/data/repositories/goalkeeper_search_repository.dart';
+import 'package:goalkeeper/src/features/goalkeeper_search/presentation/controllers/goalkeeper_search_controller.dart';
 import 'package:goalkeeper/src/features/main/presentation/screens/main_screen.dart';
+import 'package:goalkeeper/src/features/map/presentation/providers/field_selection_provider.dart';
+import 'package:goalkeeper/src/features/notifications/data/repositories/notification_repository.dart';
+import 'package:goalkeeper/src/features/notifications/presentation/controllers/notification_badge_controller.dart';
+import 'package:goalkeeper/src/features/notifications/presentation/controllers/notification_preferences_controller.dart';
+import 'package:goalkeeper/src/features/notifications/presentation/screens/notification_preferences_screen.dart';
+import 'package:goalkeeper/src/features/notifications/presentation/screens/notifications_screen.dart';
+import 'package:goalkeeper/src/features/notifications/services/notification_service.dart';
+import 'package:goalkeeper/src/features/notifications/services/notification_service_manager.dart';
+import 'package:goalkeeper/src/features/user_profile/data/repositories/user_profile_repository.dart';
+import 'package:goalkeeper/src/features/user_profile/presentation/controllers/user_profile_controller.dart';
+import 'package:goalkeeper/src/features/user_profile/presentation/screens/complete_profile_screen.dart';
+import 'package:goalkeeper/src/features/user_profile/presentation/screens/profile_screen.dart';
 import 'package:goalkeeper/src/shared/screens/splash_screen.dart';
-import 'package:goalkeeper/src/core/error_handling/error_monitoring_service.dart';
-import 'package:goalkeeper/src/core/logging/error_logger.dart';
+import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
 
   // Initialize error monitoring service first
   await ErrorMonitoringService.instance.initialize();
 
   late final NotificationService notificationService;
-
-
-  // Initialize Firebase
+  bool firebaseInitialized = false;
 
   try {
-    // Try to load .env file for local development (will fail silently in production)
-    try {
-      await dotenv.load(fileName: ".env");
-    } catch (e) {
-      // .env file not found or couldn't be loaded - this is expected in production
-      debugPrint('Note: .env file not loaded (expected in production): $e');
-    }
+    // No-op: AppConfig is now generated at build time.
 
     // Initialize Firebase (optional - only if configuration files exist)
-    final firebaseInitialized = await FirebaseConfig.initialize();
+    firebaseInitialized = await FirebaseConfig.initialize();
 
     // Validate and log configuration status
     ConfigValidator.logConfigurationStatus();
     ConfigValidator.validateConfiguration();
-    
-    // Initialize Supabase using unified AppConfig (handles both .env and --dart-define)
-    final supabaseUrl = AppConfig.supabaseUrl;
-    final supabaseAnonKey = AppConfig.supabaseAnonKey;
-    
+
+    // Initialize Supabase using unified AppConfig
     await Supabase.initialize(
-      url: supabaseUrl,
-      anonKey: supabaseAnonKey,
+      url: AppConfig.supabaseUrl,
+      anonKey: AppConfig.supabaseAnonKey,
     );
 
     // Initialize the enhanced notification service manager
     final notificationServiceManager = NotificationServiceManager.instance;
     await notificationServiceManager.initialize();
-    
+
     // Get the core notification service for provider
     notificationService = notificationServiceManager.notificationService;
-
 
     ErrorLogger.logInfo(
       'Application initialized successfully',
@@ -93,13 +79,13 @@ Future<void> main() async {
       context: 'APP_STARTUP_ERROR',
       severity: ErrorSeverity.error,
     );
-    
+
     ErrorMonitoringService.instance.reportError(
       'startup_failure',
       context: 'APP_STARTUP',
       severity: ErrorSeverity.error,
     );
-    
+
     // Re-throw to prevent app from starting in broken state
     rethrow;
   }
@@ -150,7 +136,7 @@ class _MyAppState extends State<MyApp> {
   String _getInitialRoute() {
     // Determine initial route based on authentication state
     final isAuthenticated = Supabase.instance.client.auth.currentSession != null;
-    
+
     if (!isAuthenticated) {
       // For guest users, initialize guest context immediately
       // This ensures guest tracking starts from app launch
@@ -161,7 +147,7 @@ class _MyAppState extends State<MyApp> {
         }
       });
     }
-    
+
     // Both authenticated and guest users start at home
     // MainScreen will handle guest-specific behavior and content
     // This ensures consistent initialization for all users
@@ -170,30 +156,30 @@ class _MyAppState extends State<MyApp> {
 
   Widget _buildHomeRoute(BuildContext context) {
     final authProvider = context.read<AuthStateProvider>();
-    
+
     // Initialize guest context for guest users
     if (authProvider.isGuest) {
       authProvider.initializeGuestContext();
     }
-    
+
     return const MainScreen();
   }
 
   Widget _buildRouteForGuests(BuildContext context, String routeName, int tabIndex) {
     final authProvider = context.read<AuthStateProvider>();
-    
+
     if (authProvider.isGuest) {
       // For guest users, redirect to MainScreen with appropriate tab
       // MainScreen will handle guest-specific content and registration prompts
       // Initialize guest context if not already done
       authProvider.initializeGuestContext();
-      
+
       // Track guest route access
       authProvider.trackGuestContentView('route_$routeName');
-      
+
       return MainScreen(initialTabIndex: tabIndex);
     }
-    
+
     // For authenticated users, return the appropriate screen
     switch (routeName) {
       case '/profile':
@@ -211,13 +197,13 @@ class _MyAppState extends State<MyApp> {
 
   Widget _requiresAuthentication(BuildContext context, Widget screen) {
     final authProvider = context.read<AuthStateProvider>();
-    
+
     if (authProvider.isGuest) {
       // For guest users trying to access auth-required screens, show redirect screen
       // This provides better UX than immediate redirect
       return _buildGuestRedirectScreen('/signup');
     }
-    
+
     return screen;
   }
 

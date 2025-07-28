@@ -43,4 +43,7 @@ app.*.map.json
 /android/app/release
 .env
 
+# Generated configuration file
+lib/src/core/config/app_config.dart
+
 .kiro/settings
