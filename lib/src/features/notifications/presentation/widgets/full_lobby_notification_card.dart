@@ -147,7 +147,7 @@ class FullLobbyNotificationCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
+        color: const Color(0xFF4CAF50).withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(

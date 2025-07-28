@@ -27,6 +27,7 @@ import 'package:goalkeeper/src/features/auth/presentation/screens/sign_in_screen
 import 'package:goalkeeper/src/features/auth/presentation/screens/sign_up_screen.dart';
 import 'package:goalkeeper/src/features/auth/presentation/theme/app_theme.dart';
 import 'package:goalkeeper/src/features/main/presentation/screens/main_screen.dart';
+import 'package:goalkeeper/src/shared/screens/splash_screen.dart';
 import 'package:goalkeeper/src/core/error_handling/error_monitoring_service.dart';
 import 'package:goalkeeper/src/core/logging/error_logger.dart';
 
@@ -213,61 +214,52 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    
+    _handleAuthStateChanges();
+  }
+
+  void _handleAuthStateChanges() {
     // Handle user authentication state changes
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userProfileController = context.read<UserProfileController>();
       final notificationService = context.read<NotificationService>();
       final announcementController = context.read<AnnouncementController>();
       final notificationServiceManager = NotificationServiceManager.instance;
-      
-      Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+
+      Supabase.instance.client.auth.onAuthStateChange.listen((data) async {
         final event = data.event;
         final user = data.session?.user;
-        
+
+        // The splash screen handles the initial navigation. This listener handles auth changes while the app is running.
+        if (event == AuthChangeEvent.initialSession) {
+          return;
+        }
+
         if (event == AuthChangeEvent.signedIn && user != null) {
           // Initialize enhanced notification services for user
           notificationServiceManager.onUserSignIn(user.id).catchError((error) {
             debugPrint('Failed to initialize enhanced notification services: $error');
           });
-          
+
           // Legacy notification service initialization
           notificationService.onUserSignIn().catchError((error) {
             debugPrint('Failed to handle user sign-in for notifications: $error');
           });
-          
+
           // Initialize notification badge controller
           final badgeController = context.read<NotificationBadgeController>();
           badgeController.initialize(user.id).catchError((error) {
             debugPrint('Failed to initialize notification badge controller: $error');
           });
-          
-          // Fetch announcements when user signs in
-          announcementController.fetchAnnouncements().catchError((error) {
-            debugPrint('Failed to fetch announcements on sign-in: $error');
-          });
-          
-          if (mounted) {
-            // Check for intended destination after registration
-            final authProvider = context.read<AuthStateProvider>();
-            final intendedDestination = authProvider.getAndClearIntendedDestination();
-            
-            if (intendedDestination != null) {
-              // Navigate to intended destination with arguments
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) {
-                  Navigator.of(context).pushReplacementNamed(
-                    intendedDestination['destination'],
-                    arguments: intendedDestination['arguments'],
-                  );
-                }
-              });
+
+          await userProfileController.getUserProfile();
+          final profile = userProfileController.userProfile;
+          // Use the global navigator key to avoid context issues
+          final navigator = NavigationService.navigator;
+          if (navigator != null && navigator.mounted) {
+            if (profile != null && !profile.profileCompleted) {
+              navigator.pushReplacementNamed('/complete-profile');
             } else {
-              // Default navigation to home
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) {
-                  Navigator.of(context).pushReplacementNamed('/home');
-                }
-              });
+              navigator.pushReplacementNamed('/home');
             }
           }
         } else if (event == AuthChangeEvent.signedOut) {
@@ -275,31 +267,18 @@ class _MyAppState extends State<MyApp> {
           notificationServiceManager.onUserSignOut().catchError((error) {
             debugPrint('Failed to cleanup enhanced notification services: $error');
           });
-          
+
           // Legacy notification service cleanup
           notificationService.disableToken().catchError((error) {
             debugPrint('Failed to disable notification token: $error');
           });
-          
+
           // Clear announcement cache when user signs out
           announcementController.clearParticipationCache();
-          
-          // Initialize guest context for the auth provider
-          final authProvider = context.read<AuthStateProvider>();
-          authProvider.clearGuestContext();
-          authProvider.initializeGuestContext();
-          
-          if (mounted) {
-            // Clear any pending intended destinations on sign out
-            authProvider.getAndClearIntendedDestination();
-            
-            // Instead of redirecting to signin, redirect to home as guest
-            // This provides a better UX for users who sign out
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) {
-                Navigator.of(context).pushReplacementNamed('/home');
-              }
-            });
+
+          final navigator = NavigationService.navigator;
+          if (navigator != null && navigator.mounted) {
+            navigator.pushReplacementNamed('/signin');
           }
         }
       });
@@ -312,12 +291,13 @@ class _MyAppState extends State<MyApp> {
       title: 'Goalkeeper-Finder',
       theme: AppTheme.darkTheme,
       navigatorKey: NavigationService.navigatorKey,
-      initialRoute: _getInitialRoute(),
+initialRoute: _getInitialRoute(),
       onGenerateRoute: _generateRoute,
       routes: {
+        '/': (context) => const SplashScreen(),
         '/signin': (context) => const SignInScreen(),
         '/signup': (context) => const SignUpScreen(),
-        '/home': (context) => _buildHomeRoute(context),
+'/home': (context) => _buildHomeRoute(context),
         '/profile': (context) => _buildRouteForGuests(context, '/profile', 3),
         '/notifications': (context) => _buildRouteForGuests(context, '/notifications', 2),
         '/notification-preferences': (context) => _requiresAuthentication(context, const NotificationPreferencesScreen()),

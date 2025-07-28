@@ -21,9 +21,13 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch announcements when the screen is initialized
-    Provider.of<AnnouncementController>(context, listen: false)
-        .fetchAnnouncements();
+    // Fetch announcements after the first frame is rendered
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        Provider.of<AnnouncementController>(context, listen: false)
+            .fetchAnnouncements();
+      }
+    });
   }
 
   String _getCurrentDateString() {

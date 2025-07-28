@@ -7,16 +7,14 @@ import '../../../auth/presentation/theme/app_theme.dart';
 import '../../../auth/presentation/widgets/custom_text_field.dart';
 import '../../../auth/presentation/widgets/primary_button.dart';
 
-class EditProfileScreen extends StatefulWidget {
-  final UserProfile userProfile;
-
-  const EditProfileScreen({super.key, required this.userProfile});
+class CompleteProfileScreen extends StatefulWidget {
+  const CompleteProfileScreen({super.key});
 
   @override
-  State<EditProfileScreen> createState() => _EditProfileScreenState();
+  State<CompleteProfileScreen> createState() => _CompleteProfileScreenState();
 }
 
-class _EditProfileScreenState extends State<EditProfileScreen> with TickerProviderStateMixin {
+class _CompleteProfileScreenState extends State<CompleteProfileScreen> with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
 
   late final TextEditingController _nameController;
@@ -41,33 +39,24 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
   bool _isLoading = false;
   DateTime? _selectedDate;
   
-  final List<String> _genderOptions = ['Masculino', 'Feminino', 'Outro'];
-  String? _selectedGender;
+  String? _selectedGender = 'Masculino';
+  bool _isMasculino = true;
   
+  UserProfile? _userProfile;
+
   @override
   void initState() {
     super.initState();
     
-    // Initialize controllers
-    _nameController = TextEditingController(text: widget.userProfile.name);
-    _genderController = TextEditingController(text: widget.userProfile.gender);
-    _cityController = TextEditingController(text: widget.userProfile.city);
-    _birthDateController = TextEditingController(
-        text: widget.userProfile.birthDate != null 
-            ? _formatDateForDisplay(widget.userProfile.birthDate!)
-            : '');
-    _clubController = TextEditingController(text: widget.userProfile.club);
-    _nationalityController = TextEditingController(text: widget.userProfile.nationality);
-    _countryController = TextEditingController(text: widget.userProfile.country);
-    _priceController = TextEditingController(
-        text: widget.userProfile.pricePerGame?.toString() ?? '');
+    _nameController = TextEditingController();
+    _genderController = TextEditingController(text: 'Masculino');
+    _cityController = TextEditingController();
+    _birthDateController = TextEditingController();
+    _clubController = TextEditingController();
+    _nationalityController = TextEditingController();
+    _countryController = TextEditingController();
+    _priceController = TextEditingController();
     
-    // Initialize state
-    _isGoalkeeper = widget.userProfile.isGoalkeeper;
-    _selectedDate = widget.userProfile.birthDate;
-    _selectedGender = widget.userProfile.gender;
-    
-    // Initialize animation controllers
     _mainAnimationController = AnimationController(
       duration: const Duration(milliseconds: 1000),
       vsync: this,
@@ -83,7 +72,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
       vsync: this,
     );
     
-    // Setup animations
     _fadeAnimation = Tween<double>(
       begin: 0,
       end: 1,
@@ -116,8 +104,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
       curve: Curves.easeInOut,
     ));
 
-    // Start animations
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadUserProfile();
       _startAnimations();
     });
   }
@@ -126,6 +114,35 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
     _mainAnimationController.forward();
     await Future.delayed(const Duration(milliseconds: 300));
     _cardAnimationController.forward();
+  }
+
+  Future<void> _loadUserProfile() async {
+    final controller = Provider.of<UserProfileController>(context, listen: false);
+    final profile = await controller.userProfile;
+    if (profile != null) {
+      setState(() {
+        _userProfile = profile;
+        _nameController.text = profile.name;
+        _genderController.text = profile.gender ?? '';
+        _cityController.text = profile.city ?? '';
+        _birthDateController.text = profile.birthDate != null 
+            ? _formatDateForDisplay(profile.birthDate!)
+            : '';
+        _clubController.text = profile.club ?? '';
+        _nationalityController.text = profile.nationality ?? '';
+        _countryController.text = profile.country ?? '';
+        _priceController.text = profile.pricePerGame?.toString() ?? '';
+        _isGoalkeeper = profile.isGoalkeeper;
+        _selectedDate = profile.birthDate;
+        _selectedGender = profile.gender ?? 'Masculino';
+        _genderController.text = _selectedGender!;
+        if (_selectedGender == 'Feminino') {
+          _isMasculino = false;
+        } else {
+          _isMasculino = true;
+        }
+      });
+    }
   }
 
   @override
@@ -191,20 +208,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
       padding: const EdgeInsets.all(AppTheme.spacing),
       child: Row(
         children: [
-          IconButton(
-            onPressed: () => Navigator.of(context).pop(),
-            icon: const Icon(
-              Icons.arrow_back_ios_new,
-              color: Color(0xFF000000),
-            ),
-            style: IconButton.styleFrom(
-              backgroundColor: const Color(0xFF4CAF50).withOpacity(0.3),
-              padding: const EdgeInsets.all(12),
-            ),
-          ),
           const SizedBox(width: 16),
           Text(
-            'Editar Perfil',
+            'Complete o seu Perfil',
             style: AppTheme.headingMedium.copyWith(color: const Color(0xFF000000)),
           ),
         ],
@@ -242,8 +248,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
                       children: [
                         Center(
                           child: Text(
-                            widget.userProfile.name.isNotEmpty
-                                ? widget.userProfile.name[0].toUpperCase()
+                            _userProfile?.name.isNotEmpty == true
+                                ? _userProfile!.name[0].toUpperCase()
                                 : 'U',
                             style: AppTheme.headingLarge.copyWith(
                               fontSize: 36,
@@ -345,7 +351,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
           ),
         ),
         const SizedBox(height: AppTheme.spacing),
-        _buildGenderDropdown(),
+        _buildGenderSwitch(),
         const SizedBox(height: AppTheme.spacing),
         _buildDateField(),
         const SizedBox(height: AppTheme.spacing),
@@ -641,58 +647,49 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
     );
   }
   
-  Widget _buildGenderDropdown() {
-    return Theme(
-      data: Theme.of(context).copyWith(
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: const Color(0xFF283c44),
-          hintStyle: TextStyle(
-            color: Colors.grey[800],
-            fontSize: 14,
-          ),
-          labelStyle: const TextStyle(
-            color: Color(0xFFFFFFFF),
-            fontSize: 16,
-          ),
-          prefixIconColor: const Color(0xFFFFFFFF),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppTheme.borderRadius),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppTheme.borderRadius),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(AppTheme.borderRadius),
-            borderSide: const BorderSide(
-              color: Color(0xFF283c44),
-              width: 2,
-            ),
-          ),
+  Widget _buildGenderSwitch() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFFFF).withOpacity(0.3),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.grey[600]!.withOpacity(0.3),
+          width: 2,
         ),
       ),
-      child: DropdownButtonFormField<String>(
-        value: _selectedGender,
-        decoration: InputDecoration(
-          hintText: 'Genero',
-          prefixIcon: Icon(Icons.wc, color: const Color(0xFFFFFFFF).withOpacity(0.6)),
-        ),
-        dropdownColor: const Color(0xFF283c44),
-        style: AppTheme.bodyLarge.copyWith(color: const Color(0xFFFFFFFF)),
-        items: _genderOptions.map((String value) {
-          return DropdownMenuItem<String>(
-            value: value,
-            child: Text(value),
-          );
-        }).toList(),
-        onChanged: (String? value) {
-          setState(() {
-            _selectedGender = value;
-            _genderController.text = value ?? '';
-          });
-        },
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            'Feminino',
+            style: AppTheme.bodyLarge.copyWith(
+              fontWeight: FontWeight.w600,
+              color: !_isMasculino ? AppTheme.authPrimaryGreen : const Color(0xFF000000),
+            ),
+          ),
+          Switch(
+            value: _isMasculino,
+            onChanged: (value) {
+              setState(() {
+                _isMasculino = value;
+                _selectedGender = _isMasculino ? 'Masculino' : 'Feminino';
+                _genderController.text = _selectedGender!;
+              });
+            },
+            activeTrackColor: AppTheme.authPrimaryGreen.withOpacity(0.5),
+            activeColor: AppTheme.authPrimaryGreen,
+            inactiveTrackColor: AppTheme.authSecondaryGreen.withOpacity(0.5),
+            inactiveThumbColor: AppTheme.authSecondaryGreen,
+          ),
+          Text(
+            'Masculino',
+            style: AppTheme.bodyLarge.copyWith(
+              fontWeight: FontWeight.w600,
+              color: _isMasculino ? AppTheme.authPrimaryGreen : const Color(0xFF000000),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -805,7 +802,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
         return Transform.scale(
           scale: _saveButtonScaleAnimation.value,
           child: PrimaryButton(
-            text: _isLoading ? 'Salvando...' : 'Salvar Alterações',
+            text: _isLoading ? 'Salvando...' : 'Salvar Perfil',
             icon: Icons.save_outlined,
             isLoading: _isLoading,
             onPressed: _isLoading ? null : () => _saveProfile(controller),
@@ -859,8 +856,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
     
     try {
       final updatedProfile = UserProfile(
-        id: widget.userProfile.id,
-        createdAt: widget.userProfile.createdAt,
+        id: _userProfile!.id,
+        createdAt: _userProfile!.createdAt,
         name: _nameController.text.trim(),
         gender: _selectedGender,
         city: _cityController.text.trim(),
@@ -872,6 +869,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
         pricePerGame: _priceController.text.isNotEmpty
             ? double.tryParse(_priceController.text)
             : null,
+        profileCompleted: true,
       );
       
       await controller.updateUserProfile(updatedProfile);
@@ -879,17 +877,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Perfil atualizado com sucesso!'),
+            content: Text('Perfil salvo com sucesso!'),
             backgroundColor: AppTheme.successColor,
           ),
         );
-        Navigator.of(context).pop();
+        Navigator.of(context).pushReplacementNamed('/home');
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Erro ao atualizar perfil. Tente novamente.'),
+            content: Text('Erro ao salvar perfil. Tente novamente.'),
             backgroundColor: AppTheme.errorColor,
           ),
         );

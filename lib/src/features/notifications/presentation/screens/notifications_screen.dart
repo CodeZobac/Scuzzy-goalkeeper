@@ -254,7 +254,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 24),
       decoration: BoxDecoration(
-        color: Colors.white,
+color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -453,7 +453,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
             Icon(
               icon,
               size: 80,
-              color: AppTheme.secondaryText.withValues(alpha: 0.5),
+              color: AppTheme.secondaryText.withOpacity(0.5),
             ),
             const SizedBox(height: AppTheme.spacing),
             Text(
@@ -556,7 +556,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                           )
                         : LinearGradient(
                             colors: [
-                              Color(0xFF757575).withOpacity(0.3),
+Color(0xFF757575).withOpacity(0.3),
                               Color(0xFF757575).withOpacity(0.2),
                             ],
                           ),
@@ -636,7 +636,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF4CAF50).withOpacity(0.1),
+color: const Color(0xFF4CAF50).withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: const Text(
@@ -717,7 +717,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
           Icon(
             Icons.error_outline,
             size: 80,
-            color: AppTheme.errorColor.withValues(alpha: 0.7),
+            color: AppTheme.errorColor.withOpacity(0.7),
           ),
           const SizedBox(height: AppTheme.spacing),
           Text(
