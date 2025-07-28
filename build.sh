@@ -22,13 +22,19 @@ fi
 if [ -f lib/src/core/config/app_config.template.dart ]; then
   echo "Creating app_config.dart from template..."
   
-  # Use cat with here document to avoid sed escaping issues
+  # Escape single quotes in environment variables for Dart string literals
+  ESCAPED_SUPABASE_URL=$(printf '%s' "$SUPABASE_URL" | sed "s/'/\\\\'/g")
+  ESCAPED_SUPABASE_ANON_KEY=$(printf '%s' "$SUPABASE_ANON_KEY" | sed "s/'/\\\\'/g")
+  ESCAPED_MAPBOX_ACCESS_TOKEN=$(printf '%s' "$MAPBOX_ACCESS_TOKEN" | sed "s/'/\\\\'/g")
+  ESCAPED_MAPBOX_DOWNLOADS_TOKEN=$(printf '%s' "$MAPBOX_DOWNLOADS_TOKEN" | sed "s/'/\\\\'/g")
+  
+  # Use cat with here document and escaped variables
   cat > lib/src/core/config/app_config.dart << EOF
 class AppConfig {
-  static const String supabaseUrl = '${SUPABASE_URL}';
-  static const String supabaseAnonKey = '${SUPABASE_ANON_KEY}';
-  static const String mapboxAccessToken = '${MAPBOX_ACCESS_TOKEN}';
-  static const String mapboxDownloadsToken = '${MAPBOX_DOWNLOADS_TOKEN}';
+  static const String supabaseUrl = '${ESCAPED_SUPABASE_URL}';
+  static const String supabaseAnonKey = '${ESCAPED_SUPABASE_ANON_KEY}';
+  static const String mapboxAccessToken = '${ESCAPED_MAPBOX_ACCESS_TOKEN}';
+  static const String mapboxDownloadsToken = '${ESCAPED_MAPBOX_DOWNLOADS_TOKEN}';
   static const bool isDemoMode = false;
 }
 EOF
