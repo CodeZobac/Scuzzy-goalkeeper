@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:goalkeeper/src/features/user_profile/data/services/level_service.dart';
+
 class UserProfile {
   final String id;
   String name;
@@ -17,6 +19,7 @@ class UserProfile {
   List<int>? communication;
   bool profileCompleted;
   DateTime createdAt;
+  int gamesPlayed;
 
   UserProfile({
     required this.id,
@@ -35,7 +38,14 @@ class UserProfile {
     this.distribution,
     this.communication,
     this.profileCompleted = false,
+    this.gamesPlayed = 0,
   });
+
+  int get level => LevelService().getLevelFromGames(gamesPlayed);
+
+  void addGames(int count) {
+    gamesPlayed += count;
+  }
 
   double getOverallRating() {
     final allRatings = [
@@ -70,6 +80,7 @@ class UserProfile {
       'communication': communication,
       'profile_completed': profileCompleted,
       'created_at': createdAt.toIso8601String(),
+      'games_played': gamesPlayed,
     };
   }
 
@@ -95,6 +106,7 @@ class UserProfile {
       distribution: map['distribution'] != null ? List<int>.from(map['distribution']) : null,
       communication: map['communication'] != null ? List<int>.from(map['communication']) : null,
       profileCompleted: map['profile_completed'] ?? false,
+      gamesPlayed: map['games_played'] ?? 0,
     );
   }
 

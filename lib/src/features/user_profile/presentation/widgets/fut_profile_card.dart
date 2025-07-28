@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:goalkeeper/src/features/user_profile/data/models/user_profile.dart';
+import 'package:goalkeeper/src/features/user_profile/data/services/level_service.dart';
 import '../../../auth/presentation/theme/app_theme.dart';
 import 'dart:math' as math;
 
@@ -94,8 +95,7 @@ class _FUTProfileCardState extends State<FUTProfileCard>
       final average = (reflexes + positioning + distribution + communication) / 4;
       return math.min(99, average.round()).toString();
     } else {
-      // Hardcoded level for now
-      return '2';
+      return widget.userProfile.level.toString();
     }
   }
 
@@ -500,11 +500,11 @@ class _FUTProfileCardState extends State<FUTProfileCard>
   }
 
   Widget _buildPlayerExperienceBar() {
-    // Hardcoded data for now
-    const int gamesPlayed = 6;
-    const int level = 2;
-    const int gamesForNextLevel = 10;
-    final double progress = gamesPlayed / gamesForNextLevel;
+    final int gamesPlayed = widget.userProfile.gamesPlayed;
+    final int level = widget.userProfile.level;
+    final int gamesForCurrentLevel = LevelService().getGamesRequiredForLevel(level);
+    final int gamesForNextLevel = LevelService().getGamesRequiredForLevel(level + 1);
+    final double progress = (gamesPlayed - gamesForCurrentLevel) / (gamesForNextLevel - gamesForCurrentLevel);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

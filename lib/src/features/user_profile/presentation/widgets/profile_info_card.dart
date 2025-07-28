@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:goalkeeper/src/features/user_profile/data/models/user_profile.dart';
+import 'package:goalkeeper/src/features/user_profile/data/services/level_service.dart';
 import '../../../auth/presentation/theme/app_theme.dart';
 
 class ProfileInfoCard extends StatefulWidget {
@@ -306,7 +307,7 @@ class _ProfileInfoCardState extends State<ProfileInfoCard>
           widget.userProfile.city != null || widget.userProfile.country != null,
         ),
         const SizedBox(height: 16),
-        _buildExperienceCard(),
+        _buildLevelCard(),
       ],
     );
   }
@@ -487,8 +488,9 @@ class _ProfileInfoCardState extends State<ProfileInfoCard>
     );
   }
 
-  Widget _buildExperienceCard() {
-    final experience = _getExperienceLevel();
+  Widget _buildLevelCard() {
+    final level = widget.userProfile.level;
+    final tier = LevelService().getTierForLevel(level);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -523,19 +525,19 @@ class _ProfileInfoCardState extends State<ProfileInfoCard>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Nível de Experiência',
-                  style: AppTheme.bodyMedium.copyWith(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: AppTheme.secondaryText,
+                  'Nível $level - $tier',
+                  style: AppTheme.bodyLarge.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.successColor,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  experience,
-                  style: AppTheme.bodyLarge.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.successColor,
+                  '${widget.userProfile.gamesPlayed} jogos jogados',
+                  style: AppTheme.bodyMedium.copyWith(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: AppTheme.secondaryText,
                   ),
                 ),
               ],
@@ -565,17 +567,4 @@ class _ProfileInfoCardState extends State<ProfileInfoCard>
     return age;
   }
 
-  String _getExperienceLevel() {
-    // Calculate experience based on profile completion and other factors
-    int score = 0;
-    if (widget.userProfile.club != null) score += 25;
-    if (widget.userProfile.pricePerGame != null) score += 25;
-    if (widget.userProfile.birthDate != null) score += 25;
-    if (widget.userProfile.nationality != null) score += 25;
-
-    if (score >= 75) return 'Experiente';
-    if (score >= 50) return 'Intermediário';
-    if (score >= 25) return 'Iniciante';
-    return 'Novo Jogador';
-  }
 }
