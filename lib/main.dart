@@ -20,8 +20,6 @@ import 'package:goalkeeper/src/features/announcements/data/repositories/announce
 import 'package:goalkeeper/src/features/announcements/presentation/controllers/announcement_controller.dart';
 import 'package:goalkeeper/src/features/announcements/presentation/screens/announcement_detail_screen.dart';
 import 'package:goalkeeper/src/features/announcements/presentation/screens/create_announcement_screen.dart';
-import 'package:goalkeeper/src/features/announcements/presentation/screens/announcements_screen.dart';
-import 'package:goalkeeper/src/features/map/presentation/screens/map_screen.dart';
 import 'package:goalkeeper/src/features/map/presentation/providers/field_selection_provider.dart';
 import 'package:goalkeeper/src/core/navigation/navigation_service.dart';
 import 'package:provider/provider.dart';
