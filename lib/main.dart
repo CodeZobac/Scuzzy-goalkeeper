@@ -45,14 +45,25 @@ Future<void> main() async {
   // Initialize Firebase
 
   try {
-    await dotenv.load(fileName: ".env");
+    // Try to load .env file for development, but don't fail if it doesn't exist (production)
+    try {
+      await dotenv.load(fileName: ".env");
+    } catch (e) {
+      // .env file not found - this is expected in production builds
+      debugPrint('Note: .env file not found, using dart-define or AppConfig defaults');
+    }
 
     // Initialize Firebase (optional - only if configuration files exist)
     final firebaseInitialized = await FirebaseConfig.initialize();
 
     // Initialize Supabase with environment variables or fallback to AppConfig
-    final supabaseUrl = dotenv.env['SUPABASE_URL'] ?? AppConfig.supabaseUrl;
-    final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY'] ?? AppConfig.supabaseAnonKey;
+    // Priority: dart-define > .env > AppConfig defaults
+    final supabaseUrl = AppConfig.supabaseUrl.isNotEmpty 
+        ? AppConfig.supabaseUrl 
+        : dotenv.env['SUPABASE_URL'] ?? '';
+    final supabaseAnonKey = AppConfig.supabaseAnonKey.isNotEmpty 
+        ? AppConfig.supabaseAnonKey 
+        : dotenv.env['SUPABASE_ANON_KEY'] ?? '';
     
     await Supabase.initialize(
       url: supabaseUrl,

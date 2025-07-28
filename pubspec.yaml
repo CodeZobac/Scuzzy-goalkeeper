@@ -93,7 +93,6 @@ flutter:
     - assets/icons8-football-field.svg
     - assets/icons8-football.svg
     - assets/icons8-goalkeeper-o-mais-baddy.svg
-    - .env
 
   # To add assets to your application, add an assets section, like this:
   # assets:
