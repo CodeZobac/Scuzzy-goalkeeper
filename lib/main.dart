@@ -305,7 +305,7 @@ class _MyAppState extends State<MyApp> {
       title: 'Goalkeeper-Finder',
       theme: AppTheme.darkTheme,
       navigatorKey: NavigationService.navigatorKey,
-initialRoute: _getInitialRoute(),
+initialRoute: '/',
       onGenerateRoute: _generateRoute,
       routes: {
         '/': (context) => const SplashScreen(),
