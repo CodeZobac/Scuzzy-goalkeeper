@@ -45,25 +45,28 @@ Future<void> main() async {
   // Initialize Firebase
 
   try {
-    // Try to load .env file for development, but don't fail if it doesn't exist (production)
-    try {
-      await dotenv.load(fileName: ".env");
-    } catch (e) {
-      // .env file not found - this is expected in production builds
-      debugPrint('Note: .env file not found, using dart-define or AppConfig defaults');
-    }
-
     // Initialize Firebase (optional - only if configuration files exist)
     final firebaseInitialized = await FirebaseConfig.initialize();
 
-    // Initialize Supabase with environment variables or fallback to AppConfig
-    // Priority: dart-define > .env > AppConfig defaults
-    final supabaseUrl = AppConfig.supabaseUrl.isNotEmpty 
-        ? AppConfig.supabaseUrl 
-        : dotenv.env['SUPABASE_URL'] ?? '';
-    final supabaseAnonKey = AppConfig.supabaseAnonKey.isNotEmpty 
-        ? AppConfig.supabaseAnonKey 
-        : dotenv.env['SUPABASE_ANON_KEY'] ?? '';
+    // Initialize Supabase with environment variables
+    // Priority: dart-define > .env (dev only) > empty fallback
+    String supabaseUrl = AppConfig.supabaseUrl;
+    String supabaseAnonKey = AppConfig.supabaseAnonKey;
+    
+    // Try to load .env file for development if dart-define values are empty
+    if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
+      try {
+        await dotenv.load(fileName: ".env");
+        supabaseUrl = supabaseUrl.isEmpty ? (dotenv.env['SUPABASE_URL'] ?? '') : supabaseUrl;
+        supabaseAnonKey = supabaseAnonKey.isEmpty ? (dotenv.env['SUPABASE_ANON_KEY'] ?? '') : supabaseAnonKey;
+        debugPrint('Loaded environment variables from .env file for development');
+      } catch (e) {
+        // .env file not found - this is expected in production builds
+        debugPrint('Note: .env file not found, using dart-define values or empty defaults');
+      }
+    } else {
+      debugPrint('Using dart-define environment variables for production');
+    }
     
     await Supabase.initialize(
       url: supabaseUrl,
