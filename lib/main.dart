@@ -6,6 +6,7 @@ import 'package:goalkeeper/src/features/user_profile/data/repositories/user_prof
 import 'package:goalkeeper/src/features/user_profile/presentation/controllers/user_profile_controller.dart';
 import 'package:goalkeeper/src/features/user_profile/presentation/screens/profile_screen.dart';
 import 'package:goalkeeper/src/features/auth/presentation/providers/auth_state_provider.dart';
+import 'package:goalkeeper/src/features/user_profile/presentation/screens/complete_profile_screen.dart';
 import 'package:goalkeeper/src/features/goalkeeper_search/data/repositories/goalkeeper_search_repository.dart';
 import 'package:goalkeeper/src/features/goalkeeper_search/presentation/controllers/goalkeeper_search_controller.dart';
 import 'package:goalkeeper/src/features/notifications/services/notification_service.dart';
@@ -19,6 +20,8 @@ import 'package:goalkeeper/src/features/announcements/data/repositories/announce
 import 'package:goalkeeper/src/features/announcements/presentation/controllers/announcement_controller.dart';
 import 'package:goalkeeper/src/features/announcements/presentation/screens/announcement_detail_screen.dart';
 import 'package:goalkeeper/src/features/announcements/presentation/screens/create_announcement_screen.dart';
+import 'package:goalkeeper/src/features/announcements/presentation/screens/announcements_screen.dart';
+import 'package:goalkeeper/src/features/map/presentation/screens/map_screen.dart';
 import 'package:goalkeeper/src/features/map/presentation/providers/field_selection_provider.dart';
 import 'package:goalkeeper/src/core/navigation/navigation_service.dart';
 import 'package:provider/provider.dart';
@@ -275,10 +278,23 @@ class _MyAppState extends State<MyApp> {
 
           // Clear announcement cache when user signs out
           announcementController.clearParticipationCache();
-
-          final navigator = NavigationService.navigator;
-          if (navigator != null && navigator.mounted) {
-            navigator.pushReplacementNamed('/signin');
+          
+          // Initialize guest context for the auth provider
+          final authProvider = context.read<AuthStateProvider>();
+          authProvider.clearGuestContext();
+          authProvider.initializeGuestContext();
+          
+          if (mounted) {
+            // Clear any pending intended destinations on sign out
+            authProvider.getAndClearIntendedDestination();
+            
+            // Instead of redirecting to signin, redirect to home as guest
+            // This provides a better UX for users who sign out
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                Navigator.of(context).pushReplacementNamed('/home');
+              }
+            });
           }
         }
       });
@@ -297,7 +313,8 @@ initialRoute: _getInitialRoute(),
         '/': (context) => const SplashScreen(),
         '/signin': (context) => const SignInScreen(),
         '/signup': (context) => const SignUpScreen(),
-'/home': (context) => _buildHomeRoute(context),
+        '/home': (context) => _buildHomeRoute(context),
+        '/complete-profile': (context) => const CompleteProfileScreen(),
         '/profile': (context) => _buildRouteForGuests(context, '/profile', 3),
         '/notifications': (context) => _buildRouteForGuests(context, '/notifications', 2),
         '/notification-preferences': (context) => _requiresAuthentication(context, const NotificationPreferencesScreen()),
