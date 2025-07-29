@@ -37,6 +37,7 @@ class _MapScreenContent extends StatefulWidget {
 
 class _MapScreenContentState extends State<_MapScreenContent> {
   late MapController _mapController;
+  double _currentZoom = 12.0;
 
   @override
   void initState() {
@@ -63,6 +64,13 @@ class _MapScreenContentState extends State<_MapScreenContent> {
               initialCenter: const LatLng(38.7223, -9.1393), // Lisbon
               initialZoom: 12.0,
               onTap: (_, __) => context.read<FieldSelectionProvider>().clearSelection(),
+              onPositionChanged: (position, hasGesture) {
+                if (hasGesture && position.zoom != _currentZoom) {
+                  setState(() {
+                    _currentZoom = position.zoom;
+                  });
+                }
+              },
             ),
             children: [
               TileLayer(
@@ -75,6 +83,7 @@ class _MapScreenContentState extends State<_MapScreenContent> {
                 markers: viewModel.buildMarkers(
                   context: context,
                   onGoalkeeperTap: (goalkeeper) => _showHireGoalkeeperForm(context, goalkeeper),
+                  zoom: _currentZoom,
                 ),
               ),
             ],

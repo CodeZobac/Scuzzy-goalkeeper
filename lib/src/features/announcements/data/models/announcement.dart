@@ -52,6 +52,12 @@ class Announcement {
   final int participantCount;
   final int maxParticipants;
   final List<AnnouncementParticipant> participants;
+  
+  // Goalkeeper hiring fields
+  final bool needsGoalkeeper;
+  final String? hiredGoalkeeperId;
+  final String? hiredGoalkeeperName;
+  final double? goalkeeperPrice;
 
   Announcement({
     required this.id,
@@ -71,6 +77,10 @@ class Announcement {
     this.participantCount = 0,
     this.maxParticipants = 22,
     this.participants = const [],
+    this.needsGoalkeeper = false,
+    this.hiredGoalkeeperId,
+    this.hiredGoalkeeperName,
+    this.goalkeeperPrice,
   });
 
   factory Announcement.fromJson(Map<String, dynamic> json) {
@@ -104,6 +114,11 @@ class Announcement {
       participantCount: json['participant_count'] ?? participantsList.length,
       maxParticipants: json['max_participants'] ?? 22,
       participants: participantsList,
+      // Goalkeeper fields
+      needsGoalkeeper: json['needs_goalkeeper'] ?? false,
+      hiredGoalkeeperId: json['hired_goalkeeper_id'],
+      hiredGoalkeeperName: json['hired_goalkeeper_name'],
+      goalkeeperPrice: json['goalkeeper_price']?.toDouble(),
     );
   }
 
@@ -127,6 +142,11 @@ class Announcement {
       'participant_count': participantCount,
       'max_participants': maxParticipants,
       'participants': participants.map((p) => p.toJson()).toList(),
+      // Goalkeeper fields
+      'needs_goalkeeper': needsGoalkeeper,
+      'hired_goalkeeper_id': hiredGoalkeeperId,
+      'hired_goalkeeper_name': hiredGoalkeeperName,
+      'goalkeeper_price': goalkeeperPrice,
     };
   }
 }
