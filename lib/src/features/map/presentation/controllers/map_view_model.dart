@@ -445,11 +445,12 @@ class MapViewModel extends ChangeNotifier {
       markers.add(
         Marker(
           point: cluster.center,
-          width: 80,
-          height: 80,
+          width: 100,
+          height: 100,
           child: ClusterMarker(
             cluster: cluster,
             isActive: false,
+            zoom: zoom,
             onTap: () => _handleClusterTap(cluster, context),
           ),
         ),
@@ -470,26 +471,58 @@ class MapViewModel extends ChangeNotifier {
       markers.add(
         Marker(
           point: LatLng(_userLocation!.latitude, _userLocation!.longitude),
-          width: 30,
-          height: 30,
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.red,
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 3),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.red.withValues(alpha: 0.3),
-                  blurRadius: 10,
-                  spreadRadius: 2,
+          width: 40,
+          height: 40,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Pulsing outer ring
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE53E3E).withOpacity(0.2),
+                  shape: BoxShape.circle,
                 ),
-              ],
-            ),
-            child: const Icon(
-              Icons.person,
-              color: Colors.white,
-              size: 18,
-            ),
+              ),
+              // Main marker
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFFFF6B6B),
+                      Color(0xFFE53E3E),
+                    ],
+                  ),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.white,
+                    width: 3,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                    BoxShadow(
+                      color: const Color(0xFFE53E3E).withOpacity(0.4),
+                      blurRadius: 12,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.person,
+                  color: Colors.white,
+                  size: 14,
+                ),
+              ),
+            ],
           ),
         ),
       );
@@ -513,26 +546,40 @@ class MapViewModel extends ChangeNotifier {
           height: 50,
           child: GestureDetector(
             onTap: () => selectField(field),
-            child: WebSvgAsset(
-              assetPath: 'assets/icons8-football-field.svg',
+            child: Container(
               width: 50,
               height: 50,
-              colorFilter: const ColorFilter.mode(
-                Colors.black,
-                BlendMode.srcIn,
-              ),
-              placeholder: Container(
-                width: 50,
-                height: 50,
-                decoration: const BoxDecoration(
-                  color: Colors.black,
-                  shape: BoxShape.circle,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF66BB6A),
+                    Color(0xFF2E7D32),
+                  ],
                 ),
-                child: const Icon(
-                  Icons.sports_soccer,
+                shape: BoxShape.circle,
+                border: Border.all(
                   color: Colors.white,
-                  size: 30,
+                  width: 3,
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                  BoxShadow(
+                    color: const Color(0xFF4CAF50).withOpacity(0.3),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.sports_soccer,
+                color: Colors.white,
+                size: 24,
               ),
             ),
           ),
@@ -542,8 +589,8 @@ class MapViewModel extends ChangeNotifier {
         final goalkeeper = point.data['goalkeeper'] as RealGoalkeeper;
         return Marker(
           point: point.location,
-          width: 40,
-          height: 40,
+          width: 44,
+          height: 44,
           child: GestureDetector(
             onTap: () {
               if (onGoalkeeperTap != null) {
@@ -565,27 +612,67 @@ class MapViewModel extends ChangeNotifier {
                 handleGoalkeeperTap(context);
               }
             },
-            child: WebSvgAsset(
-              assetPath: 'assets/icons8-goalkeeper-o-mais-baddy.svg',
-              width: 40,
-              height: 40,
-              colorFilter: const ColorFilter.mode(
-                Colors.black,
-                BlendMode.srcIn,
-              ),
-              placeholder: Container(
-                width: 40,
-                height: 40,
-                decoration: const BoxDecoration(
-                  color: Colors.black,
-                  shape: BoxShape.circle,
+            child: Stack(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color(0xFFFFB74D),
+                        Color(0xFFE65100),
+                      ],
+                    ),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white,
+                      width: 3,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                      BoxShadow(
+                        color: const Color(0xFFFF9800).withOpacity(0.3),
+                        blurRadius: 4,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.sports_handball,
+                    color: Colors.white,
+                    size: 20,
+                  ),
                 ),
-                child: const Icon(
-                  Icons.sports_handball,
-                  color: Colors.white,
-                  size: 22,
-                ),
-              ),
+                if (goalkeeper.isVerified)
+                  Positioned(
+                    top: 0,
+                    right: 0,
+                    child: Container(
+                      width: 16,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4CAF50),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white,
+                          width: 2,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.check,
+                        color: Colors.white,
+                        size: 8,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
         );
@@ -593,28 +680,42 @@ class MapViewModel extends ChangeNotifier {
       case ClusterPointType.player:
         return Marker(
           point: point.location,
-          width: 30,
-          height: 30,
-          child: WebSvgAsset(
-            assetPath: 'assets/icons8-football.svg',
-            width: 30,
-            height: 30,
-            colorFilter: const ColorFilter.mode(
-              Colors.black,
-              BlendMode.srcIn,
-            ),
-            placeholder: Container(
-              width: 30,
-              height: 30,
-              decoration: const BoxDecoration(
-                color: Colors.black,
-                shape: BoxShape.circle,
+          width: 36,
+          height: 36,
+          child: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF64B5F6),
+                  Color(0xFF1565C0),
+                ],
               ),
-              child: const Icon(
-                Icons.sports_soccer,
+              shape: BoxShape.circle,
+              border: Border.all(
                 color: Colors.white,
-                size: 16,
+                width: 2,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+                BoxShadow(
+                  color: const Color(0xFF2196F3).withOpacity(0.3),
+                  blurRadius: 3,
+                  offset: const Offset(0, 1),
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.person,
+              color: Colors.white,
+              size: 18,
             ),
           ),
         );
@@ -625,29 +726,59 @@ class MapViewModel extends ChangeNotifier {
   void _handleClusterTap(Cluster cluster, BuildContext? context) {
     if (context == null || _mapController == null) return;
     
-    // Move to cluster center and zoom in
-    _mapController!.move(cluster.center, 15.0);
+    // Calculate appropriate zoom level based on cluster size and current zoom
+    final currentZoom = _mapController!.camera.zoom;
+    final targetZoom = _calculateOptimalZoomForCluster(cluster, currentZoom);
     
-    // Show cluster details in a bottom sheet
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => _buildClusterDetailsSheet(cluster),
-    );
+    // Smooth zoom to cluster center
+    _mapController!.move(cluster.center, targetZoom);
+    
+    // Show cluster details in a bottom sheet only if we're not zooming in significantly
+    if (targetZoom - currentZoom < 2.0) {
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.transparent,
+        isScrollControlled: true,
+        builder: (context) => _buildClusterDetailsSheet(cluster),
+      );
+    }
   }
   
-  // Build cluster details bottom sheet
+  // Calculate optimal zoom level for expanding a cluster
+  double _calculateOptimalZoomForCluster(Cluster cluster, double currentZoom) {
+    // Base the target zoom on cluster size and density
+    if (cluster.size <= 5) {
+      return (currentZoom + 2.0).clamp(14.0, 18.0);
+    } else if (cluster.size <= 15) {
+      return (currentZoom + 1.5).clamp(13.0, 17.0);
+    } else {
+      return (currentZoom + 1.0).clamp(12.0, 16.0);
+    }
+  }
+  
+  // Handle zoom changes for smooth transitions
+  void onZoomChanged(double newZoom) {
+    // This can be used to trigger smooth cluster transitions
+    // For now, we'll just notify listeners to rebuild markers
+    notifyListeners();
+  }
+  
+  // Build enhanced cluster details bottom sheet
   Widget _buildClusterDetailsSheet(Cluster cluster) {
+    final typeBreakdown = cluster.typeBreakdown;
+    final dominantType = cluster.dominantType;
+    
     return Container(
       margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
+            color: Colors.black.withOpacity(0.15),
+            blurRadius: 20,
+            offset: const Offset(0, -5),
+            spreadRadius: 2,
           ),
         ],
       ),
@@ -665,24 +796,43 @@ class MapViewModel extends ChangeNotifier {
             ),
           ),
           
-          // Header
-          Padding(
+          // Header with gradient background
+          Container(
+            width: double.infinity,
             padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(cluster.representativePoint.color),
+                  Color(cluster.representativePoint.color).withOpacity(0.8),
+                ],
+              ),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+            ),
             child: Column(
               children: [
                 Row(
                   children: [
                     Container(
-                      width: 48,
-                      height: 48,
+                      width: 56,
+                      height: 56,
                       decoration: BoxDecoration(
-                        color: Color(cluster.representativePoint.color),
+                        color: Colors.white.withOpacity(0.2),
                         shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.3),
+                          width: 2,
+                        ),
                       ),
                       child: Icon(
-                        Icons.group,
+                        Icons.group_work,
                         color: Colors.white,
-                        size: 24,
+                        size: 28,
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -690,19 +840,21 @@ class MapViewModel extends ChangeNotifier {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Grupo de Localizações',
-                            style: TextStyle(
-                              fontSize: 18,
+                          Text(
+                            '${cluster.size} Localizações',
+                            style: const TextStyle(
+                              fontSize: 20,
                               fontWeight: FontWeight.bold,
+                              color: Colors.white,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             cluster.displaySummary,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 14,
-                              color: Color(0xFF757575),
+                              color: Colors.white.withOpacity(0.9),
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ],
@@ -710,14 +862,142 @@ class MapViewModel extends ChangeNotifier {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  'Aproxime o zoom para ver os detalhes individuais',
+              ],
+            ),
+          ),
+          
+          // Content
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Type breakdown
+                const Text(
+                  'Composição do Grupo',
                   style: TextStyle(
-                    fontSize: 12,
-                    color: const Color(0xFF757575),
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2C2C2C),
                   ),
-                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                
+                ...typeBreakdown.entries.map((entry) {
+                  final type = entry.key;
+                  final count = entry.value;
+                  final percentage = (count / cluster.size * 100).round();
+                  
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8F9FA),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: const Color(0xFFE9ECEF),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Color(ClusterPoint(
+                              id: 'temp',
+                              location: cluster.center,
+                              type: type,
+                              data: {},
+                            ).color),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            _getTypeIconForType(type),
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                count == 1 ? type.displayName : type.pluralDisplayName,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF2C2C2C),
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '$count item${count != 1 ? 's' : ''} ($percentage%)',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF757575),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+                
+                const SizedBox(height: 16),
+                
+                // Action hint
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        const Color(0xFF4CAF50).withOpacity(0.1),
+                        const Color(0xFF4CAF50).withOpacity(0.05),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: const Color(0xFF4CAF50).withOpacity(0.3),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.zoom_in,
+                        color: Color(0xFF4CAF50),
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Aproxime para ver detalhes',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF4CAF50),
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            const Text(
+                              'Faça zoom para expandir este grupo e ver cada localização individualmente',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF757575),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -725,6 +1005,18 @@ class MapViewModel extends ChangeNotifier {
         ],
       ),
     );
+  }
+  
+  // Helper method to get icon for cluster point type
+  IconData _getTypeIconForType(ClusterPointType type) {
+    switch (type) {
+      case ClusterPointType.field:
+        return Icons.sports_soccer;
+      case ClusterPointType.goalkeeper:
+        return Icons.sports_handball;
+      case ClusterPointType.player:
+        return Icons.person;
+    }
   }
 
   // Center map on user location

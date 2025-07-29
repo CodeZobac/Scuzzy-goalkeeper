@@ -19,13 +19,13 @@ class ClusteringService {
     9: 30000,   // 30km at zoom 9
     10: 20000,  // 20km at zoom 10
     11: 15000,  // 15km at zoom 11
-    12: 10000,  // 10km at zoom 12
-    13: 5000,   // 5km at zoom 13
+    12: 8000,   // 8km at zoom 12
+    13: 4000,   // 4km at zoom 13
     14: 2000,   // 2km at zoom 14
-    15: 1000,   // 1km at zoom 15
-    16: 500,    // 500m at zoom 16
-    17: 200,    // 200m at zoom 17
-    18: 100,    // 100m at zoom 18
+    15: 800,    // 800m at zoom 15
+    16: 300,    // 300m at zoom 16
+    17: 100,    // 100m at zoom 17
+    18: 50,     // 50m at zoom 18
   };
 
   /// Cluster points based on zoom level and spatial proximity
@@ -42,7 +42,7 @@ class ClusteringService {
     final double clusterRadius = _zoomToClusterRadius[zoomLevel] ?? 1000;
 
     // If zoom is high enough, don't cluster (show individual points)
-    if (zoomLevel >= 17) {
+    if (zoomLevel >= 16) {
       return ClusterResult(clusters: [], singlePoints: points);
     }
 

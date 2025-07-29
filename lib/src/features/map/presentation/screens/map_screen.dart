@@ -65,10 +65,16 @@ class _MapScreenContentState extends State<_MapScreenContent> {
               initialZoom: 12.0,
               onTap: (_, __) => context.read<FieldSelectionProvider>().clearSelection(),
               onPositionChanged: (position, hasGesture) {
-                if (hasGesture && position.zoom != _currentZoom) {
+                if (position.zoom != _currentZoom) {
                   setState(() {
                     _currentZoom = position.zoom;
                   });
+                  
+                  // Notify view model of zoom change for smooth clustering transitions
+                  if (hasGesture) {
+                    final viewModel = context.read<MapViewModel>();
+                    viewModel.onZoomChanged(_currentZoom);
+                  }
                 }
               },
             ),
