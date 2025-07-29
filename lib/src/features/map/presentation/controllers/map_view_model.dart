@@ -11,7 +11,11 @@ import '../../../../shared/widgets/web_svg_asset.dart';
 import '../../../../core/utils/guest_mode_utils.dart';
 import '../../../../shared/helpers/registration_prompt_helper.dart';
 import '../../data/services/real_data_service.dart';
+import '../../data/services/clustering_service.dart';
 import '../../data/models/real_goalkeeper.dart';
+import '../../data/models/cluster_point.dart';
+import '../../data/models/cluster_result.dart';
+import '../widgets/cluster_marker.dart';
 
 class MapViewModel extends ChangeNotifier {
   final FieldRepository _fieldRepository;
@@ -375,18 +379,136 @@ class MapViewModel extends ChangeNotifier {
     return LatLng(centerLat + deltaLat, centerLng + deltaLng);
   }
   
-  // Build markers for flutter_map
+  // Build markers for flutter_map with clustering support
   List<Marker> buildMarkers({
     BuildContext? context,
     Function(dynamic)? onGoalkeeperTap,
+    double zoom = 12.0,
   }) {
-    List<Marker> markers = [];
-
-    // Add field markers with SVG icons
-    for (MapField field in _filteredFields) {
+    final List<Marker> markers = [];
+    
+    // Convert all data to cluster points
+    final List<ClusterPoint> allPoints = [];
+    
+    // Add field points
+    for (final field in _filteredFields) {
+      allPoints.add(ClusterPoint.fromField(field));
+    }
+    
+    // Add goalkeeper points
+    for (final goalkeeper in _filteredGoalkeepers) {
+      // Generate location for goalkeeper (near a field or default location)
+      LatLng goalkeeperLocation;
+      if (_filteredFields.isNotEmpty) {
+        final randomField = _filteredFields[Random().nextInt(_filteredFields.length)];
+        goalkeeperLocation = _generateRandomLocation(
+          randomField.latitude,
+          randomField.longitude,
+          15.0, // 15km radius from field
+        );
+      } else {
+        // Default to Lisbon area if no fields
+        goalkeeperLocation = _generateRandomLocation(38.7223, -9.1393, 20.0);
+      }
+      
+      allPoints.add(ClusterPoint.fromGoalkeeper(goalkeeper, goalkeeperLocation));
+    }
+    
+    // Add sample player points around fields
+    for (final field in _filteredFields) {
+      final Random random = Random(field.name.hashCode);
+      int playerCount = 2 + random.nextInt(4); // 2-5 players per field
+      
+      for (int i = 0; i < playerCount; i++) {
+        final playerLocation = _generateRandomLocation(
+          field.latitude, 
+          field.longitude, 
+          5.0 // 5km radius
+        );
+        
+        allPoints.add(ClusterPoint.fromPlayer({
+          'id': '${field.id}_player_$i',
+          'name': 'Jogador ${i + 1}',
+        }, playerLocation));
+      }
+    }
+    
+    // Perform clustering
+    final clusterResult = ClusteringService.clusterPoints(
+      points: allPoints,
+      zoom: zoom,
+      minPointsForCluster: 2,
+    );
+    
+    // Add cluster markers
+    for (final cluster in clusterResult.clusters) {
       markers.add(
         Marker(
-          point: LatLng(field.latitude, field.longitude),
+          point: cluster.center,
+          width: 80,
+          height: 80,
+          child: ClusterMarker(
+            cluster: cluster,
+            isActive: false,
+            onTap: () => _handleClusterTap(cluster, context),
+          ),
+        ),
+      );
+    }
+    
+    // Add individual point markers
+    for (final point in clusterResult.singlePoints) {
+      markers.add(_buildIndividualMarker(
+        point: point,
+        context: context,
+        onGoalkeeperTap: onGoalkeeperTap,
+      ));
+    }
+    
+    // Add user location marker if available (always shown individually)
+    if (_userLocation != null) {
+      markers.add(
+        Marker(
+          point: LatLng(_userLocation!.latitude, _userLocation!.longitude),
+          width: 30,
+          height: 30,
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.red,
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 3),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.red.withValues(alpha: 0.3),
+                  blurRadius: 10,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.person,
+              color: Colors.white,
+              size: 18,
+            ),
+          ),
+        ),
+      );
+    }
+
+    return markers;
+  }
+  
+  // Build individual marker for a cluster point
+  Marker _buildIndividualMarker({
+    required ClusterPoint point,
+    BuildContext? context,
+    Function(dynamic)? onGoalkeeperTap,
+  }) {
+    switch (point.type) {
+      case ClusterPointType.field:
+        final field = point.data['field'] as MapField;
+        return Marker(
+          point: point.location,
           width: 50,
           height: 50,
           child: GestureDetector(
@@ -414,77 +536,17 @@ class MapViewModel extends ChangeNotifier {
               ),
             ),
           ),
-        ),
-      );
-      
-      // Add some random players around each field (for visual variety)
-      final Random random = Random(field.name.hashCode);
-      int playerCount = 2 + random.nextInt(4); // 2-5 players per field
-      
-      for (int i = 0; i < playerCount; i++) {
-        LatLng playerLocation = _generateRandomLocation(
-          field.latitude, 
-          field.longitude, 
-          5.0 // 5km radius
         );
         
-        markers.add(
-          Marker(
-            point: playerLocation,
-            width: 30,
-            height: 30,
-            child: WebSvgAsset(
-              assetPath: 'assets/icons8-football.svg',
-              width: 30,
-              height: 30,
-              colorFilter: const ColorFilter.mode(
-                Colors.black, // Black for players
-                BlendMode.srcIn,
-              ),
-              placeholder: Container(
-                width: 30,
-                height: 30,
-                decoration: const BoxDecoration(
-                  color: Colors.black,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.sports_soccer,
-                  color: Colors.white,
-                  size: 16,
-                ),
-              ),
-            ),
-          ),
-        );
-      }
-    }
-
-    // Add real goalkeeper markers
-    for (RealGoalkeeper goalkeeper in _filteredGoalkeepers) {
-      // Generate a location near a random field or use a default location
-      LatLng goalkeeperLocation;
-      if (_filteredFields.isNotEmpty) {
-        final randomField = _filteredFields[Random().nextInt(_filteredFields.length)];
-        goalkeeperLocation = _generateRandomLocation(
-          randomField.latitude,
-          randomField.longitude,
-          15.0, // 15km radius from field
-        );
-      } else {
-        // Default to Lisbon area if no fields
-        goalkeeperLocation = _generateRandomLocation(38.7223, -9.1393, 20.0);
-      }
-
-      markers.add(
-        Marker(
-          point: goalkeeperLocation,
+      case ClusterPointType.goalkeeper:
+        final goalkeeper = point.data['goalkeeper'] as RealGoalkeeper;
+        return Marker(
+          point: point.location,
           width: 40,
           height: 40,
           child: GestureDetector(
             onTap: () {
               if (onGoalkeeperTap != null) {
-                // Create goalkeeper data object from real data
                 final goalkeeperData = {
                   'id': goalkeeper.id,
                   'name': goalkeeper.name,
@@ -526,41 +588,143 @@ class MapViewModel extends ChangeNotifier {
               ),
             ),
           ),
-        ),
-      );
-    }
-
-    // Add user location marker if available
-    if (_userLocation != null) {
-      markers.add(
-        Marker(
-          point: LatLng(_userLocation!.latitude, _userLocation!.longitude),
+        );
+        
+      case ClusterPointType.player:
+        return Marker(
+          point: point.location,
           width: 30,
           height: 30,
-          child: Container(
+          child: WebSvgAsset(
+            assetPath: 'assets/icons8-football.svg',
+            width: 30,
+            height: 30,
+            colorFilter: const ColorFilter.mode(
+              Colors.black,
+              BlendMode.srcIn,
+            ),
+            placeholder: Container(
+              width: 30,
+              height: 30,
+              decoration: const BoxDecoration(
+                color: Colors.black,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.sports_soccer,
+                color: Colors.white,
+                size: 16,
+              ),
+            ),
+          ),
+        );
+    }
+  }
+  
+  // Handle cluster tap - could expand cluster or show details
+  void _handleClusterTap(Cluster cluster, BuildContext? context) {
+    if (context == null || _mapController == null) return;
+    
+    // Move to cluster center and zoom in
+    _mapController!.move(cluster.center, 15.0);
+    
+    // Show cluster details in a bottom sheet
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _buildClusterDetailsSheet(cluster),
+    );
+  }
+  
+  // Build cluster details bottom sheet
+  Widget _buildClusterDetailsSheet(Cluster cluster) {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle bar
+          Container(
+            margin: const EdgeInsets.only(top: 12),
+            width: 40,
+            height: 4,
             decoration: BoxDecoration(
-              color: Colors.red,
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 3),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.red.withValues(alpha: 0.3),
-                  blurRadius: 10,
-                  spreadRadius: 2,
+              color: const Color(0xFFE0E0E0),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          
+          // Header
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: Color(cluster.representativePoint.color),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.group,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Grupo de Localizações',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            cluster.displaySummary,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Color(0xFF757575),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Aproxime o zoom para ver os detalhes individuais',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: const Color(0xFF757575),
+                  ),
+                  textAlign: TextAlign.center,
                 ),
               ],
             ),
-            child: const Icon(
-              Icons.person,
-              color: Colors.white,
-              size: 18,
-            ),
           ),
-        ),
-      );
-    }
-
-    return markers;
+        ],
+      ),
+    );
   }
 
   // Center map on user location
