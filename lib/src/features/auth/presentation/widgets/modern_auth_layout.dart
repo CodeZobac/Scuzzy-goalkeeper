@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'dart:math';
 import '../theme/app_theme.dart';
-import '../../../../shared/widgets/svg_asset_manager.dart';
 
 class ModernAuthLayout extends StatefulWidget {
   final Widget child;
@@ -124,7 +125,9 @@ class _ModernAuthLayoutState extends State<ModernAuthLayout>
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
+    final isDesktop = screenSize.width > 900; // Fullscreen/desktop
     final isTablet = screenSize.width > 600;
+    final isMobile = screenSize.width <= 600;
 
     return Scaffold(
       backgroundColor: AppTheme.authBackground,
@@ -140,16 +143,113 @@ class _ModernAuthLayoutState extends State<ModernAuthLayout>
           ),
         ),
         child: SafeArea(
-          child: Column(
+          child: isDesktop 
+            ? _buildDesktopLayout(context)
+            : _buildMobileLayout(context, isTablet),
+        ),
+      ),
+    );
+  }
+
+  /// Desktop layout with image on the left side, form on the right
+  Widget _buildDesktopLayout(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _headerController,
+      builder: (context, child) {
+        return FadeTransition(
+          opacity: _headerFadeAnimation,
+          child: Row(
             children: [
-              _buildHeader(context, isTablet),
+              // Left side - Image
               Expanded(
-                child: _buildContent(context, isTablet),
+                flex: 5,
+                child: _buildResponsiveAuthImage(context, isDesktop: true),
+              ),
+              // Right side - Form
+              Expanded(
+                flex: 4,
+                child: Container(
+                  padding: const EdgeInsets.all(40),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Back button if needed
+                      if (widget.showBackButton) ...[
+                        GestureDetector(
+                          onTap: () => Navigator.of(context).pop(),
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppTheme.authPrimaryGreen.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: AppTheme.authPrimaryGreen.withOpacity(0.2),
+                                width: 1,
+                              ),
+                            ),
+                            child: Icon(
+                              Icons.arrow_back_ios_new,
+                              color: AppTheme.authPrimaryGreen,
+                              size: 18,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+                      ],
+                      
+                      // Title
+                      Text(
+                        widget.title,
+                        style: const TextStyle(
+                          fontSize: 36,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.authPrimaryGreen,
+                          height: 1.2,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      // Subtitle
+                      Text(
+                        widget.subtitle,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w400,
+                          color: AppTheme.authPrimaryGreen.withOpacity(0.7),
+                          height: 1.5,
+                          letterSpacing: 0.1,
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 40),
+                      
+                      // Form content
+                      Flexible(
+                        child: _buildFormCard(context, isDesktop: true),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),
+        );
+      },
+    );
+  }
+
+  /// Mobile layout with image on top, form below
+  Widget _buildMobileLayout(BuildContext context, bool isTablet) {
+    return Column(
+      children: [
+        _buildHeader(context, isTablet),
+        Expanded(
+          child: _buildContent(context, isTablet),
         ),
-      ),
+      ],
     );
   }
 
@@ -163,8 +263,8 @@ class _ModernAuthLayoutState extends State<ModernAuthLayout>
             position: _headerSlideAnimation,
             child: Stack(
               children: [
-                // SVG Header with enhanced integration and responsive sizing
-                _buildResponsiveAuthHeader(context, isTablet),
+                // PNG Header with enhanced integration and responsive sizing
+                _buildResponsiveAuthImage(context, isDesktop: false),
                 
                 // Overlay content
                 SizedBox(
@@ -245,32 +345,173 @@ class _ModernAuthLayoutState extends State<ModernAuthLayout>
     );
   }
 
-  /// Builds a responsive authentication header with proper SVG integration
+  /// Builds a responsive authentication image with PNG
   /// Handles different screen sizes and provides graceful fallback
-  Widget _buildResponsiveAuthHeader(BuildContext context, bool isTablet) {
+  Widget _buildResponsiveAuthImage(BuildContext context, {required bool isDesktop}) {
     final screenSize = MediaQuery.of(context).size;
-    final headerHeight = isTablet ? 280.0 : 240.0;
+    final imageHeight = isDesktop ? double.infinity : (screenSize.width > 600 ? 280.0 : 240.0);
     
-    return SizedBox(
-      height: headerHeight,
+    debugPrint('🖼️ Attempting to load auth header PNG for ${isDesktop ? 'desktop' : 'mobile'}');
+    debugPrint('📏 Screen size: ${screenSize.width}x${screenSize.height}');
+    
+    return Container(
+      height: isDesktop ? null : imageHeight,
       width: double.infinity,
-      child: SvgAssetManager.getAsset(
-        'auth_header',
-        width: screenSize.width,
-        height: headerHeight,
-        fit: BoxFit.cover,
-        fallback: _buildHeaderFallback(headerHeight),
-        onError: () {
-          debugPrint('Auth header SVG failed to load, using fallback');
-        },
+      child: _buildImageWithFallback(imageHeight, screenSize.width, isDesktop),
+    );
+  }
+
+  /// Builds the form card for desktop layout
+  Widget _buildFormCard(BuildContext context, {required bool isDesktop}) {
+    return AnimatedBuilder(
+      animation: _cardController,
+      builder: (context, child) {
+        return FadeTransition(
+          opacity: _cardFadeAnimation,
+          child: ScaleTransition(
+            scale: _cardScaleAnimation,
+            child: Material(
+              elevation: isDesktop ? 8 : 12,
+              shadowColor: AppTheme.authPrimaryGreen.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(24),
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: AppTheme.authCardBackground,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: AppTheme.authPrimaryGreen.withOpacity(0.1),
+                    width: 1,
+                  ),
+                ),
+                child: AnimatedBuilder(
+                  animation: _contentController,
+                  builder: (context, child) {
+                    return FadeTransition(
+                      opacity: _contentFadeAnimation,
+                      child: SlideTransition(
+                        position: _contentSlideAnimation,
+                        child: Padding(
+                          padding: const EdgeInsets.all(32),
+                          child: widget.child,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+  
+  Widget _buildImageWithFallback(double height, double width, bool isDesktop) {
+    debugPrint('🎨 Loading image for ${isDesktop ? 'desktop' : 'mobile'} layout');
+    debugPrint('🌐 Running on web: ${kIsWeb}');
+    
+    // Different fit strategies for desktop vs mobile
+    final BoxFit imageFit = isDesktop ? BoxFit.cover : BoxFit.cover;
+    
+    return ClipRRect(
+      borderRadius: isDesktop 
+        ? const BorderRadius.only(
+            topRight: Radius.circular(24),
+            bottomRight: Radius.circular(24),
+          )
+        : BorderRadius.zero,
+      child: kIsWeb 
+        ? _buildWebImage(height, width, isDesktop, imageFit)
+        : _buildNativeImage(height, width, isDesktop, imageFit),
+    );
+  }
+
+  /// Web-specific image loading with better error handling
+  Widget _buildWebImage(double height, double width, bool isDesktop, BoxFit imageFit) {
+    debugPrint('🌐 Attempting web image load');
+    
+    // Try PNG first with detailed debugging
+    debugPrint('🎯 Attempting PNG load on web');
+    debugPrint('📍 Asset path: assets/auth-header-original.png');
+    debugPrint('📐 Dimensions: ${width}x${isDesktop ? 'auto' : height}');
+    
+    return Image.asset(
+      'assets/auth-header-original.png',
+      width: width,
+      height: isDesktop ? null : height,
+      fit: imageFit,
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) {
+          debugPrint('✅ PNG loaded successfully on web!');
+          return child;
+        }
+        debugPrint('⏳ PNG loading progress: ${loadingProgress.cumulativeBytesLoaded}/${loadingProgress.expectedTotalBytes}');
+        return _buildLoadingContainer(height, width, isDesktop);
+      },
+      errorBuilder: (context, pngError, pngStackTrace) {
+        debugPrint('❌ PNG failed on web: $pngError');
+        debugPrint('📚 Stack trace: $pngStackTrace');
+        
+        // Fallback to SVG
+        debugPrint('🔄 Falling back to SVG');
+        return Image.asset(
+          'assets/auth-header.svg',
+          width: width,
+          height: isDesktop ? null : height,
+          fit: imageFit,
+          errorBuilder: (context, svgError, svgStackTrace) {
+            debugPrint('❌ SVG also failed: $svgError');
+            return _buildFallbackWithMessage(isDesktop ? 400 : height, isDesktop);
+          },
+        );
+      },
+    );
+  }
+
+  /// Native platform image loading
+  Widget _buildNativeImage(double height, double width, bool isDesktop, BoxFit imageFit) {
+    return Image.asset(
+      'assets/auth-header-original.png',
+      width: width,
+      height: isDesktop ? null : height,
+      fit: imageFit,
+      errorBuilder: (context, error, stackTrace) {
+        debugPrint('❌ Native Image.asset failed: $error');
+        return _buildFallbackWithMessage(isDesktop ? 400 : height, isDesktop);
+      },
+    );
+  }
+
+  /// Loading container with spinner
+  Widget _buildLoadingContainer(double height, double width, bool isDesktop) {
+    return Container(
+      height: isDesktop ? 400 : height,
+      width: width,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppTheme.authPrimaryGreen.withOpacity(0.1),
+            AppTheme.authSecondaryGreen.withOpacity(0.1),
+          ],
+        ),
+      ),
+      child: const Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(AppTheme.authPrimaryGreen),
+        ),
       ),
     );
   }
 
-  /// Builds a graceful fallback when auth-header.svg fails to load
-  Widget _buildHeaderFallback(double height) {
+
+
+  /// Builds a graceful fallback when auth-header.png fails to load
+  Widget _buildHeaderFallback(double height, bool isDesktop) {
     return Container(
-      height: height,
+      height: isDesktop ? null : height,
       width: double.infinity,
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -281,6 +522,12 @@ class _ModernAuthLayoutState extends State<ModernAuthLayout>
             AppTheme.authSecondaryGreen,
           ],
         ),
+        borderRadius: isDesktop 
+          ? const BorderRadius.only(
+              topRight: Radius.circular(24),
+              bottomRight: Radius.circular(24),
+            )
+          : BorderRadius.zero,
       ),
       child: CustomPaint(
         painter: BackgroundPatternPainter(),
@@ -296,6 +543,67 @@ class _ModernAuthLayoutState extends State<ModernAuthLayout>
             ),
           ),
         ),
+      ),
+    );
+  }
+  
+  /// Builds a fallback with debug message
+  Widget _buildFallbackWithMessage(double height, bool isDesktop) {
+    return Container(
+      height: isDesktop ? null : height,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppTheme.authPrimaryGreen,
+            AppTheme.authSecondaryGreen,
+          ],
+        ),
+        borderRadius: isDesktop 
+          ? const BorderRadius.only(
+              topRight: Radius.circular(24),
+              bottomRight: Radius.circular(24),
+            )
+          : BorderRadius.zero,
+      ),
+      child: Stack(
+        children: [
+          CustomPaint(
+            painter: BackgroundPatternPainter(),
+            child: const DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Color(0x1A4CAF50),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          if (kDebugMode)
+            Center(
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'PNG Image loading failed\nUsing fallback design\n${isDesktop ? 'Desktop' : 'Mobile'} layout',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

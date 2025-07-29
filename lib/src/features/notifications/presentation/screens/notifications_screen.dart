@@ -98,21 +98,38 @@ class _NotificationsScreenState extends State<NotificationsScreen>
         return controller;
       },
       child: Scaffold(
-        backgroundColor: AppTheme.primaryBackground,
-        body: Container(
-          decoration: const BoxDecoration(
-            gradient: AppTheme.primaryGradient,
-          ),
-          child: SafeArea(
-            child: Column(
-              children: [
-                _buildHeader(),
-                Expanded(
-                  child: _buildContent(),
+        backgroundColor: AppTheme.authBackground,
+        body: Column(
+          children: [
+            // Large rounded green header container (matching announcements)
+            Container(
+              height: 200,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF4CAF50),
+                    Color(0xFF45A049),
+                  ],
                 ),
-              ],
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(32),
+                  bottomRight: Radius.circular(32),
+                ),
+              ),
+              child: SafeArea(
+                child: _buildHeader(),
+              ),
             ),
-          ),
+            // Content area that can scroll freely
+            Expanded(
+              child: Transform.translate(
+                offset: const Offset(0, -60), // Move content up to overlap header
+                child: _buildContent(),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -125,85 +142,66 @@ class _NotificationsScreenState extends State<NotificationsScreen>
         return FadeTransition(
           opacity: _fadeAnimation,
           child: Padding(
-            padding: const EdgeInsets.all(AppTheme.spacingLarge),
+            padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
             child: Consumer<NotificationController>(
               builder: (context, controller, child) {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        IconButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          icon: const Icon(
-                            Icons.arrow_back_ios,
-                            color: AppTheme.primaryText,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Notificações',
-                            style: AppTheme.headingLarge,
-                          ),
-                        ),
-                        Row(
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            TextButton.icon(
-                              onPressed: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) => const NotificationHistoryScreen(),
-                                  ),
-                                );
-                              },
-                              icon: const Icon(
-                                Icons.history,
-                                size: 16,
-                                color: AppTheme.accentColor,
-                              ),
-                              label: Text(
-                                'Histórico',
-                                style: AppTheme.bodyMedium.copyWith(
-                                  color: AppTheme.accentColor,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                            Text(
+                              _getCurrentDateString(),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w400,
                               ),
                             ),
-                            if (controller.hasUnreadNotifications) ...[
-                              const SizedBox(width: 8),
-                              TextButton(
-                                onPressed: () {
-                                  final user = Supabase.instance.client.auth.currentUser;
-                                  if (user != null) {
-                                    controller.markAllAsRead(user.id);
-                                  }
-                                },
-                                child: Text(
-                                  'Marcar todas como lidas',
-                                  style: AppTheme.bodyMedium.copyWith(
-                                    color: AppTheme.accentColor,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Notificações',
+                              style: TextStyle(
+                                fontSize: 32,
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
                               ),
-                            ],
+                            ),
                           ],
+                        ),
+                        // Actions menu
+                        GestureDetector(
+                          onTap: () => _showActionsBottomSheet(context, controller),
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.more_vert,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
                         ),
                       ],
                     ),
                     if (controller.hasUnreadNotifications) ...[
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 16),
                       Text(
                         '${controller.unreadCount} notificação${controller.unreadCount != 1 ? 's' : ''} não lida${controller.unreadCount != 1 ? 's' : ''}',
-                        style: AppTheme.bodyLarge.copyWith(
-                          color: AppTheme.accentColor,
-                          fontWeight: FontWeight.w600,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
-                    const SizedBox(height: 8),
-                    _buildConnectionStatus(controller),
                   ],
                 );
               },
@@ -254,26 +252,35 @@ class _NotificationsScreenState extends State<NotificationsScreen>
 
   Widget _buildCategoryTabs(NotificationController controller) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: AppTheme.spacingLarge),
+      margin: const EdgeInsets.symmetric(horizontal: 24),
       decoration: BoxDecoration(
-        color: AppTheme.secondaryBackground.withOpacity(0.8),
-        borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: TabBar(
         controller: _tabController,
         indicator: BoxDecoration(
-          gradient: AppTheme.buttonGradient,
-          borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+          gradient: const LinearGradient(
+            colors: [Color(0xFF4CAF50), Color(0xFF45A049)],
+          ),
+          borderRadius: BorderRadius.circular(16),
         ),
         indicatorSize: TabBarIndicatorSize.tab,
         dividerColor: Colors.transparent,
         labelColor: Colors.white,
-        unselectedLabelColor: AppTheme.secondaryText,
-        labelStyle: AppTheme.bodyMedium.copyWith(
+        unselectedLabelColor: const Color(0xFF757575),
+        labelStyle: const TextStyle(
           fontWeight: FontWeight.w600,
           fontSize: 12,
         ),
-        unselectedLabelStyle: AppTheme.bodyMedium.copyWith(
+        unselectedLabelStyle: const TextStyle(
           fontSize: 12,
         ),
         tabs: NotificationCategory.values.map((category) {
@@ -297,7 +304,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: AppTheme.accentColor,
+                      color: const Color(0xFF4CAF50),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
@@ -427,12 +434,12 @@ class _NotificationsScreenState extends State<NotificationsScreen>
         break;
       case NotificationCategory.fullLobbies:
         title = 'Nenhum lobby completo';
-        subtitle = 'Receberá notificações quando seus anúncios atingirem a capacidade máxima';
+        subtitle = 'Receberá notificações quando os seus anúncios atingirem a capacidade máxima';
         icon = Icons.group;
         break;
       case NotificationCategory.general:
         title = 'Nenhuma notificação';
-        subtitle = 'Receberá notificações gerais sobre atividades da sua conta';
+        subtitle = 'Receberá notificações gerais sobre actividades da sua conta';
         icon = Icons.notifications_none;
         break;
     }
@@ -511,44 +518,46 @@ class _NotificationsScreenState extends State<NotificationsScreen>
 
   Widget _buildNotificationCard(AppNotification notification, NotificationController controller) {
     return Container(
-      margin: const EdgeInsets.only(bottom: AppTheme.spacing),
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         border: notification.isUnread
             ? Border.all(
-                color: const Color(0xFFFF9800).withOpacity(0.3),
+                color: const Color(0xFF4CAF50).withOpacity(0.3),
                 width: 2,
               )
             : null,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(notification.isUnread ? 0.15 : 0.08),
-            blurRadius: notification.isUnread ? 12 : 8,
-            offset: const Offset(0, 2),
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+          borderRadius: BorderRadius.circular(16),
           onTap: () => _handleNotificationTap(notification, controller),
           child: Padding(
-            padding: const EdgeInsets.all(AppTheme.spacing),
+            padding: const EdgeInsets.all(16),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  width: 40,
-                  height: 40,
+                  width: 48,
+                  height: 48,
                   decoration: BoxDecoration(
                     gradient: notification.isUnread
-                        ? AppTheme.buttonGradient
+                        ? const LinearGradient(
+                            colors: [Color(0xFF4CAF50), Color(0xFF45A049)],
+                          )
                         : LinearGradient(
                             colors: [
-                              AppTheme.secondaryText.withOpacity(0.3),
-                              AppTheme.secondaryText.withOpacity(0.2),
+Color(0xFF757575).withOpacity(0.3),
+                              Color(0xFF757575).withOpacity(0.2),
                             ],
                           ),
                     shape: BoxShape.circle,
@@ -556,10 +565,10 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                   child: Icon(
                     _getNotificationIcon(notification.type),
                     color: Colors.white,
-                    size: 20,
+                    size: 24,
                   ),
                 ),
-                const SizedBox(width: AppTheme.spacing),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -569,13 +578,14 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                           Expanded(
                             child: Text(
                               notification.title,
-                              style: AppTheme.bodyLarge.copyWith(
+                              style: TextStyle(
+                                fontSize: 16,
                                 fontWeight: notification.isUnread
                                     ? FontWeight.w600
                                     : FontWeight.normal,
                                 color: notification.isUnread
-                                    ? AppTheme.primaryText
-                                    : AppTheme.secondaryText,
+                                    ? const Color(0xFF2C2C2C)
+                                    : const Color(0xFF757575),
                               ),
                             ),
                           ),
@@ -584,7 +594,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                               width: 8,
                               height: 8,
                               decoration: const BoxDecoration(
-                                color: AppTheme.accentColor,
+                                color: Color(0xFF4CAF50),
                                 shape: BoxShape.circle,
                               ),
                             ),
@@ -593,10 +603,11 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                       const SizedBox(height: 4),
                       Text(
                         notification.body,
-                        style: AppTheme.bodyMedium.copyWith(
+                        style: TextStyle(
+                          fontSize: 14,
                           color: notification.isUnread
-                              ? AppTheme.primaryText
-                              : AppTheme.secondaryText,
+                              ? const Color(0xFF2C2C2C)
+                              : const Color(0xFF757575),
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -607,14 +618,14 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                           const Icon(
                             Icons.access_time,
                             size: 14,
-                            color: AppTheme.secondaryText,
+                            color: Color(0xFF757575),
                           ),
                           const SizedBox(width: 4),
                           Text(
                             notification.displayTime,
-                            style: AppTheme.bodyMedium.copyWith(
+                            style: const TextStyle(
                               fontSize: 12,
-                              color: AppTheme.secondaryText,
+                              color: Color(0xFF757575),
                             ),
                           ),
                           const Spacer(),
@@ -625,14 +636,14 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: AppTheme.accentColor.withOpacity(0.2),
+color: const Color(0xFF4CAF50).withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(4),
                               ),
-                              child: Text(
+                              child: const Text(
                                 'Pedido de Agendamento',
-                                style: AppTheme.bodyMedium.copyWith(
+                                style: TextStyle(
                                   fontSize: 10,
-                                  color: AppTheme.accentColor,
+                                  color: Color(0xFF4CAF50),
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -645,10 +656,10 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                 PopupMenuButton<String>(
                   icon: const Icon(
                     Icons.more_vert,
-                    color: AppTheme.secondaryText,
+                    color: Color(0xFF757575),
                     size: 20,
                   ),
-                  color: AppTheme.secondaryBackground,
+                  color: Colors.white,
                   onSelected: (value) {
                     switch (value) {
                       case 'mark_read':
@@ -663,27 +674,25 @@ class _NotificationsScreenState extends State<NotificationsScreen>
                   },
                   itemBuilder: (context) => [
                     if (notification.isUnread)
-                      PopupMenuItem<String>(
+                      const PopupMenuItem<String>(
                         value: 'mark_read',
                         child: Row(
                           children: [
-                            const Icon(Icons.mark_email_read, size: 18),
-                            const SizedBox(width: 8),
-                            Text('Marcar como lida', style: AppTheme.bodyMedium),
+                            Icon(Icons.mark_email_read, size: 18, color: Color(0xFF4CAF50)),
+                            SizedBox(width: 8),
+                            Text('Marcar como lida', style: TextStyle(color: Color(0xFF2C2C2C))),
                           ],
                         ),
                       ),
-                    PopupMenuItem<String>(
+                    const PopupMenuItem<String>(
                       value: 'delete',
                       child: Row(
                         children: [
-                          const Icon(Icons.delete, size: 18, color: AppTheme.errorColor),
-                          const SizedBox(width: 8),
+                          Icon(Icons.delete, size: 18, color: Color(0xFFFF6B6B)),
+                          SizedBox(width: 8),
                           Text(
                             'Eliminar',
-                            style: AppTheme.bodyMedium.copyWith(
-                              color: AppTheme.errorColor,
-                            ),
+                            style: TextStyle(color: Color(0xFFFF6B6B)),
                           ),
                         ],
                       ),
@@ -775,8 +784,8 @@ class _NotificationsScreenState extends State<NotificationsScreen>
         const SizedBox(width: 8),
         Text(
           controller.isRealtimeConnected 
-              ? 'Atualizações em tempo real ativas'
-              : 'Reconectando...',
+              ? 'Actualizações em tempo real activas'
+              : 'A reconectar...',
           style: AppTheme.bodyMedium.copyWith(
             fontSize: 12,
             color: controller.isRealtimeConnected 
@@ -802,25 +811,146 @@ class _NotificationsScreenState extends State<NotificationsScreen>
     );
   }
 
+  String _getCurrentDateString() {
+    final now = DateTime.now();
+    final weekdays = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+    final months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+    return 'Hoje, ${now.day} ${months[now.month - 1]}';
+  }
+
+  void _showActionsBottomSheet(BuildContext context, NotificationController controller) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+          ),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Handle bar
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE0E0E0),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            
+            // Title
+            const Text(
+              'Acções',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF2C2C2C),
+              ),
+            ),
+            const SizedBox(height: 24),
+            
+            // Actions
+            _buildActionOption(
+              icon: Icons.history,
+              title: 'Histórico',
+              onTap: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const NotificationHistoryScreen(),
+                  ),
+                );
+              },
+            ),
+            if (controller.hasUnreadNotifications)
+              _buildActionOption(
+                icon: Icons.mark_email_read,
+                title: 'Marcar todas como lidas',
+                onTap: () {
+                  Navigator.of(context).pop();
+                  final user = Supabase.instance.client.auth.currentUser;
+                  if (user != null) {
+                    controller.markAllAsRead(user.id);
+                  }
+                },
+              ),
+            
+            // Safe area padding
+            SizedBox(height: MediaQuery.of(context).padding.bottom),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionOption({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Icon(
+                icon,
+                color: const Color(0xFF4CAF50),
+                size: 20,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF2C2C2C),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   void _showDeleteConfirmation(AppNotification notification, NotificationController controller) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.secondaryBackground,
-        title: Text(
+        backgroundColor: Colors.white,
+        title: const Text(
           'Eliminar Notificação',
-          style: AppTheme.bodyLarge.copyWith(fontWeight: FontWeight.w600),
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF2C2C2C),
+          ),
         ),
-        content: Text(
+        content: const Text(
           'Tem a certeza que quer eliminar esta notificação?',
-          style: AppTheme.bodyMedium,
+          style: TextStyle(color: Color(0xFF757575)),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text(
+            child: const Text(
               'Cancelar',
-              style: AppTheme.bodyMedium.copyWith(color: AppTheme.secondaryText),
+              style: TextStyle(color: Color(0xFF757575)),
             ),
           ),
           TextButton(
@@ -828,9 +958,9 @@ class _NotificationsScreenState extends State<NotificationsScreen>
               Navigator.of(context).pop();
               controller.deleteNotification(notification.id);
             },
-            child: Text(
+            child: const Text(
               'Eliminar',
-              style: AppTheme.bodyMedium.copyWith(color: AppTheme.errorColor),
+              style: TextStyle(color: Color(0xFFFF6B6B)),
             ),
           ),
         ],

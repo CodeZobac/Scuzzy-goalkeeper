@@ -124,13 +124,7 @@ class AnnouncementCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 
-                // Organizer section
-                OrganizerProfile(
-                  name: announcement.organizerName,
-                  avatarUrl: announcement.organizerAvatarUrl,
-                  rating: announcement.organizerRating ?? 4.5,
-                  badge: 'Solo',
-                ),
+                // Organizer section removed to maintain privacy
               ],
             ),
           ),

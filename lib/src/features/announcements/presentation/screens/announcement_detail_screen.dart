@@ -11,6 +11,9 @@ import '../widgets/loading_state_widget.dart';
 import '../widgets/error_state_widget.dart';
 import '../../../../core/navigation/navigation_service.dart';
 import '../../utils/error_handler.dart';
+import '../../../auth/presentation/providers/auth_state_provider.dart';
+import '../../../../shared/widgets/registration_prompt_dialog.dart';
+import '../../../../shared/helpers/registration_prompt_helper.dart';
 
 class AnnouncementDetailScreen extends StatefulWidget {
   final Announcement announcement;
@@ -78,6 +81,14 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
 
 
   Future<void> _toggleJoinStatus() async {
+    final authStateProvider = Provider.of<AuthStateProvider>(context, listen: false);
+    
+    // Check if user is guest and show registration prompt
+    if (authStateProvider.isGuest) {
+      await RegistrationPromptHelper.showJoinMatchPrompt(context);
+      return;
+    }
+    
     final announcementController =
         Provider.of<AnnouncementController>(context, listen: false);
     final userId = Supabase.instance.client.auth.currentUser?.id;
@@ -243,21 +254,22 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                             const SizedBox(height: 24),
                             
                             // Join Event button
-                            Consumer<AnnouncementController>(
-                              builder: (context, controller, child) {
+                            Consumer2<AnnouncementController, AuthStateProvider>(
+                              builder: (context, controller, authProvider, child) {
                                 final isLoading = controller.isJoinLeaveLoading(_announcement.id);
-                                final isJoined = controller.isUserParticipant(_announcement.id);
+                                final isJoined = !authProvider.isGuest && controller.isUserParticipant(_announcement.id);
                                 final isFull = _announcement.participantCount >= _announcement.maxParticipants;
+                                final isGuest = authProvider.isGuest;
                                 
                                 return SizedBox(
                                   width: double.infinity,
                                   height: 48,
                                   child: ElevatedButton(
-                                    onPressed: (isLoading || (isFull && !isJoined)) ? null : _toggleJoinStatus,
+                                    onPressed: (isLoading || (isFull && !isJoined && !isGuest)) ? null : _toggleJoinStatus,
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: isJoined 
                                           ? const Color(0xFF757575) 
-                                          : (isFull && !isJoined)
+                                          : (isFull && !isJoined && !isGuest)
                                               ? const Color(0xFFBDBDBD)
                                               : const Color(0xFFFF9800),
                                       foregroundColor: Colors.white,
@@ -276,11 +288,13 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                                             ),
                                           )
                                         : Text(
-                                            isJoined 
-                                                ? 'Leave Event' 
-                                                : (isFull && !isJoined)
-                                                    ? 'Event Full'
-                                                    : 'Join Event',
+                                            isGuest
+                                                ? 'Join Event'
+                                                : isJoined 
+                                                    ? 'Leave Event' 
+                                                    : (isFull && !isJoined)
+                                                        ? 'Event Full'
+                                                        : 'Join Event',
                                             style: const TextStyle(
                                               fontSize: 16,
                                               fontWeight: FontWeight.w600,

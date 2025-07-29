@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:geolocator/geolocator.dart';
 import '../controllers/announcement_controller.dart';
 import '../../data/models/announcement.dart';
+import '../../../user_profile/data/models/user_profile.dart';
+import '../../../goalkeeper_search/data/services/goalkeeper_search_service.dart';
+import '../../../../shared/services/location_service.dart';
 
 class CreateAnnouncementScreen extends StatefulWidget {
   const CreateAnnouncementScreen({super.key});
@@ -21,6 +25,17 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
   bool _isSubmitting = false;
+  
+  // Goalkeeper hiring fields
+  bool _needsGoalkeeper = false;
+  String? _selectedGoalkeeperId;
+  final List<UserProfile> _availableGoalkeepers = [];
+  final TextEditingController _goalkeeperSearchController = TextEditingController();
+  List<UserProfile> _filteredGoalkeepers = [];
+  bool _isLoadingGoalkeepers = false;
+  Position? _userLocation;
+  final GoalkeeperSearchService _goalkeeperSearchService = GoalkeeperSearchService();
+  final LocationService _locationService = LocationService();
 
   @override
   void dispose() {
@@ -28,7 +43,98 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
     _descriptionController.dispose();
     _priceController.dispose();
     _stadiumController.dispose();
+    _goalkeeperSearchController.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _goalkeeperSearchController.addListener(_filterGoalkeepers);
+  }
+
+  // Get user's current location
+  Future<void> _getUserLocation() async {
+    try {
+      _userLocation = await _locationService.getCurrentLocation();
+      if (_userLocation != null) {
+        await _fetchNearbyGoalkeepers();
+      } else {
+        _showErrorSnackBar('Não foi possível obter sua localização');
+      }
+    } catch (e) {
+      _showErrorSnackBar('Erro ao obter localização: ${e.toString()}');
+    }
+  }
+
+  // Fetch nearby goalkeepers from database
+  Future<void> _fetchNearbyGoalkeepers() async {
+    setState(() {
+      _isLoadingGoalkeepers = true;
+    });
+
+    try {
+      // Get current user info to use city as fallback
+      final currentUser = Supabase.instance.client.auth.currentUser;
+      String? userCity;
+      
+      if (currentUser != null) {
+        try {
+          final userResponse = await Supabase.instance.client
+              .from('users')
+              .select('city')
+              .eq('id', currentUser.id)
+              .single();
+          userCity = userResponse['city'];
+        } catch (e) {
+          print('Could not get user city: $e');
+        }
+      }
+
+      final goalkeepers = await _goalkeeperSearchService.getNearbyGoalkeepers(
+        radiusKm: 50.0,
+        userLocation: _userLocation,
+        userCity: userCity,
+      );
+
+      setState(() {
+        _availableGoalkeepers.clear();
+        _availableGoalkeepers.addAll(goalkeepers);
+        _filteredGoalkeepers = List.from(_availableGoalkeepers);
+        _isLoadingGoalkeepers = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingGoalkeepers = false;
+      });
+      _showErrorSnackBar('Erro ao carregar guarda-redes: ${e.toString()}');
+    }
+  }
+
+  // Filter goalkeepers based on search input
+  void _filterGoalkeepers() {
+    final query = _goalkeeperSearchController.text.toLowerCase();
+    setState(() {
+      _filteredGoalkeepers = _availableGoalkeepers
+          .where((goalkeeper) => 
+              goalkeeper.name.toLowerCase().contains(query))
+          .toList();
+    });
+  }
+
+  // Handle goalkeeper hiring checkbox change
+  void _onGoalkeeperHiringChanged(bool? value) async {
+    setState(() {
+      _needsGoalkeeper = value ?? false;
+      if (!_needsGoalkeeper) {
+        _selectedGoalkeeperId = null;
+        _goalkeeperSearchController.clear();
+      }
+    });
+
+    if (_needsGoalkeeper && _userLocation == null) {
+      await _getUserLocation();
+    }
   }
 
   Future<void> _selectDate() async {
@@ -97,12 +203,12 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
     }
 
     if (_selectedDate == null) {
-      _showErrorSnackBar('Please select a date');
+      _showErrorSnackBar('Por favor, selecione uma data');
       return;
     }
 
     if (_selectedTime == null) {
-      _showErrorSnackBar('Please select a time');
+      _showErrorSnackBar('Por favor, selecione uma hora');
       return;
     }
 
@@ -138,12 +244,12 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
       await controller.createAnnouncement(announcement);
 
       if (mounted) {
-        _showSuccessSnackBar('Announcement created successfully!');
+        _showSuccessSnackBar('Anúncio criado com sucesso!');
         Navigator.of(context).pop();
       }
     } catch (e) {
       if (mounted) {
-        _showErrorSnackBar('Failed to create announcement: ${e.toString()}');
+        _showErrorSnackBar('Falha ao criar anúncio: ${e.toString()}');
       }
     } finally {
       if (mounted) {
@@ -192,7 +298,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
-          'Create Announcement',
+          'Criar Anúncio',
           style: TextStyle(
             color: Color(0xFF2C2C2C),
             fontSize: 20,
@@ -211,14 +317,14 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
               // Title Field
               _buildInputField(
                 controller: _titleController,
-                label: 'Title',
-                hint: 'Enter announcement title',
+                label: 'Título',
+                hint: 'Digite o título do anúncio',
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Title is required';
+                    return 'Título é obrigatório';
                   }
                   if (value.trim().length < 3) {
-                    return 'Title must be at least 3 characters';
+                    return 'Título deve ter pelo menos 3 caracteres';
                   }
                   return null;
                 },
@@ -228,8 +334,8 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
               // Description Field
               _buildInputField(
                 controller: _descriptionController,
-                label: 'Description',
-                hint: 'Enter announcement description (optional)',
+                label: 'Descrição',
+                hint: 'Digite a descrição do anúncio (opcional)',
                 maxLines: 3,
               ),
               const SizedBox(height: 16),
@@ -239,21 +345,21 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                 children: [
                   Expanded(
                     child: _buildDateTimeField(
-                      label: 'Date',
+                      label: 'Data',
                       value: _selectedDate != null ? _formatDate(_selectedDate!) : null,
-                      hint: 'Select date',
+                      hint: 'Selecionar data',
                       onTap: _selectDate,
-                      validator: () => _selectedDate == null ? 'Date is required' : null,
+                      validator: () => _selectedDate == null ? 'Data é obrigatória' : null,
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: _buildDateTimeField(
-                      label: 'Time',
+                      label: 'Hora',
                       value: _selectedTime != null ? _formatTime(_selectedTime!) : null,
-                      hint: 'Select time',
+                      hint: 'Selecionar hora',
                       onTap: _selectTime,
-                      validator: () => _selectedTime == null ? 'Time is required' : null,
+                      validator: () => _selectedTime == null ? 'Hora é obrigatória' : null,
                     ),
                   ),
                 ],
@@ -263,14 +369,14 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
               // Price Field
               _buildInputField(
                 controller: _priceController,
-                label: 'Price',
-                hint: 'Enter price (optional)',
+                label: 'Preço',
+                hint: 'Digite o preço (opcional)',
                 keyboardType: TextInputType.number,
                 validator: (value) {
                   if (value != null && value.trim().isNotEmpty) {
                     final price = double.tryParse(value.trim());
                     if (price == null || price < 0) {
-                      return 'Please enter a valid price';
+                      return 'Por favor, digite um preço válido';
                     }
                   }
                   return null;
@@ -281,9 +387,13 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
               // Stadium Field
               _buildInputField(
                 controller: _stadiumController,
-                label: 'Stadium',
-                hint: 'Enter stadium name (optional)',
+                label: 'Estádio',
+                hint: 'Digite o nome do estádio (opcional)',
               ),
+              const SizedBox(height: 24),
+
+              // Goalkeeper Hiring Section
+              _buildGoalkeeperSection(),
               const SizedBox(height: 32),
 
               // Submit Button
@@ -310,7 +420,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
                           ),
                         )
                       : const Text(
-                          'Create Announcement',
+                          'Criar Anúncio',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -453,5 +563,184 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
         ],
       ],
     );
+  }
+
+  Widget _buildGoalkeeperSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Goalkeeper hiring checkbox
+        Row(
+          children: [
+            Checkbox(
+              value: _needsGoalkeeper,
+              onChanged: _onGoalkeeperHiringChanged,
+              activeColor: const Color(0xFF4CAF50),
+            ),
+            const Expanded(
+              child: Text(
+                'Contratar guarda-redes',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF2C2C2C),
+                ),
+              ),
+            ),
+          ],
+        ),
+        
+        // Goalkeeper dropdown (shown when checkbox is checked)
+        if (_needsGoalkeeper) ...[
+          const SizedBox(height: 16),
+          const Text(
+            'Selecionar guarda-redes',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: Color(0xFF2C2C2C),
+            ),
+          ),
+          const SizedBox(height: 8),
+          
+          // Search field for goalkeepers
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFE0E0E0)),
+            ),
+            child: Column(
+              children: [
+                // Search input
+                TextFormField(
+                  controller: _goalkeeperSearchController,
+                  decoration: const InputDecoration(
+                    hintText: 'Digite para pesquisar guarda-redes...',
+                    prefixIcon: Icon(Icons.search, color: Color(0xFF757575)),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    filled: true,
+                    fillColor: Colors.white,
+                    hintStyle: TextStyle(
+                      color: Color(0xFF757575),
+                      fontSize: 14,
+                    ),
+                  ),
+                  style: const TextStyle(
+                    color: Color(0xFF2C2C2C),
+                    fontSize: 16,
+                  ),
+                ),
+                
+                // Goalkeeper list
+                if (_isLoadingGoalkeepers)
+                  const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF4CAF50)),
+                    ),
+                  )
+                else if (_filteredGoalkeepers.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Text(
+                      'Nenhum guarda-redes encontrado na sua área',
+                      style: TextStyle(
+                        color: Color(0xFF757575),
+                        fontSize: 14,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  )
+                else
+                  Container(
+                    constraints: const BoxConstraints(maxHeight: 200),
+                    child: ListView.separated(
+                      shrinkWrap: true,
+                      itemCount: _filteredGoalkeepers.length,
+                      separatorBuilder: (context, index) => const Divider(
+                        height: 1,
+                        color: Color(0xFFE0E0E0),
+                      ),
+                      itemBuilder: (context, index) {
+                        final goalkeeper = _filteredGoalkeepers[index];
+                        final isSelected = _selectedGoalkeeperId == goalkeeper.id;
+                        
+                        return ListTile(
+                          onTap: () {
+                            setState(() {
+                              _selectedGoalkeeperId = goalkeeper.id;
+                            });
+                          },
+                          leading: CircleAvatar(
+                            backgroundColor: const Color(0xFF4CAF50),
+                            child: Text(
+                              goalkeeper.name.substring(0, 1).toUpperCase(),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          title: Text(
+                            goalkeeper.name,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF2C2C2C),
+                            ),
+                          ),
+                          subtitle: Text(
+                            _getGoalkeeperDistance(goalkeeper),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Color(0xFF757575),
+                            ),
+                          ),
+                          trailing: isSelected
+                              ? const Icon(
+                                  Icons.check_circle,
+                                  color: Color(0xFF4CAF50),
+                                )
+                              : const Icon(
+                                  Icons.radio_button_unchecked,
+                                  color: Color(0xFF757575),
+                                ),
+                        );
+                      },
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  String _getGoalkeeperDistance(UserProfile goalkeeper) {
+    // Show distance if both user and goalkeeper have location data
+    if (_userLocation != null && goalkeeper.hasLocation) {
+      final distance = _locationService.calculateDistance(
+        _userLocation!.latitude,
+        _userLocation!.longitude,
+        goalkeeper.latitude!,
+        goalkeeper.longitude!,
+      );
+      return '${distance.toStringAsFixed(1)} km de distância';
+    }
+    
+    // Fallback to city or rating info
+    if (goalkeeper.city != null && goalkeeper.city!.isNotEmpty) {
+      return goalkeeper.city!;
+    }
+    
+    final rating = goalkeeper.getOverallRating();
+    if (rating > 0) {
+      return 'Avaliação: ${rating.toStringAsFixed(1)}/5';
+    }
+    
+    return 'Guarda-redes disponível';
   }
 }

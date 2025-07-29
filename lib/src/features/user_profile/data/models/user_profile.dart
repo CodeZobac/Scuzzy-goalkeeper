@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:goalkeeper/src/features/user_profile/data/services/level_service.dart';
 
@@ -20,6 +21,8 @@ class UserProfile {
   bool profileCompleted;
   DateTime createdAt;
   int gamesPlayed;
+  double? latitude;
+  double? longitude;
 
   UserProfile({
     required this.id,
@@ -39,6 +42,8 @@ class UserProfile {
     this.communication,
     this.profileCompleted = false,
     this.gamesPlayed = 0,
+    this.latitude,
+    this.longitude,
   });
 
   int get level => LevelService().getLevelFromGames(gamesPlayed);
@@ -62,6 +67,40 @@ class UserProfile {
     return allRatings.reduce((a, b) => a + b) / allRatings.length;
   }
 
+  /// Calculate distance to another user in kilometers
+  double? distanceTo(UserProfile other) {
+    if (latitude == null || longitude == null || 
+        other.latitude == null || other.longitude == null) {
+      return null;
+    }
+    
+    return _calculateDistance(latitude!, longitude!, other.latitude!, other.longitude!);
+  }
+
+  /// Haversine formula to calculate distance between two points
+  static double _calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+    const double earthRadius = 6371; // Earth's radius in kilometers
+    
+    final double dLat = _degreesToRadians(lat2 - lat1);
+    final double dLon = _degreesToRadians(lon2 - lon1);
+    
+    final double a = 
+        sin(dLat / 2) * sin(dLat / 2) +
+        cos(_degreesToRadians(lat1)) * cos(_degreesToRadians(lat2)) * 
+        sin(dLon / 2) * sin(dLon / 2);
+    
+    final double c = 2 * asin(sqrt(a));
+    
+    return earthRadius * c;
+  }
+
+  static double _degreesToRadians(double degrees) {
+    return degrees * (pi / 180);
+  }
+
+  /// Check if user has location data
+  bool get hasLocation => latitude != null && longitude != null;
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -81,6 +120,8 @@ class UserProfile {
       'profile_completed': profileCompleted,
       'created_at': createdAt.toIso8601String(),
       'games_played': gamesPlayed,
+      'latitude': latitude,
+      'longitude': longitude,
     };
   }
 
@@ -107,6 +148,8 @@ class UserProfile {
       communication: map['communication'] != null ? List<int>.from(map['communication']) : null,
       profileCompleted: map['profile_completed'] ?? false,
       gamesPlayed: map['games_played'] ?? 0,
+      latitude: map['latitude']?.toDouble(),
+      longitude: map['longitude']?.toDouble(),
     );
   }
 

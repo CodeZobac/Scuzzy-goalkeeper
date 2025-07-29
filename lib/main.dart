@@ -1,81 +1,77 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:goalkeeper/src/core/config/firebase_config.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:goalkeeper/src/core/config/app_config.dart';
-import 'package:goalkeeper/src/features/user_profile/data/repositories/user_profile_repository.dart';
-import 'package:goalkeeper/src/features/user_profile/presentation/controllers/user_profile_controller.dart';
-import 'package:goalkeeper/src/features/user_profile/presentation/screens/profile_screen.dart';
-import 'package:goalkeeper/src/features/user_profile/presentation/screens/complete_profile_screen.dart';
-import 'package:goalkeeper/src/features/goalkeeper_search/data/repositories/goalkeeper_search_repository.dart';
-import 'package:goalkeeper/src/features/goalkeeper_search/presentation/controllers/goalkeeper_search_controller.dart';
-import 'package:goalkeeper/src/features/notifications/services/notification_service.dart';
-import 'package:goalkeeper/src/features/notifications/services/notification_service_manager.dart';
-import 'package:goalkeeper/src/features/notifications/presentation/screens/notifications_screen.dart';
-import 'package:goalkeeper/src/features/notifications/presentation/controllers/notification_preferences_controller.dart';
-import 'package:goalkeeper/src/features/notifications/presentation/controllers/notification_badge_controller.dart';
-import 'package:goalkeeper/src/features/notifications/presentation/screens/notification_preferences_screen.dart';
-import 'package:goalkeeper/src/features/notifications/data/repositories/notification_repository.dart';
+import 'package:goalkeeper/src/core/config/config_validator.dart';
+import 'package:goalkeeper/src/core/config/firebase_config.dart';
+import 'package:goalkeeper/src/core/error_handling/error_monitoring_service.dart';
+import 'package:goalkeeper/src/core/logging/error_logger.dart';
+import 'package:goalkeeper/src/core/navigation/navigation_service.dart';
 import 'package:goalkeeper/src/features/announcements/data/repositories/announcement_repository_impl.dart';
 import 'package:goalkeeper/src/features/announcements/presentation/controllers/announcement_controller.dart';
-import 'package:goalkeeper/src/features/announcements/presentation/screens/announcements_screen.dart';
 import 'package:goalkeeper/src/features/announcements/presentation/screens/announcement_detail_screen.dart';
 import 'package:goalkeeper/src/features/announcements/presentation/screens/create_announcement_screen.dart';
-import 'package:goalkeeper/src/features/map/presentation/providers/field_selection_provider.dart';
-import 'package:goalkeeper/src/core/navigation/navigation_service.dart';
-import 'package:provider/provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:goalkeeper/src/features/auth/presentation/providers/auth_state_provider.dart';
 import 'package:goalkeeper/src/features/auth/presentation/screens/sign_in_screen.dart';
 import 'package:goalkeeper/src/features/auth/presentation/screens/sign_up_screen.dart';
 import 'package:goalkeeper/src/features/auth/presentation/theme/app_theme.dart';
-import 'package:goalkeeper/src/features/map/presentation/screens/map_screen.dart';
+import 'package:goalkeeper/src/features/goalkeeper_search/data/repositories/goalkeeper_search_repository.dart';
+import 'package:goalkeeper/src/features/goalkeeper_search/presentation/controllers/goalkeeper_search_controller.dart';
 import 'package:goalkeeper/src/features/main/presentation/screens/main_screen.dart';
+import 'package:goalkeeper/src/features/map/presentation/providers/field_selection_provider.dart';
+import 'package:goalkeeper/src/features/notifications/data/repositories/notification_repository.dart';
+import 'package:goalkeeper/src/features/notifications/presentation/controllers/notification_badge_controller.dart';
+import 'package:goalkeeper/src/features/notifications/presentation/controllers/notification_preferences_controller.dart';
+import 'package:goalkeeper/src/features/notifications/presentation/screens/notification_preferences_screen.dart';
+import 'package:goalkeeper/src/features/notifications/presentation/screens/notifications_screen.dart';
+import 'package:goalkeeper/src/features/notifications/services/notification_service.dart';
+import 'package:goalkeeper/src/features/notifications/services/notification_service_manager.dart';
+import 'package:goalkeeper/src/features/user_profile/data/repositories/user_profile_repository.dart';
+import 'package:goalkeeper/src/features/user_profile/presentation/controllers/user_profile_controller.dart';
+import 'package:goalkeeper/src/features/user_profile/presentation/screens/complete_profile_screen.dart';
+import 'package:goalkeeper/src/features/user_profile/presentation/screens/profile_screen.dart';
 import 'package:goalkeeper/src/shared/screens/splash_screen.dart';
-import 'package:goalkeeper/src/core/error_handling/error_monitoring_service.dart';
-import 'package:goalkeeper/src/core/logging/error_logger.dart';
+import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
 
   // Initialize error monitoring service first
   await ErrorMonitoringService.instance.initialize();
 
   late final NotificationService notificationService;
-
-
-  // Initialize Firebase
+  bool firebaseInitialized = false;
 
   try {
-    await dotenv.load(fileName: ".env");
+    // No-op: AppConfig is now generated at build time.
 
     // Initialize Firebase (optional - only if configuration files exist)
-    final firebaseInitialized = await FirebaseConfig.initialize();
+    firebaseInitialized = await FirebaseConfig.initialize();
 
-    // Initialize Supabase with environment variables or fallback to AppConfig
-    final supabaseUrl = dotenv.env['SUPABASE_URL'] ?? AppConfig.supabaseUrl;
-    final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY'] ?? AppConfig.supabaseAnonKey;
-    
+    // Validate and log configuration status
+    ConfigValidator.logConfigurationStatus();
+    ConfigValidator.validateConfiguration();
+
+    // Initialize Supabase using unified AppConfig
     await Supabase.initialize(
-      url: supabaseUrl,
-      anonKey: supabaseAnonKey,
+      url: AppConfig.supabaseUrl,
+      anonKey: AppConfig.supabaseAnonKey,
     );
 
     // Initialize the enhanced notification service manager
     final notificationServiceManager = NotificationServiceManager.instance;
     await notificationServiceManager.initialize();
-    
+
     // Get the core notification service for provider
     notificationService = notificationServiceManager.notificationService;
-
 
     ErrorLogger.logInfo(
       'Application initialized successfully',
       context: 'APP_STARTUP',
       additionalData: {
         'firebase_initialized': firebaseInitialized,
-        'supabase_url': dotenv.env['SUPABASE_URL'] != null ? 'configured' : 'missing',
+        'supabase_url': AppConfig.supabaseUrl.isNotEmpty ? 'configured' : 'missing',
       },
     );
   } catch (error, stackTrace) {
@@ -85,13 +81,13 @@ Future<void> main() async {
       context: 'APP_STARTUP_ERROR',
       severity: ErrorSeverity.error,
     );
-    
+
     ErrorMonitoringService.instance.reportError(
       'startup_failure',
       context: 'APP_STARTUP',
       severity: ErrorSeverity.error,
     );
-    
+
     // Re-throw to prevent app from starting in broken state
     rethrow;
   }
@@ -122,6 +118,9 @@ Future<void> main() async {
         ChangeNotifierProvider(
           create: (_) => NotificationBadgeController(NotificationRepository()),
         ),
+        ChangeNotifierProvider(
+          create: (_) => AuthStateProvider(),
+        ),
       ],
       child: const MyApp(),
     ),
@@ -136,6 +135,82 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  String _getInitialRoute() {
+    // Determine initial route based on authentication state
+    final isAuthenticated = Supabase.instance.client.auth.currentSession != null;
+
+    if (!isAuthenticated) {
+      // For guest users, initialize guest context immediately
+      // This ensures guest tracking starts from app launch
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          final authProvider = context.read<AuthStateProvider>();
+          authProvider.initializeGuestContext();
+        }
+      });
+    }
+
+    // Both authenticated and guest users start at home
+    // MainScreen will handle guest-specific behavior and content
+    // This ensures consistent initialization for all users
+    return '/home';
+  }
+
+  Widget _buildHomeRoute(BuildContext context) {
+    final authProvider = context.read<AuthStateProvider>();
+
+    // Initialize guest context for guest users
+    if (authProvider.isGuest) {
+      authProvider.initializeGuestContext();
+    }
+
+    return const MainScreen();
+  }
+
+  Widget _buildRouteForGuests(BuildContext context, String routeName, int tabIndex) {
+    final authProvider = context.read<AuthStateProvider>();
+
+    if (authProvider.isGuest) {
+      // For guest users, redirect to MainScreen with appropriate tab
+      // MainScreen will handle guest-specific content and registration prompts
+      // Initialize guest context if not already done
+      authProvider.initializeGuestContext();
+
+      // Track guest route access
+      authProvider.trackGuestContentView('route_$routeName');
+
+      return MainScreen(initialTabIndex: tabIndex);
+    }
+
+    // For authenticated users, return the appropriate screen
+    switch (routeName) {
+      case '/profile':
+        return const ProfileScreen();
+      case '/notifications':
+        return const NotificationsScreen();
+      case '/announcements':
+        return MainScreen(initialTabIndex: tabIndex);
+      case '/map':
+        return MainScreen(initialTabIndex: tabIndex);
+      default:
+        return const MainScreen();
+    }
+  }
+
+  Widget _requiresAuthentication(BuildContext context, Widget screen) {
+    final authProvider = context.read<AuthStateProvider>();
+
+    if (authProvider.isGuest) {
+      // For guest users trying to access auth-required screens, show redirect screen
+      // This provides better UX than immediate redirect
+      return _buildGuestRedirectScreen('/signup');
+    }
+
+    return screen;
+  }
+
+
+
   @override
   void initState() {
     super.initState();
@@ -176,7 +251,6 @@ class _MyAppState extends State<MyApp> {
             debugPrint('Failed to initialize notification badge controller: $error');
           });
 
-          // Check user profile completion on sign-in
           await userProfileController.getUserProfile();
           final profile = userProfileController.userProfile;
           // Use the global navigator key to avoid context issues
@@ -201,11 +275,23 @@ class _MyAppState extends State<MyApp> {
 
           // Clear announcement cache when user signs out
           announcementController.clearParticipationCache();
-
-          // Use the global navigator key to avoid context issues
-          final navigator = NavigationService.navigator;
-          if (navigator != null && navigator.mounted) {
-            navigator.pushReplacementNamed('/signin');
+          
+          // Initialize guest context for the auth provider
+          final authProvider = context.read<AuthStateProvider>();
+          authProvider.clearGuestContext();
+          authProvider.initializeGuestContext();
+          
+          if (mounted) {
+            // Clear any pending intended destinations on sign out
+            authProvider.getAndClearIntendedDestination();
+            
+            // Instead of redirecting to signin, redirect to home as guest
+            // This provides a better UX for users who sign out
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                Navigator.of(context).pushReplacementNamed('/home');
+              }
+            });
           }
         }
       });
@@ -218,29 +304,38 @@ class _MyAppState extends State<MyApp> {
       title: 'Goalkeeper-Finder',
       theme: AppTheme.darkTheme,
       navigatorKey: NavigationService.navigatorKey,
-      initialRoute: '/',
+initialRoute: '/test-svg',
       onGenerateRoute: _generateRoute,
       routes: {
         '/': (context) => const SplashScreen(),
+        '/test-svg': (context) => const TestSvgScreen(),
         '/signin': (context) => const SignInScreen(),
         '/signup': (context) => const SignUpScreen(),
-        '/home': (context) => const MainScreen(),
+        '/home': (context) => _buildHomeRoute(context),
         '/complete-profile': (context) => const CompleteProfileScreen(),
-        '/profile': (context) => const ProfileScreen(),
-        '/notifications': (context) => const NotificationsScreen(),
-        '/notification-preferences': (context) => const NotificationPreferencesScreen(),
-        '/map': (context) => const MapScreen(),
-        '/announcements': (context) => const AnnouncementsScreen(),
-        '/create-announcement': (context) => const CreateAnnouncementScreen(),
+        '/profile': (context) => _buildRouteForGuests(context, '/profile', 3),
+        '/notifications': (context) => _buildRouteForGuests(context, '/notifications', 2),
+        '/notification-preferences': (context) => _requiresAuthentication(context, const NotificationPreferencesScreen()),
+        '/map': (context) => _buildRouteForGuests(context, '/map', 1),
+        '/announcements': (context) => _buildRouteForGuests(context, '/announcements', 0),
+        '/create-announcement': (context) => _requiresAuthentication(context, const CreateAnnouncementScreen()),
       },
     );
   }
 
   Route<dynamic>? _generateRoute(RouteSettings settings) {
+    // Check if guest user is trying to access restricted routes
+    final authProvider = context.read<AuthStateProvider>();
+    
     switch (settings.name) {
       case '/announcement-detail':
         final announcement = settings.arguments;
         if (announcement != null) {
+          // Both guest and authenticated users can view announcement details
+          // Track guest content viewing
+          if (authProvider.isGuest) {
+            authProvider.trackGuestContentView('announcement_detail');
+          }
           return _createSlideRoute(
             AnnouncementDetailScreen(announcement: announcement as dynamic),
           );
@@ -249,6 +344,14 @@ class _MyAppState extends State<MyApp> {
       case '/contract-details':
         final contractData = settings.arguments as Map<String, dynamic>?;
         if (contractData != null) {
+          // Contract details require authentication
+          if (authProvider.isGuest) {
+            // Store intended destination for post-registration redirect
+            authProvider.setIntendedDestination('/contract-details', contractData);
+            return _createSlideRoute(_buildGuestRedirectScreen('/signup', 
+              intendedDestination: '/contract-details',
+              destinationArguments: contractData));
+          }
           return _createSlideRoute(
             _buildContractDetailsScreen(contractData),
           );
@@ -257,11 +360,147 @@ class _MyAppState extends State<MyApp> {
       case '/notification-deep-link':
         final notificationData = settings.arguments as Map<String, dynamic>?;
         if (notificationData != null) {
+          // Notification deep links require authentication
+          if (authProvider.isGuest) {
+            // Store intended destination for post-registration redirect
+            authProvider.setIntendedDestination('/notification-deep-link', notificationData);
+            return _createSlideRoute(_buildGuestRedirectScreen('/signup',
+              intendedDestination: '/notification-deep-link',
+              destinationArguments: notificationData));
+          }
           return _handleNotificationDeepLink(notificationData);
         }
         return null;
       default:
+        // Handle unknown routes for guest users
+        if (authProvider.isGuest) {
+          // Check if the route is guest-accessible
+          if (authProvider.isRouteAccessibleToGuests(settings.name ?? '')) {
+            // Track guest navigation to allowed routes
+            authProvider.trackGuestContentView('route_${settings.name}');
+            return null; // Let the default route handling take over
+          } else {
+            // Store intended destination and redirect to signup for restricted routes
+            if (settings.name != null) {
+              authProvider.setIntendedDestination(settings.name!, settings.arguments);
+            }
+            return _createSlideRoute(_buildGuestRedirectScreen('/signup',
+              intendedDestination: settings.name,
+              destinationArguments: settings.arguments));
+          }
+        }
         return null;
+    }
+  }
+
+  Widget _buildGuestRedirectScreen(String targetRoute, {
+    String? intendedDestination,
+    dynamic destinationArguments,
+  }) {
+    return Scaffold(
+      backgroundColor: AppTheme.primaryBackground,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: AppTheme.primaryGradient,
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.account_circle,
+                  size: 80,
+                  color: AppTheme.accentColor,
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  'Acesso Restrito',
+                  style: AppTheme.headingLarge,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  _getContextualMessage(intendedDestination),
+                  style: AppTheme.bodyLarge,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      // Store intended destination for post-registration redirect
+                      if (intendedDestination != null) {
+                        final authProvider = context.read<AuthStateProvider>();
+                        authProvider.setIntendedDestination(
+                          intendedDestination, 
+                          destinationArguments
+                        );
+                      }
+                      
+                      // Navigate to signup with proper route handling
+                      if (targetRoute == '/signup') {
+                        Navigator.of(context).pushReplacementNamed('/signup');
+                      } else {
+                        Navigator.of(context).pushReplacementNamed(targetRoute);
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.accentColor,
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      'Criar Conta',
+                      style: AppTheme.buttonText,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton(
+                    onPressed: () {
+                      // Clear any stored intended destination
+                      final authProvider = context.read<AuthStateProvider>();
+                      authProvider.getAndClearIntendedDestination();
+                      Navigator.of(context).pushReplacementNamed('/home');
+                    },
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                    ),
+                    child: Text(
+                      'Voltar ao Início',
+                      style: AppTheme.bodyMedium.copyWith(
+                        color: AppTheme.accentColor,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _getContextualMessage(String? intendedDestination) {
+    switch (intendedDestination) {
+      case '/contract-details':
+        return 'Para visualizar detalhes de contratos e gerenciar suas reservas, você precisa criar uma conta.';
+      case '/notification-deep-link':
+        return 'Para acessar notificações e se manter atualizado, você precisa criar uma conta.';
+      case '/create-announcement':
+        return 'Para criar anúncios e organizar partidas, você precisa criar uma conta.';
+      case '/notification-preferences':
+        return 'Para gerenciar suas preferências de notificação, você precisa criar uma conta.';
+      default:
+        return 'Esta funcionalidade requer uma conta.\nCrie sua conta para continuar e aproveitar todos os recursos.';
     }
   }
 
@@ -296,7 +535,7 @@ class _MyAppState extends State<MyApp> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Tela de detalhes do contrato será implementada em breve.',
+                  'Ecrã de detalhes do contrato será implementado em breve.',
                   style: AppTheme.bodyLarge,
                   textAlign: TextAlign.center,
                 ),
@@ -377,6 +616,96 @@ class _MyAppState extends State<MyApp> {
           child: child,
         );
       },
+    );
+  }
+}
+
+class TestSvgScreen extends StatefulWidget {
+  const TestSvgScreen({super.key});
+
+  @override
+  State<TestSvgScreen> createState() => _TestSvgScreenState();
+}
+
+class _TestSvgScreenState extends State<TestSvgScreen> {
+  String? _svgContent;
+  String? _error;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSvg();
+  }
+
+  Future<void> _loadSvg() async {
+    try {
+      final svgString = await DefaultAssetBundle.of(context).loadString('assets/auth-header.svg');
+      setState(() {
+        _svgContent = svgString;
+        _loading = false;
+      });
+      print('SVG loaded successfully, length: ${svgString.length}');
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+      });
+      print('Error loading SVG: $e');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('SVG Loading Test')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Loading Status:', style: Theme.of(context).textTheme.headlineSmall),
+            const SizedBox(height: 8),
+            if (_loading) 
+              const CircularProgressIndicator()
+            else if (_error != null) 
+              Text('Error: $_error', style: const TextStyle(color: Colors.red))
+            else if (_svgContent != null) ...[
+              const Text('✅ SVG loaded successfully!', style: TextStyle(color: Colors.green)),
+              const SizedBox(height: 16),
+              const Text('Testing different loading methods:'),
+              const SizedBox(height: 16),
+              
+              // Method 1: SvgPicture.asset
+              const Text('Method 1: SvgPicture.asset'),
+              Container(
+                height: 200,
+                width: double.infinity,
+                decoration: BoxDecoration(border: Border.all()),
+                child: SvgPicture.asset(
+                  'assets/auth-header.svg',
+                  fit: BoxFit.cover,
+                  placeholderBuilder: (_) => const Center(child: CircularProgressIndicator()),
+                ),
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Method 2: SvgPicture.string
+              const Text('Method 2: SvgPicture.string'),
+              Container(
+                height: 200,
+                width: double.infinity,
+                decoration: BoxDecoration(border: Border.all()),
+                child: SvgPicture.string(
+                  _svgContent!,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }
@@ -485,7 +814,7 @@ class _DeepLinkHandlerState extends State<_DeepLinkHandler> {
               ),
               SizedBox(height: 24),
               Text(
-                'Carregando...',
+                'A carregar...',
                 style: TextStyle(
                   color: AppTheme.primaryText,
                   fontSize: 16,

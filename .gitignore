@@ -31,6 +31,7 @@ migrate_working_dir/
 .pub/
 /build/
 
+
 # Symbolication related
 app.*.symbols
 
@@ -42,3 +43,8 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 .env
+
+# Generated configuration file
+lib/src/core/config/app_config.dart
+
+.kiro/settings

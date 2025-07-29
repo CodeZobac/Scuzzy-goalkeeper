@@ -47,51 +47,51 @@ class GoalkeeperMarker extends StatelessWidget {
 
   Color _getPrimaryColor() {
     if (!isActive) {
-      return const Color(0xFF9E9E9E); // Grey for inactive
+      return const Color(0xFF757575); // Darker grey for inactive for better contrast
     }
     
-    // Color based on rating if available
+    // Color based on rating if available - improved contrast colors
     if (rating != null) {
       if (rating! >= 4.5) {
-        return const Color(0xFFFFD700); // Gold for excellent rating
+        return const Color(0xFFFF8F00); // Darker gold/amber for excellent rating
       } else if (rating! >= 4.0) {
-        return const Color(0xFF2196F3); // Blue for good rating
+        return const Color(0xFF1976D2); // Darker blue for good rating
       } else if (rating! >= 3.0) {
-        return const Color(0xFF4CAF50); // Green for average rating
+        return const Color(0xFF388E3C); // Darker green for average rating
       } else {
-        return const Color(0xFFFF9800); // Orange for low rating
+        return const Color(0xFFE65100); // Darker orange for low rating
       }
     }
     
-    // Color based on experience level
+    // Color based on experience level - improved contrast
     if (experienceLevel != null) {
       switch (experienceLevel!) {
         case 1:
         case 2:
-          return const Color(0xFF4CAF50); // Green for beginner
+          return const Color(0xFF2E7D32); // Darker green for beginner
         case 3:
         case 4:
-          return const Color(0xFF2196F3); // Blue for intermediate
+          return const Color(0xFF1565C0); // Darker blue for intermediate
         case 5:
-          return const Color(0xFF9C27B0); // Purple for expert
+          return const Color(0xFF7B1FA2); // Darker purple for expert
         default:
-          return const Color(0xFF4CAF50);
+          return const Color(0xFF2E7D32);
       }
     }
     
     switch (goalkeeperStatus) {
       case 'available':
-        return const Color(0xFF4CAF50); // Green for available
+        return const Color(0xFF2E7D32); // Darker green for available
       case 'busy':
-        return const Color(0xFFFF9800); // Orange for busy
+        return const Color(0xFFE65100); // Darker orange for busy
       case 'in_game':
-        return const Color(0xFFE91E63); // Pink for in game
+        return const Color(0xFFC2185B); // Darker pink for in game
       case 'offline':
-        return const Color(0xFF757575); // Grey for offline
+        return const Color(0xFF424242); // Darker grey for offline
       default:
         return isSelected 
-            ? const Color(0xFF2196F3) // Blue for selected
-            : const Color(0xFF6C5CE7); // Purple for default
+            ? const Color(0xFF1565C0) // Darker blue for selected
+            : const Color(0xFF512DA8); // Darker purple for default
     }
   }
 
@@ -107,7 +107,7 @@ class GoalkeeperMarker extends StatelessWidget {
     // Show verified badge if verified
     if (isVerified) {
       return const MarkerStatusIndicator(
-        color: Color(0xFF2196F3),
+        color: Color(0xFF1976D2),
         icon: Icons.verified,
         size: 18,
       );
@@ -133,25 +133,25 @@ class GoalkeeperMarker extends StatelessWidget {
     switch (goalkeeperStatus) {
       case 'available':
         return const MarkerStatusIndicator(
-          color: Color(0xFF4CAF50),
+          color: Color(0xFF2E7D32),
           icon: Icons.check_circle,
           size: 16,
         );
       case 'busy':
         return const MarkerStatusIndicator(
-          color: Color(0xFFFF9800),
+          color: Color(0xFFE65100),
           icon: Icons.schedule,
           size: 16,
         );
       case 'in_game':
         return const MarkerStatusIndicator(
-          color: Color(0xFFE91E63),
+          color: Color(0xFFC2185B),
           icon: Icons.sports_soccer,
           size: 16,
         );
       case 'offline':
         return const MarkerStatusIndicator(
-          color: Color(0xFF757575),
+          color: Color(0xFF424242),
           icon: Icons.offline_bolt,
           size: 16,
         );
@@ -161,16 +161,16 @@ class GoalkeeperMarker extends StatelessWidget {
   }
 
   Color _getRatingColor() {
-    if (rating == null) return const Color(0xFF4CAF50);
+    if (rating == null) return const Color(0xFF2E7D32);
     
     if (rating! >= 4.5) {
-      return const Color(0xFFFFD700); // Gold
+      return const Color(0xFFFF8F00); // Darker gold/amber
     } else if (rating! >= 4.0) {
-      return const Color(0xFF2196F3); // Blue
+      return const Color(0xFF1976D2); // Darker blue
     } else if (rating! >= 3.0) {
-      return const Color(0xFF4CAF50); // Green
+      return const Color(0xFF388E3C); // Darker green
     } else {
-      return const Color(0xFFFF9800); // Orange
+      return const Color(0xFFE65100); // Darker orange
     }
   }
 
@@ -187,19 +187,19 @@ class GoalkeeperMarker extends StatelessWidget {
   }
 
   Color _getExperienceLevelColor() {
-    if (experienceLevel == null) return const Color(0xFF4CAF50);
+    if (experienceLevel == null) return const Color(0xFF2E7D32);
     
     switch (experienceLevel!) {
       case 1:
       case 2:
-        return const Color(0xFF4CAF50); // Green for beginner
+        return const Color(0xFF2E7D32); // Darker green for beginner
       case 3:
       case 4:
-        return const Color(0xFF2196F3); // Blue for intermediate
+        return const Color(0xFF1565C0); // Darker blue for intermediate
       case 5:
-        return const Color(0xFF9C27B0); // Purple for expert
+        return const Color(0xFF7B1FA2); // Darker purple for expert
       default:
-        return const Color(0xFF4CAF50);
+        return const Color(0xFF2E7D32);
     }
   }
 
@@ -365,16 +365,16 @@ class GoalkeeperAvailabilityMarker extends StatelessWidget {
   }
 
   Color _getPrimaryColorByRating() {
-    if (averageRating == null) return const Color(0xFF6C5CE7);
+    if (averageRating == null) return const Color(0xFF512DA8);
     
     if (averageRating! >= 4.5) {
-      return const Color(0xFFFFD700); // Gold
+      return const Color(0xFFFF8F00); // Darker gold/amber
     } else if (averageRating! >= 4.0) {
-      return const Color(0xFF2196F3); // Blue
+      return const Color(0xFF1976D2); // Darker blue
     } else if (averageRating! >= 3.0) {
-      return const Color(0xFF4CAF50); // Green
+      return const Color(0xFF388E3C); // Darker green
     } else {
-      return const Color(0xFFFF9800); // Orange
+      return const Color(0xFFE65100); // Darker orange
     }
   }
 }

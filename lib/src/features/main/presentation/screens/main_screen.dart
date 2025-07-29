@@ -5,6 +5,8 @@ import 'package:goalkeeper/src/features/map/presentation/providers/field_selecti
 import 'package:goalkeeper/src/features/announcements/presentation/screens/announcements_screen.dart';
 import 'package:goalkeeper/src/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:goalkeeper/src/features/user_profile/presentation/screens/enhanced_profile_screen.dart';
+import 'package:goalkeeper/src/features/user_profile/presentation/screens/guest_profile_screen.dart';
+import 'package:goalkeeper/src/features/auth/presentation/providers/auth_state_provider.dart';
 import '../../../../shared/widgets/app_navbar.dart';
 
 class MainScreen extends StatefulWidget {
@@ -56,19 +58,85 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Widget _getSelectedScreen() {
-    switch (_selectedItem) {
-      case NavbarItem.home:
-        return const AnnouncementsScreen();
-      case NavbarItem.map:
-        return const MapScreen();
-      case NavbarItem.notifications:
-        return const NotificationsScreen();
-      case NavbarItem.profile:
-        return const EnhancedProfileScreen();
-    }
+    return Consumer<AuthStateProvider>(
+      builder: (context, authProvider, child) {
+        // Initialize guest context if user is in guest mode
+        if (authProvider.isGuest) {
+          authProvider.initializeGuestContext();
+        }
+        
+        switch (_selectedItem) {
+          case NavbarItem.home:
+            // Track guest content viewing for announcements
+            if (authProvider.isGuest) {
+              authProvider.trackGuestContentView('announcements');
+            }
+            return const AnnouncementsScreen();
+          case NavbarItem.map:
+            // Track guest content viewing for map
+            if (authProvider.isGuest) {
+              authProvider.trackGuestContentView('map');
+            }
+            return const MapScreen();
+          case NavbarItem.notifications:
+            // For guest users, redirect to profile screen with registration prompt
+            if (authProvider.isGuest) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  setState(() {
+                    _selectedItem = NavbarItem.profile;
+                  });
+                }
+              });
+              return const GuestProfileScreen();
+            }
+            return const NotificationsScreen();
+          case NavbarItem.profile:
+            // Track guest profile access
+            if (authProvider.isGuest) {
+              authProvider.trackGuestContentView('profile');
+            }
+            return authProvider.isGuest 
+                ? const GuestProfileScreen()
+                : const EnhancedProfileScreen();
+        }
+      },
+    );
   }
 
   void _onItemSelected(NavbarItem item) {
+    final authProvider = context.read<AuthStateProvider>();
+    
+    // Handle guest mode navigation restrictions
+    if (authProvider.isGuest && item == NavbarItem.notifications) {
+      // For guest users, redirect notifications tap to profile screen
+      // This provides a consistent way to prompt for registration
+      setState(() {
+        _selectedItem = NavbarItem.profile;
+      });
+      return;
+    }
+    
+    // Track navigation for guest users
+    if (authProvider.isGuest) {
+      String screenName = '';
+      switch (item) {
+        case NavbarItem.home:
+          screenName = 'announcements';
+          break;
+        case NavbarItem.map:
+          screenName = 'map';
+          break;
+        case NavbarItem.notifications:
+          screenName = 'notifications';
+          break;
+        case NavbarItem.profile:
+          screenName = 'profile';
+          break;
+      }
+      authProvider.trackGuestContentView('navigation_$screenName');
+    }
+    
     setState(() {
       _selectedItem = item;
     });
@@ -81,6 +149,18 @@ class _MainScreenState extends State<MainScreen> {
         children: [
           // Main content
           _getSelectedScreen(),
+          // Floating login button for guest users
+          Consumer<AuthStateProvider>(
+            builder: (context, authProvider, child) {
+              if (!authProvider.isGuest) return const SizedBox.shrink();
+              
+              return Positioned(
+                top: MediaQuery.of(context).padding.top + 16,
+                right: 16,
+                child: _buildGuestLoginButton(),
+              );
+            },
+          ),
           // Floating transparent navbar
           Positioned(
             bottom: 0,
@@ -102,6 +182,60 @@ class _MainScreenState extends State<MainScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildGuestLoginButton() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF0BA95F),
+            Color(0xFF0A8A4F),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(25),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0BA95F).withOpacity(0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(25),
+          onTap: () {
+            Navigator.of(context).pushNamed('/signin');
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.login,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                const Text(
+                  'Entrar',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
