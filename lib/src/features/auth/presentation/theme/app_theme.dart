@@ -266,12 +266,12 @@ class AppTheme {
     ),
 
     // Card Theme
-    cardTheme: CardTheme(
+    cardTheme: const CardTheme(
       color: secondaryBackground,
       elevation: 8,
       shadowColor: Colors.black26,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.all(Radius.circular(16)),
       ),
     ),
 
@@ -285,13 +285,13 @@ class AppTheme {
     colorScheme: const ColorScheme.dark(
       primary: accentColor,
       secondary: successColor,
-      background: primaryBackground,
-      surface: secondaryBackground,
+      surface: primaryBackground,
+      surfaceContainer: secondaryBackground,
       error: errorColor,
       onPrimary: Colors.white,
       onSecondary: Colors.white,
-      onBackground: primaryText,
       onSurface: primaryText,
+      onSurfaceVariant: primaryText,
       onError: Colors.white,
     ),
   );
