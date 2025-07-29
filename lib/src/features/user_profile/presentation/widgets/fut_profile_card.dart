@@ -545,7 +545,23 @@ class _FUTProfileCardState extends State<FUTProfileCard>
     final int level = widget.userProfile.level;
     final int gamesForCurrentLevel = LevelService().getGamesRequiredForLevel(level);
     final int gamesForNextLevel = LevelService().getGamesRequiredForLevel(level + 1);
-    final double progress = (gamesPlayed - gamesForCurrentLevel) / (gamesForNextLevel - gamesForCurrentLevel);
+    
+    // Safe calculation to prevent division by zero and handle edge cases
+    double progress = 0.0;
+    if (gamesForNextLevel > gamesForCurrentLevel) {
+      final gamesIntoCurrentLevel = gamesPlayed - gamesForCurrentLevel;
+      final gamesNeededForNextLevel = gamesForNextLevel - gamesForCurrentLevel;
+      progress = (gamesIntoCurrentLevel / gamesNeededForNextLevel).clamp(0.0, 1.0);
+    } else if (level >= LevelService.maxLevel) {
+      // If already at max level, show full progress
+      progress = 1.0;
+    }
+    
+    // Handle case where player is at max level
+    final bool isMaxLevel = level >= LevelService.maxLevel;
+    final String progressText = isMaxLevel 
+        ? '$gamesPlayed Games (Max Level)'
+        : '$gamesPlayed / $gamesForNextLevel Games';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -553,7 +569,7 @@ class _FUTProfileCardState extends State<FUTProfileCard>
         Row(
           children: [
             Text(
-              'Level $level',
+              isMaxLevel ? 'Level $level (MAX)' : 'Level $level',
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -562,7 +578,7 @@ class _FUTProfileCardState extends State<FUTProfileCard>
             ),
             const Spacer(),
             Text(
-              '$gamesPlayed / $gamesForNextLevel Games',
+              progressText,
               style: TextStyle(
                 fontSize: 10,
                 color: Colors.white.withOpacity(0.8),
