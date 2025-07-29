@@ -89,6 +89,7 @@ flutter:
     - assets/goalkeeper_fields.geojson
     - assets/goalkeeper_mapbox_style.json
     - assets/auth-header.svg
+    - assets/auth-header-original.png
     - assets/icons8-football-field.svg
     - assets/icons8-football.svg
     - assets/icons8-goalkeeper-o-mais-baddy.svg

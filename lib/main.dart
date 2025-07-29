@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:goalkeeper/src/core/config/app_config.dart';
 import 'package:goalkeeper/src/core/config/config_validator.dart';
 import 'package:goalkeeper/src/core/config/firebase_config.dart';
@@ -302,10 +304,11 @@ class _MyAppState extends State<MyApp> {
       title: 'Goalkeeper-Finder',
       theme: AppTheme.darkTheme,
       navigatorKey: NavigationService.navigatorKey,
-initialRoute: '/',
+initialRoute: '/test-svg',
       onGenerateRoute: _generateRoute,
       routes: {
         '/': (context) => const SplashScreen(),
+        '/test-svg': (context) => const TestSvgScreen(),
         '/signin': (context) => const SignInScreen(),
         '/signup': (context) => const SignUpScreen(),
         '/home': (context) => _buildHomeRoute(context),
@@ -613,6 +616,96 @@ initialRoute: '/',
           child: child,
         );
       },
+    );
+  }
+}
+
+class TestSvgScreen extends StatefulWidget {
+  const TestSvgScreen({super.key});
+
+  @override
+  State<TestSvgScreen> createState() => _TestSvgScreenState();
+}
+
+class _TestSvgScreenState extends State<TestSvgScreen> {
+  String? _svgContent;
+  String? _error;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSvg();
+  }
+
+  Future<void> _loadSvg() async {
+    try {
+      final svgString = await DefaultAssetBundle.of(context).loadString('assets/auth-header.svg');
+      setState(() {
+        _svgContent = svgString;
+        _loading = false;
+      });
+      print('SVG loaded successfully, length: ${svgString.length}');
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+      });
+      print('Error loading SVG: $e');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('SVG Loading Test')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Loading Status:', style: Theme.of(context).textTheme.headlineSmall),
+            const SizedBox(height: 8),
+            if (_loading) 
+              const CircularProgressIndicator()
+            else if (_error != null) 
+              Text('Error: $_error', style: const TextStyle(color: Colors.red))
+            else if (_svgContent != null) ...[
+              const Text('✅ SVG loaded successfully!', style: TextStyle(color: Colors.green)),
+              const SizedBox(height: 16),
+              const Text('Testing different loading methods:'),
+              const SizedBox(height: 16),
+              
+              // Method 1: SvgPicture.asset
+              const Text('Method 1: SvgPicture.asset'),
+              Container(
+                height: 200,
+                width: double.infinity,
+                decoration: BoxDecoration(border: Border.all()),
+                child: SvgPicture.asset(
+                  'assets/auth-header.svg',
+                  fit: BoxFit.cover,
+                  placeholderBuilder: (_) => const Center(child: CircularProgressIndicator()),
+                ),
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Method 2: SvgPicture.string
+              const Text('Method 2: SvgPicture.string'),
+              Container(
+                height: 200,
+                width: double.infinity,
+                decoration: BoxDecoration(border: Border.all()),
+                child: SvgPicture.string(
+                  _svgContent!,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }
