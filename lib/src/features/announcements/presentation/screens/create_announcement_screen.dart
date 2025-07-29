@@ -5,6 +5,8 @@ import 'package:geolocator/geolocator.dart';
 import '../controllers/announcement_controller.dart';
 import '../../data/models/announcement.dart';
 import '../../../user_profile/data/models/user_profile.dart';
+import '../../../goalkeeper_search/data/services/goalkeeper_search_service.dart';
+import '../../../../shared/services/location_service.dart';
 
 class CreateAnnouncementScreen extends StatefulWidget {
   const CreateAnnouncementScreen({super.key});
@@ -32,6 +34,8 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
   List<UserProfile> _filteredGoalkeepers = [];
   bool _isLoadingGoalkeepers = false;
   Position? _userLocation;
+  final GoalkeeperSearchService _goalkeeperSearchService = GoalkeeperSearchService();
+  final LocationService _locationService = LocationService();
 
   @override
   void dispose() {
@@ -52,28 +56,12 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
   // Get user's current location
   Future<void> _getUserLocation() async {
     try {
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        _showErrorSnackBar('Serviços de localização estão desabilitados');
-        return;
+      _userLocation = await _locationService.getCurrentLocation();
+      if (_userLocation != null) {
+        await _fetchNearbyGoalkeepers();
+      } else {
+        _showErrorSnackBar('Não foi possível obter sua localização');
       }
-
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          _showErrorSnackBar('Permissão de localização negada');
-          return;
-        }
-      }
-
-      if (permission == LocationPermission.deniedForever) {
-        _showErrorSnackBar('Permissão de localização negada permanentemente');
-        return;
-      }
-
-      _userLocation = await Geolocator.getCurrentPosition();
-      await _fetchNearbyGoalkeepers();
     } catch (e) {
       _showErrorSnackBar('Erro ao obter localização: ${e.toString()}');
     }
@@ -81,30 +69,37 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
 
   // Fetch nearby goalkeepers from database
   Future<void> _fetchNearbyGoalkeepers() async {
-    if (_userLocation == null) return;
-
     setState(() {
       _isLoadingGoalkeepers = true;
     });
 
     try {
-      final response = await Supabase.instance.client
-          .from('user_profiles')
-          .select('*')
-          .eq('role', 'goalkeeper')
-          .eq('is_available', true);
+      // Get current user info to use city as fallback
+      final currentUser = Supabase.instance.client.auth.currentUser;
+      String? userCity;
+      
+      if (currentUser != null) {
+        try {
+          final userResponse = await Supabase.instance.client
+              .from('users')
+              .select('city')
+              .eq('id', currentUser.id)
+              .single();
+          userCity = userResponse['city'];
+        } catch (e) {
+          print('Could not get user city: $e');
+        }
+      }
 
-      final List<UserProfile> goalkeepers = (response as List)
-          .map((data) => UserProfile.fromJson(data))
-          .toList();
-
-      // For now, add all goalkeepers since we don't have location data
-      // TODO: Add latitude/longitude fields to UserProfile model
-      final nearbyGoalkeepers = goalkeepers;
+      final goalkeepers = await _goalkeeperSearchService.getNearbyGoalkeepers(
+        radiusKm: 50.0,
+        userLocation: _userLocation,
+        userCity: userCity,
+      );
 
       setState(() {
         _availableGoalkeepers.clear();
-        _availableGoalkeepers.addAll(nearbyGoalkeepers);
+        _availableGoalkeepers.addAll(goalkeepers);
         _filteredGoalkeepers = List.from(_availableGoalkeepers);
         _isLoadingGoalkeepers = false;
       });
@@ -725,7 +720,18 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
   }
 
   String _getGoalkeeperDistance(UserProfile goalkeeper) {
-    // Since UserProfile doesn't have location data yet, show city or rating info
+    // Show distance if both user and goalkeeper have location data
+    if (_userLocation != null && goalkeeper.hasLocation) {
+      final distance = _locationService.calculateDistance(
+        _userLocation!.latitude,
+        _userLocation!.longitude,
+        goalkeeper.latitude!,
+        goalkeeper.longitude!,
+      );
+      return '${distance.toStringAsFixed(1)} km de distância';
+    }
+    
+    // Fallback to city or rating info
     if (goalkeeper.city != null && goalkeeper.city!.isNotEmpty) {
       return goalkeeper.city!;
     }
