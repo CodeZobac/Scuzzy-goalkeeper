@@ -290,6 +290,49 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                                 );
                               },
                             ),
+                            const SizedBox(height: 16),
+                            if (_announcement.createdBy == Supabase.instance.client.auth.currentUser?.id)
+                              SizedBox(
+                                width: double.infinity,
+                                height: 48,
+                                child: ElevatedButton(
+                                  onPressed: () async {
+                                    final announcementController =
+                                        Provider.of<AnnouncementController>(context, listen: false);
+                                    try {
+                                      await announcementController.endGame(_announcement.id);
+                                      if (mounted) {
+                                        AnnouncementErrorHandler.showSuccessSnackBar(
+                                          context,
+                                          'Successfully ended the game',
+                                        );
+                                      }
+                                    } catch (e) {
+                                      if (mounted) {
+                                        AnnouncementErrorHandler.showErrorSnackBar(
+                                          context,
+                                          AnnouncementErrorHandler.getErrorMessage(e),
+                                        );
+                                      }
+                                    }
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.red,
+                                    foregroundColor: Colors.white,
+                                    elevation: 0,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  child: const Text(
+                                    'End Game',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
                           ],
                         ),
                       ),

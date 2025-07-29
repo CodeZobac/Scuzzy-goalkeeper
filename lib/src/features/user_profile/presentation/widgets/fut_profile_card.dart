@@ -295,7 +295,7 @@ class _FUTProfileCardState extends State<FUTProfileCard>
                 Shadow(
                   offset: Offset(0, 1),
                   blurRadius: 3,
-                  color: Colors.black26,
+                  color: Colors.black,
                 ),
               ],
             ),

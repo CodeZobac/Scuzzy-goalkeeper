@@ -221,5 +221,11 @@ class AnnouncementController extends ChangeNotifier {
     notifyListeners();
   }
 
-
+  Future<void> endGame(int announcementId) async {
+    try {
+      await _announcementRepository.endGame(announcementId);
+    } catch (e) {
+      rethrow;
+    }
+  }
 }
