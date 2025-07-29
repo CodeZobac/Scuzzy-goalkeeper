@@ -261,4 +261,25 @@ class AnnouncementRepositoryImpl implements AnnouncementRepository {
       'photo_count': 0,
     };
   }
+
+  @override
+  Future<void> endGame(int announcementId) async {
+    try {
+      final response = await _supabaseClient
+          .from('bookings')
+          .select('id')
+          .eq('announcement_id', announcementId);
+
+      final bookingIds = (response as List).map((e) => e['id'] as String).toList();
+
+      for (final bookingId in bookingIds) {
+        await _supabaseClient
+            .from('bookings')
+            .update({'status': 'completed'})
+            .eq('id', bookingId);
+      }
+    } catch (e) {
+      throw Exception('Failed to end game: $e');
+    }
+  }
 }

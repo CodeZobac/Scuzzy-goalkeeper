@@ -13,7 +13,7 @@ class UserProfileRepository {
 
     final response = await _supabase
         .from('users')
-        .select('*, reflexes, positioning, distribution, communication')
+        .select('*, reflexes, positioning, distribution, communication, games_played')
         .eq('id', user.id)
         .single();
 
@@ -30,5 +30,19 @@ class UserProfileRepository {
         .from('users')
         .update(userProfile.toMap())
         .eq('id', user.id);
+  }
+
+  Future<void> addGamesPlayed(int games) async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) {
+      throw Exception('User not logged in');
+    }
+
+    final currentProfile = await getUserProfile();
+    currentProfile.addGames(games);
+
+    await _supabase.from('users').update({
+      'games_played': currentProfile.gamesPlayed,
+    }).eq('id', user.id);
   }
 }

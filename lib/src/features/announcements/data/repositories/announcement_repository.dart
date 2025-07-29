@@ -13,4 +13,5 @@ abstract class AnnouncementRepository {
   Future<bool> isUserParticipant(int announcementId, String userId);
   Future<Map<String, dynamic>> getOrganizerInfo(String userId);
   Future<Map<String, dynamic>> getStadiumInfo(String stadiumName);
+  Future<void> endGame(int announcementId);
 }

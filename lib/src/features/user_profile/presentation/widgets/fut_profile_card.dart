@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:goalkeeper/src/features/user_profile/data/models/user_profile.dart';
+import 'package:goalkeeper/src/features/user_profile/data/services/level_service.dart';
+import 'package:goalkeeper/src/shared/widgets/player_name_with_level.dart';
 import '../../../auth/presentation/theme/app_theme.dart';
 import 'dart:math' as math;
 
@@ -64,22 +66,40 @@ class _FUTProfileCardState extends State<FUTProfileCard>
     }
   }
 
+  Map<String, Color> _getTierColors() {
+    final tier = LevelService().getTierForLevel(widget.userProfile.level);
+    switch (tier) {
+      case 'Bronze':
+        return {'card': const Color(0xFFCD7F32), 'accent': const Color(0xFFA95C24)};
+      case 'Silver':
+        return {'card': const Color(0xFFC0C0C0), 'accent': const Color(0xFFD3D3D3)};
+      case 'Gold':
+        return {'card': const Color(0xFFFFD700), 'accent': const Color(0xFFE5C100)};
+      case 'Diamond':
+        return {'card': const Color(0xFFB9F2FF), 'accent': const Color(0xFF82E0FF)};
+      case 'Elite':
+        return {'card': const Color(0xFF2C3E50), 'accent': const Color(0xFF5D737E)};
+      default:
+        return {'card': const Color(0xFFE94560), 'accent': const Color(0xFFFF6B6B)};
+    }
+  }
+
   Color get _cardColor {
     if (widget.userProfile.isGoalkeeper) {
       return const Color(0xFF00A85A); // Green for goalkeeper
     }
-    return const Color(0xFFE94560); // Pink/Red for player
+    return _getTierColors()['card']!;
   }
 
   Color get _accentColor {
     if (widget.userProfile.isGoalkeeper) {
       return const Color(0xFF4ECDC4); // Cyan accent
     }
-    return const Color(0xFFFF6B6B); // Red accent
+    return _getTierColors()['accent']!;
   }
 
   String get _positionText {
-    return widget.userProfile.isGoalkeeper ? 'GK' : 'FP';
+    return widget.userProfile.isGoalkeeper ? 'GK' : '';
   }
 
   String get _overallRating {
@@ -94,13 +114,8 @@ class _FUTProfileCardState extends State<FUTProfileCard>
       final average = (reflexes + positioning + distribution + communication) / 4;
       return math.min(99, average.round()).toString();
     } else {
-      // Generate a rating based on profile completion and other factors
-      int baseRating = 65;
-      if (widget.userProfile.club != null) baseRating += 5;
-      if (widget.userProfile.nationality != null) baseRating += 5;
-      if (widget.userProfile.birthDate != null) baseRating += 5;
-      if (widget.userProfile.pricePerGame != null) baseRating += 10;
-      return math.min(99, baseRating).toString();
+      final tier = LevelService().getTierForLevel(widget.userProfile.level);
+      return tier;
     }
   }
 
@@ -115,7 +130,7 @@ class _FUTProfileCardState extends State<FUTProfileCard>
           return Transform.scale(
             scale: _scaleAnimation.value,
             child: Container(
-              height: 280,
+              height: 275,
               margin: const EdgeInsets.symmetric(horizontal: 4),
               decoration: BoxDecoration(
                 boxShadow: [
@@ -161,7 +176,7 @@ class _FUTProfileCardState extends State<FUTProfileCard>
                             // Header with rating and position
                             _buildCardHeader(),
                             
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 8),
                             
                             // Player info and avatar
                             _buildPlayerSection(),
@@ -171,7 +186,7 @@ class _FUTProfileCardState extends State<FUTProfileCard>
                             // Stats section
                             _buildStatsSection(),
                             
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 8),
                             
                             // Footer with club and nationality
                             _buildCardFooter(),
@@ -203,44 +218,88 @@ class _FUTProfileCardState extends State<FUTProfileCard>
   }
 
   Widget _buildCardHeader() {
+    final isGoalkeeper = widget.userProfile.isGoalkeeper;
+    final overallRatingText = _overallRating;
+    final bool isTier = !isGoalkeeper && ['Bronze', 'Silver', 'Gold', 'Diamond', 'Elite'].contains(overallRatingText);
+
     return Row(
       children: [
         // Overall Rating
-        Container(
-          width: 60,
-          height: 60,
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.3),
-              width: 2,
+        if (isGoalkeeper)
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.3),
+                width: 2,
+              ),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Center(
+                  child: Text(
+                    overallRatingText,
+                    style: TextStyle(
+                      fontSize: isTier ? 18 : 24,
+                      fontWeight: FontWeight.bold,
+                      fontStyle: isTier ? FontStyle.italic : FontStyle.normal,
+                      color: isTier ? _getTierColors()['accent'] : Colors.white,
+                      height: 1,
+                      shadows: [
+                        Shadow(
+                          offset: Offset(0, 1),
+                          blurRadius: 3,
+                          color: Colors.black26,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                if (isGoalkeeper)
+                  Text(
+                    _positionText,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                      height: 1,
+                    ),
+                  ),
+                if (!isGoalkeeper && !isTier)
+                  Text(
+                    'LVL',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                      height: 1,
+                    ),
+                  ),
+              ],
             ),
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                _overallRating.toString(),
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  height: 1,
+        if (!isGoalkeeper)
+          Text(
+            overallRatingText,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              fontStyle: FontStyle.italic,
+              color: Colors.white,
+              height: 1,
+              shadows: [
+                Shadow(
+                  offset: Offset(0, 1),
+                  blurRadius: 3,
+                  color: Colors.black,
                 ),
-              ),
-              Text(
-                _positionText,
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                  height: 1,
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
         
         const Spacer(),
         
@@ -314,23 +373,7 @@ class _FUTProfileCardState extends State<FUTProfileCard>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                widget.userProfile.name,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  shadows: [
-                    Shadow(
-                      offset: Offset(0, 1),
-                      blurRadius: 3,
-                      color: Colors.black26,
-                    ),
-                  ],
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
+              PlayerNameWithLevel(userProfile: widget.userProfile),
               const SizedBox(height: 4),
               if (widget.userProfile.city != null)
                 Text(
@@ -349,12 +392,15 @@ class _FUTProfileCardState extends State<FUTProfileCard>
   }
 
   Widget _buildStatsSection() {
-    final stats = _getPlayerStats();
-    
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: stats.map((stat) => _buildStatItem(stat['label']!, stat['value']!)).toList(),
-    );
+    if (widget.userProfile.isGoalkeeper) {
+      final stats = _getPlayerStats();
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: stats.map((stat) => _buildStatItem(stat['label']!, stat['value']!)).toList(),
+      );
+    } else {
+      return _buildPlayerExperienceBar();
+    }
   }
 
   Widget _buildStatItem(String label, String value) {
@@ -431,7 +477,7 @@ class _FUTProfileCardState extends State<FUTProfileCard>
         const Spacer(),
         
         // Price indicator
-        if (widget.userProfile.pricePerGame != null)
+        if (widget.userProfile.isGoalkeeper && widget.userProfile.pricePerGame != null)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
@@ -490,12 +536,83 @@ class _FUTProfileCardState extends State<FUTProfileCard>
         {'label': 'KIC', 'value': distribution > 0 ? distribution.toStringAsFixed(0) : 'N/D'},
       ];
     } else {
-      return [
-        {'label': 'PAC', 'value': '82'},
-        {'label': 'SHO', 'value': '78'},
-        {'label': 'PAS', 'value': '85'},
-      ];
+      return [];
     }
+  }
+
+  Widget _buildPlayerExperienceBar() {
+    final int gamesPlayed = widget.userProfile.gamesPlayed;
+    final int level = widget.userProfile.level;
+    final int gamesForCurrentLevel = LevelService().getGamesRequiredForLevel(level);
+    final int gamesForNextLevel = LevelService().getGamesRequiredForLevel(level + 1);
+    
+    // Safe calculation to prevent division by zero and handle edge cases
+    double progress = 0.0;
+    if (gamesForNextLevel > gamesForCurrentLevel) {
+      final gamesIntoCurrentLevel = gamesPlayed - gamesForCurrentLevel;
+      final gamesNeededForNextLevel = gamesForNextLevel - gamesForCurrentLevel;
+      progress = (gamesIntoCurrentLevel / gamesNeededForNextLevel).clamp(0.0, 1.0);
+    } else if (level >= LevelService.maxLevel) {
+      // If already at max level, show full progress
+      progress = 1.0;
+    }
+    
+    // Handle case where player is at max level
+    final bool isMaxLevel = level >= LevelService.maxLevel;
+    final String progressText = isMaxLevel 
+        ? '$gamesPlayed Games (Max Level)'
+        : '$gamesPlayed / $gamesForNextLevel Games';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              isMaxLevel ? 'Level $level (MAX)' : 'Level $level',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            const Spacer(),
+            Text(
+              progressText,
+              style: TextStyle(
+                fontSize: 10,
+                color: Colors.white.withOpacity(0.8),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        // Progress bar
+        Container(
+          width: double.infinity,
+          height: 8,
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: FractionallySizedBox(
+            alignment: Alignment.centerLeft,
+            widthFactor: progress,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    _accentColor.withOpacity(0.8),
+                    _accentColor,
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
 
