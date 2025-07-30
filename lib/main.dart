@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:goalkeeper/src/core/config/app_config.dart';
+import 'package:goalkeeper/l10n/app_localizations.dart';
 import 'package:goalkeeper/src/core/config/config_validator.dart';
 import 'package:goalkeeper/src/core/config/firebase_config.dart';
 import 'package:goalkeeper/src/core/error_handling/error_monitoring_service.dart';
@@ -304,7 +306,17 @@ class _MyAppState extends State<MyApp> {
       title: 'Goalkeeper-Finder',
       theme: AppTheme.darkTheme,
       navigatorKey: NavigationService.navigatorKey,
-initialRoute: '/test-svg',
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('pt', ''),
+      ],
+      locale: const Locale('pt', ''),
+initialRoute: '/home',
       onGenerateRoute: _generateRoute,
       routes: {
         '/': (context) => const SplashScreen(),

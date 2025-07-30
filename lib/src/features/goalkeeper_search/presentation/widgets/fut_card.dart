@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../data/models/goalkeeper.dart';
 import '../../../auth/presentation/theme/app_theme.dart';
-import 'fifa_card_clipper.dart';
+// import 'fifa_card_clipper.dart'; // Missing file, using default clipper
 import '../screens/goalkeeper_details_screen.dart';
 
 enum CardRarity { 
@@ -171,14 +171,14 @@ class _ExpandableFutCardState extends State<ExpandableFutCard>
 
   CustomClipper<Path> get _cardClipper {
     switch (_rarity) {
-      case CardRarity.Icon:
-        return PremiumCardClipper();
-      case CardRarity.TeamOfTheWeek:
-        return const EnhancedFifaCardClipper(notchDepth: 0.08);
-      case CardRarity.Special:
-        return const EnhancedFifaCardClipper(notchDepth: 0.06);
+      // case CardRarity.Icon:
+      //   return PremiumCardClipper();
+      // case CardRarity.TeamOfTheWeek:
+      //   return const EnhancedFifaCardClipper(notchDepth: 0.08);
+      // case CardRarity.Special:
+      //   return const EnhancedFifaCardClipper(notchDepth: 0.06);
       default:
-        return FifaCardClipper();
+        return _DefaultCardClipper();
     }
   }
 
@@ -1201,4 +1201,20 @@ class CardPatternPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// Default card clipper for basic rounded rectangle shape
+class _DefaultCardClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    path.addRRect(RRect.fromRectAndRadius(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      const Radius.circular(24.0),
+    ));
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
 }
