@@ -273,113 +273,99 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
-          ),
-        ),
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Handle bar
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE0E0E0),
-                  borderRadius: BorderRadius.circular(2),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            return Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
-            
-            // Title
-            const Text(
-              'Filtrar Anúncios',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF2C2C2C),
-              ),
-            ),
-            const SizedBox(height: 24),
-            
-            // Filter options
-            _buildFilterOption('Todos os Anúncios', _selectedFilter == 'Todos os Anúncios'),
-            _buildFilterOption('Hoje', _selectedFilter == 'Hoje'),
-            _buildFilterOption('Esta Semana', _selectedFilter == 'Esta Semana'),
-            _buildFilterOption('Jogos Gratuitos', _selectedFilter == 'Jogos Gratuitos'),
-            _buildFilterOption('Jogos Pagos', _selectedFilter == 'Jogos Pagos'),
-            
-            const SizedBox(height: 24),
-            
-            // Apply button
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  setState(() {
-                    // Filter is already applied through _selectedFilter
-                  });
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF4CAF50),
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Handle bar
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE0E0E0),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
                   ),
-                ),
-                child: const Text(
-                  'Aplicar Filtros',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                  const SizedBox(height: 20),
+                  
+                  // Title
+                  const Text(
+                    'Filtrar Anúncios',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF2C2C2C),
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 24),
+                  
+                  // Filter options
+                  _buildFilterOption('Todos os Anúncios', _selectedFilter == 'Todos os Anúncios', setModalState),
+                  _buildFilterOption('Hoje', _selectedFilter == 'Hoje', setModalState),
+                  _buildFilterOption('Esta Semana', _selectedFilter == 'Esta Semana', setModalState),
+                  _buildFilterOption('Jogos Gratuitos', _selectedFilter == 'Jogos Gratuitos', setModalState),
+                  _buildFilterOption('Jogos Pagos', _selectedFilter == 'Jogos Pagos', setModalState),
+                  
+                  const SizedBox(height: 24),
+                  
+                  // Safe area padding
+                  SizedBox(height: MediaQuery.of(context).padding.bottom),
+                ],
               ),
-            ),
-            
-            // Safe area padding
-            SizedBox(height: MediaQuery.of(context).padding.bottom),
-          ],
-        ),
-      ),
+            );
+          },
+        );
+      },
     );
   }
 
-  Widget _buildFilterOption(String title, bool isSelected) {
+  Widget _buildFilterOption(String title, bool isSelected, StateSetter setModalState) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
         onTap: () {
-          setState(() {
+          setModalState(() {
             _selectedFilter = title;
+          });
+          // Close the bottom sheet after a short delay to show the selection
+          Future.delayed(const Duration(milliseconds: 200), () {
+            if (mounted) {
+              Navigator.of(context).pop();
+              setState(() {});
+            }
           });
         },
         borderRadius: BorderRadius.circular(12),
-        child: Container(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
             color: isSelected ? const Color(0xFF4CAF50).withOpacity(0.1) : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isSelected ? const Color(0xFF4CAF50) : const Color(0xFFE0E0E0),
-              width: 1,
+              width: isSelected ? 1.5 : 1,
             ),
           ),
           child: Row(
             children: [
               Icon(
-                isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                isSelected ? Icons.check_circle_rounded : Icons.radio_button_unchecked,
                 color: isSelected ? const Color(0xFF4CAF50) : const Color(0xFF757575),
                 size: 20,
               ),
@@ -388,7 +374,7 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
                 title,
                 style: TextStyle(
                   fontSize: 16,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                   color: isSelected ? const Color(0xFF4CAF50) : const Color(0xFF2C2C2C),
                 ),
               ),
