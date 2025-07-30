@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../shared/widgets/location_aware_distance.dart';
 
 class StadiumCard extends StatelessWidget {
   final String stadiumName;
@@ -48,14 +49,26 @@ class StadiumCard extends StatelessWidget {
                           color: Colors.white,
                         ),
                       ),
-                      if (distance != null)
-                        Text(
-                          '${distance!.toStringAsFixed(0)} km away',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.white70,
-                          ),
+                      // Use location-aware distance if coordinates are available,
+                      // otherwise fallback to the existing distance from the model
+                      LocationAwareDistance(
+                        fieldLatitude: null, // No coordinates available in current model
+                        fieldLongitude: null,
+                        textStyle: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.white70,
                         ),
+                        suffix: ' km de distância',
+                        child: distance != null
+                            ? Text(
+                                '${distance!.toStringAsFixed(0)} km de distância',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white70,
+                                ),
+                              )
+                            : const SizedBox.shrink(),
+                      ),
                     ],
                   ),
                 ),

@@ -7,6 +7,8 @@ import '../../data/models/announcement.dart';
 import '../../../user_profile/data/models/user_profile.dart';
 import '../../../goalkeeper_search/data/services/goalkeeper_search_service.dart';
 import '../../../../shared/services/location_service.dart';
+import '../../data/services/field_service.dart';
+import '../../../map/data/models/real_field.dart';
 
 class CreateAnnouncementScreen extends StatefulWidget {
   const CreateAnnouncementScreen({super.key});
@@ -21,6 +23,11 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
   final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
   final _stadiumController = TextEditingController();
+  RealField? _selectedField;
+  final List<RealField> _availableFields = [];
+  List<RealField> _filteredFields = [];
+  final TextEditingController _fieldSearchController = TextEditingController();
+  bool _isLoadingFields = false;
   
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
@@ -44,6 +51,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
     _priceController.dispose();
     _stadiumController.dispose();
     _goalkeeperSearchController.dispose();
+    _fieldSearchController.dispose();
     super.dispose();
   }
 
@@ -51,6 +59,42 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
   void initState() {
     super.initState();
     _goalkeeperSearchController.addListener(_filterGoalkeepers);
+    _fieldSearchController.addListener(_filterFields);
+    _fetchFields();
+  }
+
+  Future<void> _fetchFields() async {
+    setState(() {
+      _isLoadingFields = true;
+    });
+
+    try {
+      final fieldService = FieldService(Supabase.instance.client);
+      final fields = await fieldService.getFields();
+      setState(() {
+        _availableFields.clear();
+        _availableFields.addAll(fields);
+        _filteredFields = List.from(_availableFields);
+        _isLoadingFields = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingFields = false;
+      });
+      _showErrorSnackBar('Erro ao carregar campos: ${e.toString()}');
+    }
+  }
+
+  void _filterFields() {
+    final query = _fieldSearchController.text.toLowerCase();
+    setState(() {
+      _filteredFields = _availableFields
+          .where((field) =>
+              field.name.toLowerCase().contains(query) ||
+              (field.address != null &&
+                  field.address!.toLowerCase().contains(query)))
+          .toList();
+    });
   }
 
   // Get user's current location
@@ -234,9 +278,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
         price: _priceController.text.trim().isEmpty 
             ? null 
             : double.tryParse(_priceController.text.trim()),
-        stadium: _stadiumController.text.trim().isEmpty 
-            ? null 
-            : _stadiumController.text.trim(),
+        stadium: _selectedField?.name,
         createdAt: DateTime.now(),
       );
 
@@ -385,11 +427,7 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
               const SizedBox(height: 16),
 
               // Stadium Field
-              _buildInputField(
-                controller: _stadiumController,
-                label: 'Estádio',
-                hint: 'Digite o nome do estádio (opcional)',
-              ),
+              _buildFieldSection(),
               const SizedBox(height: 24),
 
               // Goalkeeper Hiring Section
@@ -715,6 +753,123 @@ class _CreateAnnouncementScreenState extends State<CreateAnnouncementScreen> {
             ),
           ),
         ],
+      ],
+    );
+  }
+
+  Widget _buildFieldSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Estádio',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: Color(0xFF2C2C2C),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFE0E0E0)),
+          ),
+          child: Column(
+            children: [
+              TextFormField(
+                controller: _fieldSearchController,
+                decoration: const InputDecoration(
+                  hintText: 'Digite para pesquisar estádios...',
+                  prefixIcon: Icon(Icons.search, color: Color(0xFF757575)),
+                  border: InputBorder.none,
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  filled: true,
+                  fillColor: Colors.white,
+                  hintStyle: TextStyle(
+                    color: Color(0xFF757575),
+                    fontSize: 14,
+                  ),
+                ),
+                style: const TextStyle(
+                  color: Color(0xFF2C2C2C),
+                  fontSize: 16,
+                ),
+              ),
+              if (_isLoadingFields)
+                const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: CircularProgressIndicator(
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(Color(0xFF4CAF50)),
+                  ),
+                )
+              else if (_filteredFields.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text(
+                    'Nenhum estádio encontrado',
+                    style: TextStyle(
+                      color: Color(0xFF757575),
+                      fontSize: 14,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                )
+              else
+                Container(
+                  constraints: const BoxConstraints(maxHeight: 200),
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: _filteredFields.length,
+                    separatorBuilder: (context, index) => const Divider(
+                      height: 1,
+                      color: Color(0xFFE0E0E0),
+                    ),
+                    itemBuilder: (context, index) {
+                      final field = _filteredFields[index];
+                      final isSelected = _selectedField?.id == field.id;
+
+                      return ListTile(
+                        onTap: () {
+                          setState(() {
+                            _selectedField = field;
+                            _fieldSearchController.text = field.name;
+                          });
+                        },
+                        title: Text(
+                          field.name,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF2C2C2C),
+                          ),
+                        ),
+                        subtitle: Text(
+                          field.address ?? 'Endereço não disponível',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF757575),
+                          ),
+                        ),
+                        trailing: isSelected
+                            ? const Icon(
+                                Icons.check_circle,
+                                color: Color(0xFF4CAF50),
+                              )
+                            : const Icon(
+                                Icons.radio_button_unchecked,
+                                color: Color(0xFF757575),
+                              ),
+                      );
+                    },
+                  ),
+                ),
+            ],
+          ),
+        ),
       ],
     );
   }

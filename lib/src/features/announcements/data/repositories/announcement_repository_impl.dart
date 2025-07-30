@@ -10,7 +10,23 @@ class AnnouncementRepositoryImpl implements AnnouncementRepository {
   @override
   Future<void> createAnnouncement(Announcement announcement) async {
     try {
-      await _supabaseClient.from('announcements').insert(announcement.toJson());
+      // Only send fields that exist in the database table
+      final data = {
+        'created_by': announcement.createdBy,
+        'title': announcement.title,
+        'description': announcement.description,
+        'date': announcement.date.toIso8601String().split('T')[0], // DATE format
+        'time': '${announcement.time.hour.toString().padLeft(2, '0')}:${announcement.time.minute.toString().padLeft(2, '0')}:00', // TIME format
+        'price': announcement.price,
+        'stadium': announcement.stadium,
+        'max_participants': announcement.maxParticipants,
+        'needs_goalkeeper': announcement.needsGoalkeeper,
+        'hired_goalkeeper_id': announcement.hiredGoalkeeperId,
+        'hired_goalkeeper_name': announcement.hiredGoalkeeperName,
+        'goalkeeper_price': announcement.goalkeeperPrice,
+      };
+      
+      await _supabaseClient.from('announcements').insert(data);
     } catch (e) {
       throw Exception('Failed to create announcement: $e');
     }
@@ -265,19 +281,10 @@ class AnnouncementRepositoryImpl implements AnnouncementRepository {
   @override
   Future<void> endGame(int announcementId) async {
     try {
-      final response = await _supabaseClient
-          .from('bookings')
-          .select('id')
-          .eq('announcement_id', announcementId);
-
-      final bookingIds = (response as List).map((e) => e['id'] as String).toList();
-
-      for (final bookingId in bookingIds) {
-        await _supabaseClient
-            .from('bookings')
-            .update({'status': 'completed'})
-            .eq('id', bookingId);
-      }
+      await _supabaseClient
+          .from('announcements')
+          .update({'status': 'completed'})
+          .eq('id', announcementId);
     } catch (e) {
       throw Exception('Failed to end game: $e');
     }

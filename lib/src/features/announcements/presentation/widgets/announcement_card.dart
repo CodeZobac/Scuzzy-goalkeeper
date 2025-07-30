@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:goalkeeper/src/features/announcements/data/models/announcement.dart';
 import 'package:goalkeeper/src/features/announcements/presentation/widgets/game_details_row.dart';
 import 'package:goalkeeper/src/features/announcements/presentation/widgets/organizer_profile.dart';
+import '../../../../shared/widgets/location_aware_distance.dart';
 
 class AnnouncementCard extends StatelessWidget {
   final Announcement announcement;
@@ -71,12 +72,25 @@ class AnnouncementCard extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 2),
-                          Text(
-                            '${announcement.distanceKm?.toStringAsFixed(1) ?? '2'} km away',
-                            style: const TextStyle(
+                          // Use location-aware distance if coordinates are available,
+                          // otherwise fallback to the existing distance from the model
+                          LocationAwareDistance(
+                            fieldLatitude: null, // No coordinates available in current model
+                            fieldLongitude: null,
+                            textStyle: const TextStyle(
                               fontSize: 12,
                               color: Color(0xFF757575),
                             ),
+                            suffix: ' km de distância',
+                            child: announcement.distanceKm != null
+                                ? Text(
+                                    '${announcement.distanceKm!.toStringAsFixed(1)} km de distância',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Color(0xFF757575),
+                                    ),
+                                  )
+                                : const SizedBox.shrink(),
                           ),
                         ],
                       ),
