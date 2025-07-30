@@ -374,14 +374,12 @@ class _ProfileInfoCardState extends State<ProfileInfoCard>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isHighlighted 
-            ? AppTheme.accentColor.withOpacity(0.1)
-            : AppTheme.primaryBackground.withOpacity(0.3),
+        color: isHighlighted
+            ? Colors.white.withOpacity(0.2)
+            : Colors.white.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isHighlighted 
-              ? AppTheme.accentColor.withOpacity(0.3)
-              : AppTheme.secondaryText.withOpacity(0.2),
+          color: Colors.white.withOpacity(0.3),
         ),
       ),
       child: Row(
@@ -389,14 +387,14 @@ class _ProfileInfoCardState extends State<ProfileInfoCard>
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: isHighlighted 
-                  ? AppTheme.accentColor.withOpacity(0.2)
-                  : AppTheme.secondaryText.withOpacity(0.2),
+              color: isHighlighted
+                  ? Colors.white.withOpacity(0.3)
+                  : Colors.white.withOpacity(0.2),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
               icon,
-              color: isHighlighted ? AppTheme.accentColor : AppTheme.secondaryText,
+              color: isHighlighted ? Colors.white : Colors.white.withOpacity(0.8),
               size: 18,
             ),
           ),
@@ -410,7 +408,7 @@ class _ProfileInfoCardState extends State<ProfileInfoCard>
                   style: AppTheme.bodyMedium.copyWith(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    color: AppTheme.secondaryText,
+                    color: Colors.white.withOpacity(0.8),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -418,7 +416,7 @@ class _ProfileInfoCardState extends State<ProfileInfoCard>
                   value,
                   style: AppTheme.bodyLarge.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: isHighlighted ? AppTheme.primaryText : AppTheme.secondaryText,
+                    color: Colors.white,
                   ),
                 ),
               ],

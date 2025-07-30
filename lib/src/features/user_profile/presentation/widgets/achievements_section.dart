@@ -165,17 +165,10 @@ class _AchievementsSectionState extends State<AchievementsSection>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppTheme.accentColor.withOpacity(0.1),
-            AppTheme.successColor.withOpacity(0.1),
-          ],
-        ),
+        color: Colors.white.withOpacity(0.1),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppTheme.accentColor.withOpacity(0.3),
+          color: Colors.white.withOpacity(0.2),
         ),
       ),
       child: Column(
@@ -186,12 +179,12 @@ class _AchievementsSectionState extends State<AchievementsSection>
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppTheme.accentColor.withOpacity(0.2),
+                  color: Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.trending_up,
-                  color: AppTheme.accentColor,
+                  color: Colors.white,
                   size: 20,
                 ),
               ),
@@ -204,12 +197,13 @@ class _AchievementsSectionState extends State<AchievementsSection>
                       'Progresso do Perfil',
                       style: AppTheme.bodyLarge.copyWith(
                         fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
                     Text(
                       '$unlockedCount/${_achievements.length} conquistas desbloqueadas',
                       style: AppTheme.bodyMedium.copyWith(
-                        color: AppTheme.secondaryText,
+                        color: Colors.white.withOpacity(0.8),
                       ),
                     ),
                   ],
@@ -220,7 +214,7 @@ class _AchievementsSectionState extends State<AchievementsSection>
                 style: AppTheme.headingMedium.copyWith(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.accentColor,
+                  color: Colors.white,
                 ),
               ),
             ],
@@ -231,7 +225,7 @@ class _AchievementsSectionState extends State<AchievementsSection>
             width: double.infinity,
             height: 8,
             decoration: BoxDecoration(
-              color: AppTheme.secondaryText.withOpacity(0.2),
+              color: Colors.white.withOpacity(0.2),
               borderRadius: BorderRadius.circular(4),
             ),
             child: FractionallySizedBox(
@@ -239,8 +233,8 @@ class _AchievementsSectionState extends State<AchievementsSection>
               widthFactor: completionPercentage / 100,
               child: Container(
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [AppTheme.accentColor, AppTheme.successColor],
+                  gradient: const LinearGradient(
+                    colors: [Colors.white, Color.fromARGB(255, 201, 199, 199)],
                   ),
                   borderRadius: BorderRadius.circular(4),
                 ),

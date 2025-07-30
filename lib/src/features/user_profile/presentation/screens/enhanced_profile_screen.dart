@@ -264,14 +264,8 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen>
       elevation: 0,
       floating: true,
       snap: true,
-      title: Text(
-        'Perfil do Jogador',
-        style: AppTheme.headingMedium.copyWith(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
       centerTitle: true,
+      automaticallyImplyLeading: false,
       actions: [
         IconButton(
           onPressed: () {

@@ -82,13 +82,13 @@ class _StatsDashboardState extends State<StatsDashboard>
         {
           'label': 'Distribuição',
           'value': _calculateAverage(widget.userProfile.distribution),
-          'color': const Color(0xFF9C27B0),
+          'color': const Color(0xFFFF9800),
           'icon': Icons.sports_soccer,
         },
         {
           'label': 'Comunicação',
           'value': _calculateAverage(widget.userProfile.communication),
-          'color': const Color(0xFF2196F3),
+          'color': AppTheme.errorColor,
           'icon': Icons.campaign,
         },
       ];
