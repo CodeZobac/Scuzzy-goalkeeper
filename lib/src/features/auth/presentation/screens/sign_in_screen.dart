@@ -275,16 +275,7 @@ class _SignInScreenState extends State<SignInScreen> with ErrorHandlingMixin {
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Text('Funcionalidade em desenvolvimento'),
-                          backgroundColor: AppTheme.authPrimaryGreen,
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      );
+                      Navigator.of(context).pushNamed('/forgot-password');
                     },
                     child: Text(
                       'Esqueceu a palavra-passe?',

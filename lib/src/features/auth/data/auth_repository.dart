@@ -24,5 +24,9 @@ class AuthRepository {
     await _supabase.auth.signOut();
   }
 
+  Future<void> resetPasswordForEmail(String email) async {
+    await _supabase.auth.resetPasswordForEmail(email);
+  }
+
   Session? get currentUserSession => _supabase.auth.currentSession;
 }

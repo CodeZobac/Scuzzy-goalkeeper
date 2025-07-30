@@ -1,36 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:goalkeeper/src/core/config/app_config.dart';
-import 'package:goalkeeper/src/core/config/config_validator.dart';
-import 'package:goalkeeper/src/core/config/firebase_config.dart';
-import 'package:goalkeeper/src/core/error_handling/error_monitoring_service.dart';
-import 'package:goalkeeper/src/core/logging/error_logger.dart';
-import 'package:goalkeeper/src/core/navigation/navigation_service.dart';
-import 'package:goalkeeper/src/features/announcements/data/repositories/announcement_repository_impl.dart';
-import 'package:goalkeeper/src/features/announcements/presentation/controllers/announcement_controller.dart';
-import 'package:goalkeeper/src/features/announcements/presentation/screens/announcement_detail_screen.dart';
-import 'package:goalkeeper/src/features/announcements/presentation/screens/create_announcement_screen.dart';
-import 'package:goalkeeper/src/features/auth/presentation/providers/auth_state_provider.dart';
-import 'package:goalkeeper/src/features/auth/presentation/screens/sign_in_screen.dart';
-import 'package:goalkeeper/src/features/auth/presentation/screens/sign_up_screen.dart';
-import 'package:goalkeeper/src/features/auth/presentation/theme/app_theme.dart';
-import 'package:goalkeeper/src/features/goalkeeper_search/data/repositories/goalkeeper_search_repository.dart';
-import 'package:goalkeeper/src/features/goalkeeper_search/presentation/controllers/goalkeeper_search_controller.dart';
-import 'package:goalkeeper/src/features/main/presentation/screens/main_screen.dart';
-import 'package:goalkeeper/src/features/map/presentation/providers/field_selection_provider.dart';
-import 'package:goalkeeper/src/features/notifications/data/repositories/notification_repository.dart';
-import 'package:goalkeeper/src/features/notifications/presentation/controllers/notification_badge_controller.dart';
-import 'package:goalkeeper/src/features/notifications/presentation/controllers/notification_preferences_controller.dart';
-import 'package:goalkeeper/src/features/notifications/presentation/screens/notification_preferences_screen.dart';
-import 'package:goalkeeper/src/features/notifications/presentation/screens/notifications_screen.dart';
-import 'package:goalkeeper/src/features/notifications/services/notification_service.dart';
-import 'package:goalkeeper/src/features/notifications/services/notification_service_manager.dart';
-import 'package:goalkeeper/src/features/user_profile/data/repositories/user_profile_repository.dart';
-import 'package:goalkeeper/src/features/user_profile/presentation/controllers/user_profile_controller.dart';
-import 'package:goalkeeper/src/features/user_profile/presentation/screens/complete_profile_screen.dart';
-import 'package:goalkeeper/src/features/user_profile/presentation/screens/profile_screen.dart';
-import 'package:goalkeeper/src/shared/screens/splash_screen.dart';
+import 'src/core/config/app_config.dart';
+import 'src/core/config/config_validator.dart';
+import 'src/core/config/firebase_config.dart';
+import 'src/core/error_handling/error_monitoring_service.dart';
+import 'src/core/logging/error_logger.dart';
+import 'src/core/navigation/navigation_service.dart';
+import 'src/features/announcements/data/repositories/announcement_repository_impl.dart';
+import 'src/features/announcements/presentation/controllers/announcement_controller.dart';
+import 'src/features/announcements/presentation/screens/announcement_detail_screen.dart';
+import 'src/features/announcements/presentation/screens/create_announcement_screen.dart';
+import 'src/features/auth/presentation/providers/auth_state_provider.dart';
+import 'src/features/auth/presentation/screens/forgot_password_screen.dart';
+import 'src/features/auth/presentation/screens/sign_in_screen.dart';
+import 'src/features/auth/presentation/screens/sign_up_screen.dart';
+import 'src/features/auth/presentation/theme/app_theme.dart';
+import 'src/features/goalkeeper_search/data/repositories/goalkeeper_search_repository.dart';
+import 'src/features/goalkeeper_search/presentation/controllers/goalkeeper_search_controller.dart';
+import 'src/features/main/presentation/screens/main_screen.dart';
+import 'src/features/map/presentation/providers/field_selection_provider.dart';
+import 'src/features/notifications/data/repositories/notification_repository.dart';
+import 'src/features/notifications/presentation/controllers/notification_badge_controller.dart';
+import 'src/features/notifications/presentation/controllers/notification_preferences_controller.dart';
+import 'src/features/notifications/presentation/screens/notification_preferences_screen.dart';
+import 'src/features/notifications/presentation/screens/notifications_screen.dart';
+import 'src/features/notifications/services/notification_service.dart';
+import 'src/features/notifications/services/notification_service_manager.dart';
+import 'src/features/user_profile/data/repositories/user_profile_repository.dart';
+import 'src/features/user_profile/presentation/controllers/user_profile_controller.dart';
+import 'src/features/user_profile/presentation/screens/complete_profile_screen.dart';
+import 'src/features/user_profile/presentation/screens/profile_screen.dart';
+import 'src/shared/screens/splash_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -311,6 +312,7 @@ initialRoute: '/test-svg',
         '/test-svg': (context) => const TestSvgScreen(),
         '/signin': (context) => const SignInScreen(),
         '/signup': (context) => const SignUpScreen(),
+        '/forgot-password': (context) => const ForgotPasswordScreen(),
         '/home': (context) => _buildHomeRoute(context),
         '/complete-profile': (context) => const CompleteProfileScreen(),
         '/profile': (context) => _buildRouteForGuests(context, '/profile', 3),
