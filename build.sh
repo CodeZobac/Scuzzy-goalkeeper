@@ -35,6 +35,7 @@ class AppConfig {
   static const String supabaseAnonKey = '${ESCAPED_SUPABASE_ANON_KEY}';
   static const String mapboxAccessToken = '${ESCAPED_MAPBOX_ACCESS_TOKEN}';
   static const String mapboxDownloadsToken = '${ESCAPED_MAPBOX_DOWNLOADS_TOKEN}';
+  static const String currencySymbol = '€';
   static const bool isDemoMode = false;
 }
 EOF
@@ -60,4 +61,5 @@ else
 fi
 
 # Build the Flutter web app
+
 flutter build web
