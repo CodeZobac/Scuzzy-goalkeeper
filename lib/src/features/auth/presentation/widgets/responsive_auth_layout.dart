@@ -190,7 +190,7 @@ class _ResponsiveAuthLayoutState extends State<ResponsiveAuthLayout>
   Widget _buildTabletLayout(BuildContext context) {
     return Column(
       children: [
-        _buildHeader(context, height: context.authHeaderHeight),
+        _buildHeader(context),
         Expanded(
           child: SingleChildScrollView(
             padding: context.authPadding,
@@ -210,7 +210,7 @@ class _ResponsiveAuthLayoutState extends State<ResponsiveAuthLayout>
   Widget _buildMobileLayout(BuildContext context) {
     return Column(
       children: [
-        _buildHeader(context, height: context.authHeaderHeight),
+        _buildHeader(context),
         Expanded(
           child: SingleChildScrollView(
             padding: context.authPadding.copyWith(
@@ -225,8 +225,9 @@ class _ResponsiveAuthLayoutState extends State<ResponsiveAuthLayout>
   }
 
   Widget _buildHeader(BuildContext context, {double? height}) {
-    final headerHeight = height ?? context.authHeaderHeight;
-    
+    final screenWidth = MediaQuery.of(context).size.width;
+    final headerHeight = height ?? (screenWidth * 9 / 16); // Assuming 16:9 aspect ratio
+
     return AnimatedBuilder(
       animation: _headerController,
       builder: (context, child) {
@@ -234,12 +235,7 @@ class _ResponsiveAuthLayoutState extends State<ResponsiveAuthLayout>
           opacity: _headerFadeAnimation,
           child: SlideTransition(
             position: _headerSlideAnimation,
-            child: Stack(
-              children: [
-                _buildResponsiveAuthHeader(context, headerHeight),
-                _buildHeaderOverlay(context, headerHeight),
-              ],
-            ),
+            child: _buildResponsiveAuthHeader(context, headerHeight),
           ),
         );
       },
@@ -250,17 +246,11 @@ class _ResponsiveAuthLayoutState extends State<ResponsiveAuthLayout>
     final screenSize = MediaQuery.of(context).size;
     
     return SizedBox(
-      height: headerHeight,
       width: double.infinity,
-      child: SvgAssetManager.getAsset(
-        'auth_header',
-        width: screenSize.width,
-        height: headerHeight,
+      height: headerHeight,
+      child: Image.asset(
+        'assets/auth-header-original.png',
         fit: BoxFit.cover,
-        fallback: _buildHeaderFallback(headerHeight),
-        onError: () {
-          debugPrint('Auth header SVG failed to load, using fallback');
-        },
       ),
     );
   }

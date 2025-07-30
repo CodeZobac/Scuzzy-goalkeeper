@@ -194,15 +194,9 @@ class _SignInScreenState extends State<SignInScreen> with ErrorHandlingMixin {
 
   @override
   Widget build(BuildContext context) {
-    return AuthErrorBoundary(
-      onAuthError: () {
-        // Clear sensitive data on auth error
-        _emailController.clear();
-        _passwordController.clear();
-      },
-      child: ResponsiveAuthLayout(
-        title: 'Bem-vindo de volta!',
-        subtitle: 'Acesse a sua conta para encontrar o guarda-redes perfeito',
+    return ResponsiveAuthLayout(
+        title: '',
+        subtitle: '',
         child: StaggeredFadeInSlideUp(
           baseDelay: const Duration(milliseconds: 400),
           children: [
@@ -435,7 +429,6 @@ class _SignInScreenState extends State<SignInScreen> with ErrorHandlingMixin {
             ),
           ],
         ),
-      ),
-    );
+      );
   }
 }
