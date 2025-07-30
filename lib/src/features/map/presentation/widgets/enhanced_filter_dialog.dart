@@ -1,23 +1,38 @@
 import 'package:flutter/material.dart';
+import '../../../../features/auth/presentation/theme/app_theme.dart';
 
-enum FilterType { city, availability }
+enum FilterType { city, availability, markerType, surface, size }
 
 class EnhancedFilterDialog extends StatefulWidget {
   final List<String> availableCities;
   final String? selectedCity;
   final String? selectedAvailability;
+  final List<String> availableSurfaces;
+  final List<String> selectedSurfaces;
+  final List<String> availableSizes;
+  final List<String> selectedSizes;
   final Function(String) onCitySelected;
   final Function(String) onAvailabilitySelected;
+  final Function(List<String>) onSurfacesSelected;
+  final Function(List<String>) onSizesSelected;
   final VoidCallback onClearFilter;
+  final Function(Set<String>) onMarkerTypesSelected;
 
   const EnhancedFilterDialog({
     super.key,
     required this.availableCities,
     this.selectedCity,
     this.selectedAvailability,
+    required this.availableSurfaces,
+    required this.selectedSurfaces,
+    required this.availableSizes,
+    required this.selectedSizes,
     required this.onCitySelected,
     required this.onAvailabilitySelected,
+    required this.onSurfacesSelected,
+    required this.onSizesSelected,
     required this.onClearFilter,
+    required this.onMarkerTypesSelected,
   });
 
   @override
@@ -31,7 +46,10 @@ class _EnhancedFilterDialogState extends State<EnhancedFilterDialog>
   late Animation<double> _opacityAnimation;
   String? _tempSelectedCity;
   String? _tempSelectedAvailability;
+  List<String> _tempSelectedSurfaces = [];
+  List<String> _tempSelectedSizes = [];
   FilterType _currentFilter = FilterType.city;
+  final Set<String> _selectedMarkerTypes = {'Players', 'Fields', 'Goalkeepers'};
 
   final List<String> _availabilityOptions = [
     'Disponível agora',
@@ -45,6 +63,8 @@ class _EnhancedFilterDialogState extends State<EnhancedFilterDialog>
     super.initState();
     _tempSelectedCity = widget.selectedCity;
     _tempSelectedAvailability = widget.selectedAvailability;
+    _tempSelectedSurfaces = List.from(widget.selectedSurfaces);
+    _tempSelectedSizes = List.from(widget.selectedSizes);
     
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 300),
@@ -52,11 +72,11 @@ class _EnhancedFilterDialogState extends State<EnhancedFilterDialog>
     );
     
     _scaleAnimation = Tween<double>(
-      begin: 0.8,
+      begin: 0.9,
       end: 1.0,
     ).animate(CurvedAnimation(
       parent: _animationController,
-      curve: Curves.elasticOut,
+      curve: Curves.easeOutBack,
     ));
     
     _opacityAnimation = Tween<double>(
@@ -79,18 +99,20 @@ class _EnhancedFilterDialogState extends State<EnhancedFilterDialog>
   void _handleApplyFilters() {
     // Apply city filter
     if (_tempSelectedCity != null) {
-      widget.onCitySelected(_tempSelectedCity!);
+      widget.onCitySelected(_tempSelectedCity!); 
     }
     
     // Apply availability filter
     if (_tempSelectedAvailability != null) {
-      widget.onAvailabilitySelected(_tempSelectedAvailability!);
+      widget.onAvailabilitySelected(_tempSelectedAvailability!); 
     }
     
-    // If no filters selected, clear all
-    if (_tempSelectedCity == null && _tempSelectedAvailability == null) {
-      widget.onClearFilter();
-    }
+    // Apply surface and size filters
+    widget.onSurfacesSelected(_tempSelectedSurfaces);
+    widget.onSizesSelected(_tempSelectedSizes);
+    
+    // Apply marker type filters
+    widget.onMarkerTypesSelected(_selectedMarkerTypes);
     
     Navigator.of(context).pop();
   }
@@ -109,14 +131,14 @@ class _EnhancedFilterDialogState extends State<EnhancedFilterDialog>
               child: Container(
                 constraints: const BoxConstraints(
                   maxWidth: 400,
-                  maxHeight: 600,
+                  maxHeight: 650,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1A1A1A),
+                  color: AppTheme.authBackground,
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
+                      color: Colors.black.withOpacity(0.1),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
@@ -143,11 +165,7 @@ class _EnhancedFilterDialogState extends State<EnhancedFilterDialog>
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF6C5CE7), Color(0xFF74B9FF)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        gradient: AppTheme.authPrimaryGradient,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(24),
           topRight: Radius.circular(24),
@@ -168,13 +186,11 @@ class _EnhancedFilterDialogState extends State<EnhancedFilterDialog>
             ),
           ),
           const SizedBox(width: 16),
-          const Expanded(
+          Expanded(
             child: Text(
-              'Filtros',
-              style: TextStyle(
+              'Filtros Avançados',
+              style: AppTheme.authHeadingSmall.copyWith(
                 color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
               ),
             ),
           ),
@@ -192,28 +208,51 @@ class _EnhancedFilterDialogState extends State<EnhancedFilterDialog>
 
   Widget _buildFilterTabs() {
     return Container(
-      margin: const EdgeInsets.all(16),
+      height: 60,
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       decoration: BoxDecoration(
-        color: Colors.grey.withOpacity(0.1),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _buildTabButton(
-              'Cidade',
-              Icons.location_city,
-              FilterType.city,
-              _currentFilter == FilterType.city,
-            ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
           ),
-          Expanded(
-            child: _buildTabButton(
-              'Disponibilidade',
-              Icons.access_time,
-              FilterType.availability,
-              _currentFilter == FilterType.availability,
-            ),
+        ],
+      ),
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          _buildTabButton(
+            'Cidade',
+            Icons.location_city,
+            FilterType.city,
+            _currentFilter == FilterType.city,
+          ),
+          _buildTabButton(
+            'Disponibilidade',
+            Icons.access_time,
+            FilterType.availability,
+            _currentFilter == FilterType.availability,
+          ),
+          _buildTabButton(
+            'Tipo',
+            Icons.public,
+            FilterType.markerType,
+            _currentFilter == FilterType.markerType,
+          ),
+          _buildTabButton(
+            'Superfície',
+            Icons.grass,
+            FilterType.surface,
+            _currentFilter == FilterType.surface,
+          ),
+          _buildTabButton(
+            'Tamanho',
+            Icons.fullscreen,
+            FilterType.size,
+            _currentFilter == FilterType.size,
           ),
         ],
       ),
@@ -231,9 +270,9 @@ class _EnhancedFilterDialogState extends State<EnhancedFilterDialog>
         },
         borderRadius: BorderRadius.circular(16),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
           decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFF6C5CE7) : Colors.transparent,
+            color: isSelected ? AppTheme.authPrimaryGreen : Colors.transparent,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Row(
@@ -241,16 +280,16 @@ class _EnhancedFilterDialogState extends State<EnhancedFilterDialog>
             children: [
               Icon(
                 icon,
-                color: isSelected ? Colors.white : Colors.grey,
+                color: isSelected ? Colors.white : AppTheme.authTextSecondary,
                 size: 20,
               ),
               const SizedBox(width: 8),
               Text(
                 title,
                 style: TextStyle(
-                  color: isSelected ? Colors.white : Colors.grey,
+                  color: isSelected ? Colors.white : AppTheme.authTextSecondary,
                   fontSize: 14,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                 ),
               ),
             ],
@@ -262,61 +301,138 @@ class _EnhancedFilterDialogState extends State<EnhancedFilterDialog>
 
   Widget _buildFilterContent() {
     return Flexible(
-      child: _currentFilter == FilterType.city
-          ? _buildCityFilter()
-          : _buildAvailabilityFilter(),
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 200),
+        transitionBuilder: (child, animation) {
+          return FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0.0, 0.1),
+                end: Offset.zero,
+              ).animate(animation),
+              child: child,
+            ),
+          );
+        },
+        child: _getCurrentFilterContent(),
+      ),
     );
   }
 
+  Widget _getCurrentFilterContent() {
+    switch (_currentFilter) {
+      case FilterType.city:
+        return _buildCityFilter();
+      case FilterType.availability:
+        return _buildAvailabilityFilter();
+      case FilterType.markerType:
+        return _buildMarkerTypeFilter();
+      case FilterType.surface:
+        return _buildSurfaceFilter();
+      case FilterType.size:
+        return _buildSizeFilter();
+    }
+  }
+
   Widget _buildCityFilter() {
-    return widget.availableCities.isEmpty
-        ? _buildEmptyState('Nenhuma cidade disponível', Icons.location_off)
-        : ListView.builder(
-            shrinkWrap: true,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: widget.availableCities.length + 1,
-            itemBuilder: (context, index) {
-              if (index == 0) {
-                return _buildFilterOption(
-                  title: 'Todas as cidades',
-                  subtitle: 'Mostrar todos os campos',
-                  icon: Icons.public,
-                  isSelected: _tempSelectedCity == null,
-                  onTap: () {
-                    setState(() {
-                      _tempSelectedCity = null;
-                    });
-                  },
-                );
+    // Implement searchable dropdown for cities
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: Autocomplete<String>(
+            optionsBuilder: (TextEditingValue textEditingValue) {
+              if (textEditingValue.text.isEmpty) {
+                return const Iterable<String>.empty();
               }
-              
-              final city = widget.availableCities[index - 1];
-              return _buildFilterOption(
-                title: city,
-                subtitle: 'Campos em $city',
-                icon: Icons.location_city,
-                isSelected: _tempSelectedCity == city,
-                onTap: () {
-                  setState(() {
-                    _tempSelectedCity = city;
-                  });
-                },
+              return widget.availableCities.where((String option) {
+                return option.toLowerCase().contains(textEditingValue.text.toLowerCase());
+              });
+            },
+            onSelected: (String selection) {
+              setState(() {
+                _tempSelectedCity = selection;
+              });
+            },
+            fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+              return TextField(
+                controller: controller,
+                focusNode: focusNode,
+                decoration: InputDecoration(
+                  hintText: 'Pesquisar cidade...',
+                  prefixIcon: const Icon(Icons.search, color: AppTheme.authTextSecondary),
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppTheme.authInputBorder),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppTheme.authInputBorder),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppTheme.authPrimaryGreen, width: 2),
+                  ),
+                ),
               );
             },
-          );
+          ),
+        ),
+        Expanded(
+          child: widget.availableCities.isEmpty
+              ? _buildEmptyState('Nenhuma cidade disponível', Icons.location_off_outlined)
+              : ListView.builder(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: widget.availableCities.length + 1,
+                  itemBuilder: (context, index) {
+                    if (index == 0) {
+                      return _buildFilterOption(
+                        title: 'Todas as cidades',
+                        subtitle: 'Mostrar todos os campos e jogadores',
+                        icon: Icons.public,
+                        isSelected: _tempSelectedCity == null,
+                        onTap: () {
+                          setState(() {
+                            _tempSelectedCity = null;
+                          });
+                        },
+                      );
+                    }
+                    
+                    final city = widget.availableCities[index - 1];
+                    return _buildFilterOption(
+                      title: city,
+                      subtitle: 'Filtrar por $city',
+                      icon: Icons.location_city,
+                      isSelected: _tempSelectedCity == city,
+                      onTap: () {
+                        setState(() {
+                          _tempSelectedCity = city;
+                        });
+                      },
+                    );
+                  },
+                ),
+        ),
+      ],
+    );
   }
 
   Widget _buildAvailabilityFilter() {
     return ListView.builder(
       shrinkWrap: true,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       itemCount: _availabilityOptions.length + 1,
       itemBuilder: (context, index) {
         if (index == 0) {
           return _buildFilterOption(
             title: 'Qualquer disponibilidade',
-            subtitle: 'Mostrar todos os campos',
-            icon: Icons.schedule,
+            subtitle: 'Mostrar todas as disponibilidades',
+            icon: Icons.event_available,
             isSelected: _tempSelectedAvailability == null,
             onTap: () {
               setState(() {
@@ -330,7 +446,7 @@ class _EnhancedFilterDialogState extends State<EnhancedFilterDialog>
         return _buildFilterOption(
           title: availability,
           subtitle: _getAvailabilitySubtitle(availability),
-          icon: Icons.access_time,
+          icon: Icons.access_time_filled,
           isSelected: _tempSelectedAvailability == availability,
           onTap: () {
             setState(() {
@@ -345,16 +461,100 @@ class _EnhancedFilterDialogState extends State<EnhancedFilterDialog>
   String _getAvailabilitySubtitle(String availability) {
     switch (availability) {
       case 'Disponível agora':
-        return 'Campos livres neste momento';
+        return 'Disponibilidade imediata';
       case 'Disponível hoje':
-        return 'Campos com horários hoje';
+        return 'Disponível nas próximas 24 horas';
       case 'Disponível esta semana':
-        return 'Campos com horários na semana';
+        return 'Disponível nos próximos 7 dias';
       case 'Sempre disponível':
-        return 'Campos sempre abertos';
+        return 'Disponível a qualquer momento';
       default:
         return '';
     }
+  }
+
+  Widget _buildMarkerTypeFilter() {
+    final markerTypes = {
+      'Jogadores': Icons.person,
+      'Campos': Icons.sports_soccer,
+      'Guarda-redes': Icons.sports_handball,
+    };
+
+    return ListView( 
+      shrinkWrap: true,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      children: markerTypes.entries.map((entry) {
+        final type = entry.key;
+        final icon = entry.value;
+        final isSelected = _selectedMarkerTypes.contains(type);
+
+        return _buildFilterOption(
+          title: type,
+          subtitle: 'Mostrar ${type.toLowerCase()} no mapa',
+          icon: icon,
+          isSelected: isSelected,
+          onTap: () {
+            setState(() {
+              if (isSelected) {
+                _selectedMarkerTypes.remove(type);
+              } else {
+                _selectedMarkerTypes.add(type);
+              }
+            });
+          },
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildSurfaceFilter() {
+    return ListView(
+      shrinkWrap: true,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      children: widget.availableSurfaces.map((surface) {
+        final isSelected = _tempSelectedSurfaces.contains(surface);
+        return _buildFilterOption(
+          title: surface,
+          subtitle: 'Filtrar por tipo de relva',
+          icon: Icons.grass,
+          isSelected: isSelected,
+          onTap: () {
+            setState(() {
+              if (isSelected) {
+                _tempSelectedSurfaces.remove(surface);
+              } else {
+                _tempSelectedSurfaces.add(surface);
+              }
+            });
+          },
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildSizeFilter() {
+    return ListView(
+      shrinkWrap: true,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      children: widget.availableSizes.map((size) {
+        final isSelected = _tempSelectedSizes.contains(size);
+        return _buildFilterOption(
+          title: size,
+          subtitle: 'Filtrar por tamanho do campo',
+          icon: Icons.fullscreen,
+          isSelected: isSelected,
+          onTap: () {
+            setState(() {
+              if (isSelected) {
+                _tempSelectedSizes.remove(size);
+              } else {
+                _tempSelectedSizes.add(size);
+              }
+            });
+          },
+        );
+      }).toList(),
+    );
   }
 
   Widget _buildFilterOption({
@@ -375,15 +575,24 @@ class _EnhancedFilterDialogState extends State<EnhancedFilterDialog>
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: isSelected
-                  ? const Color(0xFF6C5CE7).withOpacity(0.1)
-                  : Colors.grey.withOpacity(0.05),
+                  ? AppTheme.authPrimaryGreen.withOpacity(0.1)
+                  : AppTheme.authCardBackground,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: isSelected
-                    ? const Color(0xFF6C5CE7)
-                    : Colors.grey.withOpacity(0.2),
+                    ? AppTheme.authPrimaryGreen
+                    : AppTheme.authInputBorder,
                 width: isSelected ? 2 : 1,
               ),
+              boxShadow: isSelected
+                  ? [
+                      BoxShadow(
+                        color: AppTheme.authPrimaryGreen.withOpacity(0.2),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ]
+                  : [],
             ),
             child: Row(
               children: [
@@ -391,13 +600,13 @@ class _EnhancedFilterDialogState extends State<EnhancedFilterDialog>
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? const Color(0xFF6C5CE7)
-                        : Colors.grey.withOpacity(0.2),
+                        ? AppTheme.authPrimaryGreen
+                        : AppTheme.authInputBackground,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
                     icon,
-                    color: isSelected ? Colors.white : Colors.grey,
+                    color: isSelected ? Colors.white : AppTheme.authTextSecondary,
                     size: 20,
                   ),
                 ),
@@ -408,19 +617,14 @@ class _EnhancedFilterDialogState extends State<EnhancedFilterDialog>
                     children: [
                       Text(
                         title,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                          color: isSelected ? Colors.white : Colors.grey[300],
+                        style: AppTheme.authBodyLarge.copyWith(
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         subtitle,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: isSelected ? Colors.white70 : Colors.grey[500],
-                        ),
+                        style: AppTheme.authBodyMedium,
                       ),
                     ],
                   ),
@@ -429,7 +633,7 @@ class _EnhancedFilterDialogState extends State<EnhancedFilterDialog>
                   Container(
                     padding: const EdgeInsets.all(6),
                     decoration: const BoxDecoration(
-                      color: Color(0xFF6C5CE7),
+                      color: AppTheme.authPrimaryGreen,
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
@@ -455,15 +659,13 @@ class _EnhancedFilterDialogState extends State<EnhancedFilterDialog>
           Icon(
             icon,
             size: 48,
-            color: Colors.grey,
+            color: AppTheme.authTextSecondary,
           ),
           const SizedBox(height: 16),
           Text(
             message,
-            style: const TextStyle(
-              fontSize: 16,
-              color: Colors.grey,
-            ),
+            textAlign: TextAlign.center,
+            style: AppTheme.authBodyMedium,
           ),
         ],
       ),
@@ -473,102 +675,55 @@ class _EnhancedFilterDialogState extends State<EnhancedFilterDialog>
   Widget _buildFooter() {
     return Container(
       padding: const EdgeInsets.all(24),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (_tempSelectedCity != null || _tempSelectedAvailability != null)
-                  Text(
-                    'Filtros ativos:',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[400],
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                if (_tempSelectedCity != null)
-                  Text(
-                    '• $_tempSelectedCity',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF6C5CE7),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                if (_tempSelectedAvailability != null)
-                  Text(
-                    '• $_tempSelectedAvailability',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF6C5CE7),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                if (_tempSelectedCity == null && _tempSelectedAvailability == null)
-                  Text(
-                    'Nenhum filtro selecionado',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[400],
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 16),
-          _buildApplyButton(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildApplyButton() {
-    return Container(
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF6C5CE7), Color(0xFF74B9FF)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+        color: AppTheme.authCardBackground,
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(24),
+          bottomRight: Radius.circular(24),
         ),
-        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF6C5CE7).withOpacity(0.3),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
-            offset: const Offset(0, 4),
+            offset: const Offset(0, -5),
           ),
         ],
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: _handleApplyFilters,
-          borderRadius: BorderRadius.circular(20),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.check,
-                  color: Colors.white,
-                  size: 20,
-                ),
-                SizedBox(width: 8),
-                Text(
-                  'Aplicar',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
+      child: Row(
+        children: [
+          TextButton(
+            onPressed: () {
+              setState(() {
+                _tempSelectedCity = null;
+                _tempSelectedAvailability = null;
+                _selectedMarkerTypes.clear();
+              });
+            },
+            child: Text(
+              'Limpar',
+              style: AppTheme.authLinkText.copyWith(
+                color: AppTheme.authError,
+              ),
             ),
           ),
-        ),
+          const Spacer(),
+          ElevatedButton(
+            onPressed: _handleApplyFilters,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.authPrimaryGreen,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              elevation: 2,
+            ),
+            child: Text(
+              'Aplicar Filtros',
+              style: AppTheme.authButtonText,
+            ),
+          ),
+        ],
       ),
     );
   }
