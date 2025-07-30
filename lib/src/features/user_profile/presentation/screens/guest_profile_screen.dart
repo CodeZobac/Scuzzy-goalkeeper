@@ -110,68 +110,45 @@ class _GuestProfileScreenState extends State<GuestProfileScreen>
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Container(
-        child: _buildGuestProfileContent(size),
-      ),
-      floatingActionButton: _buildActionButtons(),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      body: _buildGuestProfileContent(),
     );
   }
-  
-  Widget _buildGuestProfileContent(Size size) {
+
+  Widget _buildGuestProfileContent() {
     return AnimatedBuilder(
       animation: _mainAnimationController,
-      child: CustomScrollView(
-        slivers: [
-          _buildAppBar(),
-          SliverPadding(
-            padding: const EdgeInsets.all(AppTheme.spacing),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                const SizedBox(height: 20),
-                _buildGuestAvatar(),
-                const SizedBox(height: AppTheme.spacingLarge),
-                _buildWelcomeMessage(),
-                const SizedBox(height: AppTheme.spacingLarge),
-                _buildFeatureCards(),
-                const SizedBox(height: AppTheme.spacingLarge),
-                _buildRegistrationCard(),
-                const SizedBox(height: 120), // Space for buttons
-              ]),
-            ),
-          ),
-        ],
-      ),
       builder: (context, child) {
-        return Transform.translate(
-          offset: Offset(0, _slideAnimation.value),
-          child: Opacity(
-            opacity: _fadeAnimation.value,
-            child: child,
+        return Opacity(
+          opacity: _fadeAnimation.value,
+          child: Transform.translate(
+            offset: Offset(0, _slideAnimation.value),
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppTheme.spacing),
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 20),
+                      _buildActionButtons(),
+                      const SizedBox(height: 40),
+                      _buildGuestAvatar(),
+                      const SizedBox(height: AppTheme.spacingLarge),
+                      _buildWelcomeMessage(),
+                      const SizedBox(height: AppTheme.spacingLarge),
+                      _buildFeatureCards(),
+                      const SizedBox(height: AppTheme.spacingLarge),
+                      _buildRegistrationCard(),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
         );
       },
-    );
-  }
-  
-  Widget _buildAppBar() {
-    return SliverAppBar(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      floating: true,
-      snap: true,
-      title: Text(
-        'Perfil',
-        style: AppTheme.authHeadingMedium.copyWith(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      centerTitle: true,
     );
   }
   
@@ -222,7 +199,7 @@ class _GuestProfileScreenState extends State<GuestProfileScreen>
           child: Column(
             children: [
               Text(
-                'Você não está logado',
+                'Não tem sessão iniciada',
                 style: AppTheme.authHeadingMedium.copyWith(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -231,7 +208,7 @@ class _GuestProfileScreenState extends State<GuestProfileScreen>
               ),
               const SizedBox(height: 12),
               Text(
-                'Crie uma conta para acessar recursos exclusivos e personalizar seu perfil',
+                'Crie uma conta para aceder a recursos exclusivos e personalizar o seu perfil',
                 style: AppTheme.authBodyMedium.copyWith(
                   fontSize: 16,
                   height: 1.5,
@@ -255,22 +232,22 @@ class _GuestProfileScreenState extends State<GuestProfileScreen>
             children: [
               _buildFeatureCard(
                 icon: Icons.sports_soccer,
-                title: 'Participe de Partidas',
-                description: 'Encontre e participe de jogos na sua região',
+                title: 'Participe em Jogos',
+                description: 'Encontre e participe em jogos na sua região',
                 color: AppTheme.authPrimaryGreen,
               ),
               const SizedBox(height: AppTheme.spacing),
               _buildFeatureCard(
                 icon: Icons.person_search,
-                title: 'Contrate Goleiros',
-                description: 'Encontre goleiros profissionais disponíveis',
+                title: 'Contrate Guarda-Redes',
+                description: 'Encontre guarda-redes profissionais disponíveis',
                 color: AppTheme.authLightGreen,
               ),
               const SizedBox(height: AppTheme.spacing),
               _buildFeatureCard(
                 icon: Icons.account_circle,
                 title: 'Perfil Personalizado',
-                description: 'Crie seu perfil e mostre suas habilidades',
+                description: 'Crie o seu perfil e mostre as suas habilidades',
                 color: AppTheme.authSecondaryGreen,
               ),
             ],
@@ -497,7 +474,7 @@ class _GuestProfileScreenState extends State<GuestProfileScreen>
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
-                                  'Desbloqueie todos os recursos!',
+                                  'Desbloqueie todas as funcionalidades!',
                                   style: AppTheme.authBodyMedium.copyWith(
                                     color: Colors.white.withOpacity(0.9),
                                     fontWeight: FontWeight.w500,
@@ -560,7 +537,7 @@ class _GuestProfileScreenState extends State<GuestProfileScreen>
                                 const SizedBox(width: 16),
                                 Expanded(
                                   child: Text(
-                                    'Acesse partidas exclusivas, contrate goleiros profissionais e conecte-se com jogadores da sua região',
+                                    'Aceda a jogos exclusivos, contrate guarda-redes profissionais e conecte-se com jogadores da sua região',
                                     style: AppTheme.authBodyMedium.copyWith(
                                       color: Colors.white,
                                       fontWeight: FontWeight.w600,
@@ -574,9 +551,9 @@ class _GuestProfileScreenState extends State<GuestProfileScreen>
                             const SizedBox(height: 16),
                             Row(
                               children: [
-                                _buildBenefit('Partidas', Icons.sports_soccer),
+                                _buildBenefit('Jogos', Icons.sports_soccer),
                                 const SizedBox(width: 16),
-                                _buildBenefit('Goleiros', Icons.sports_handball),
+                                _buildBenefit('Guarda-Redes', Icons.sports_handball),
                                 const SizedBox(width: 16),
                                 _buildBenefit('Comunidade', Icons.group),
                               ],
@@ -695,119 +672,84 @@ class _GuestProfileScreenState extends State<GuestProfileScreen>
       builder: (context, child) {
         return Transform.scale(
           scale: _buttonScaleAnimation.value,
-          child: Container(
-            width: double.infinity,
-            margin: EdgeInsets.only(
-              bottom: MediaQuery.of(context).padding.bottom + 35,
-              left: 16,
-              right: 16,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Register Button
-                Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    gradient: AppTheme.authButtonGradient,
-                    borderRadius: BorderRadius.circular(30),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppTheme.authPrimaryGreen.withOpacity(0.4),
-                        blurRadius: 15,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(30),
-                      onTap: _navigateToRegister,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 32,
-                          vertical: 20,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              Icons.person_add,
-                              color: Colors.white,
-                              size: 24,
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              'Criar Conta',
-                              style: AppTheme.authButtonText.copyWith(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                // Login Button
-                Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(30),
-                    border: Border.all(
-                      color: AppTheme.authPrimaryGreen,
-                      width: 2,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(30),
-                      onTap: _navigateToLogin,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 32,
-                          vertical: 20,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.login,
-                              color: AppTheme.authPrimaryGreen,
-                              size: 24,
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              'Já tenho conta',
-                              style: AppTheme.authButtonText.copyWith(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                                color: AppTheme.authPrimaryGreen,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildAuthButton(
+                text: 'Entrar',
+                icon: Icons.login,
+                onTap: _navigateToLogin,
+                isPrimary: false,
+              ),
+              const SizedBox(width: 16),
+              _buildAuthButton(
+                text: 'Criar Conta',
+                icon: Icons.person_add,
+                onTap: _navigateToRegister,
+                isPrimary: true,
+              ),
+            ],
           ),
         );
       },
+    );
+  }
+
+  Widget _buildAuthButton({
+    required String text,
+    required IconData icon,
+    required VoidCallback onTap,
+    bool isPrimary = true,
+  }) {
+    return Expanded(
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: isPrimary ? AppTheme.authButtonGradient : null,
+          color: isPrimary ? null : AppTheme.authCardBackground,
+          borderRadius: BorderRadius.circular(25),
+          boxShadow: [
+            BoxShadow(
+              color: isPrimary
+                  ? AppTheme.authPrimaryGreen.withOpacity(0.4)
+                  : Colors.black.withOpacity(0.1),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(25),
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 16,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    icon,
+                    color: isPrimary ? Colors.white : AppTheme.authPrimaryGreen,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    text,
+                    style: AppTheme.authButtonText.copyWith(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: isPrimary ? Colors.white : AppTheme.authPrimaryGreen,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 

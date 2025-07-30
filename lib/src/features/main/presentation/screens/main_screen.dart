@@ -152,7 +152,10 @@ class _MainScreenState extends State<MainScreen> {
           // Floating login button for guest users
           Consumer<AuthStateProvider>(
             builder: (context, authProvider, child) {
-              if (!authProvider.isGuest) return const SizedBox.shrink();
+              // Hide button if user is not a guest or is on the profile tab
+              if (!authProvider.isGuest || _selectedItem == NavbarItem.profile) {
+                return const SizedBox.shrink();
+              }
               
               return Positioned(
                 top: MediaQuery.of(context).padding.top + 16,
