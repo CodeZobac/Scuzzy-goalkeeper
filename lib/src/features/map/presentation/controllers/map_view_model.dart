@@ -15,7 +15,7 @@ import '../../data/services/clustering_service.dart';
 import '../../data/models/real_goalkeeper.dart';
 import '../../data/models/cluster_point.dart';
 import '../../data/models/cluster_result.dart';
-import '../widgets/cluster_marker.dart';
+import '../../../../core/navigation/navigation_service.dart';
 
 class MapViewModel extends ChangeNotifier {
   final FieldRepository _fieldRepository;
@@ -27,6 +27,8 @@ class MapViewModel extends ChangeNotifier {
   List<MapField> _filteredFields = [];
   List<RealGoalkeeper> _goalkeepers = [];
   List<RealGoalkeeper> _filteredGoalkeepers = [];
+  List<RealGoalkeeper> _players = [];
+  List<RealGoalkeeper> _filteredPlayers = [];
   Position? _userLocation;
   bool _isLoading = false;
   String? _error;
@@ -35,17 +37,21 @@ class MapViewModel extends ChangeNotifier {
   List<String> _selectedSurfaces = [];
   List<String> _selectedSizes = [];
   double _maxDistance = 50.0; // km
+  Set<String> _selectedMarkerTypes = {'Fields', 'Goalkeepers', 'Players'};
   
   // Additional filter properties for compatibility
   String? _selectedCity;
   String? _selectedAvailability;
   List<String> _availableCities = [];
+  List<String> _availableSurfaces = [];
+  List<String> _availableSizes = [];
   
   MapViewModel(this._fieldRepository, this._fieldSelectionProvider);
 
   // Getters
   List<MapField> get fields => _filteredFields;
   List<RealGoalkeeper> get goalkeepers => _filteredGoalkeepers;
+  List<RealGoalkeeper> get players => _filteredPlayers;
   Position? get userLocation => _userLocation;
   bool get isLoading => _isLoading;
   String? get error => _error;
@@ -53,9 +59,12 @@ class MapViewModel extends ChangeNotifier {
   List<String> get selectedSurfaces => _selectedSurfaces;
   List<String> get selectedSizes => _selectedSizes;
   double get maxDistance => _maxDistance;
+  Set<String> get selectedMarkerTypes => _selectedMarkerTypes;
   String? get selectedCity => _selectedCity;
   String? get selectedAvailability => _selectedAvailability;
   List<String> get availableCities => _availableCities;
+  List<String> get availableSurfaces => _availableSurfaces;
+  List<String> get availableSizes => _availableSizes;
 
   // Set the map controller from the map screen
   void setMapController(MapController controller) {
@@ -69,9 +78,15 @@ class MapViewModel extends ChangeNotifier {
       await Future.wait([
         _loadFields(),
         _loadGoalkeepers(),
-        _getCurrentLocation(),
+        _loadPlayers(),
       ]);
+      await _getCurrentLocation(); // Ensure location is fetched before applying filters
       _applyFilters();
+
+      // Center map on user location if available
+      if (_userLocation != null) {
+        centerOnUser();
+      }
     } catch (e) {
       _setError('Failed to initialize map: $e');
     } finally {
@@ -82,8 +97,21 @@ class MapViewModel extends ChangeNotifier {
   // Load fields from repository
   Future<void> _loadFields() async {
     try {
+      // First, run the test to see what's in the database
+      await _realDataService.testFieldsFetch();
+      
       // Try to load real fields from Supabase
-      final realFields = await _realDataService.getApprovedFields();
+      var realFields = await _realDataService.getApprovedFields();
+      
+      // If no fields found, insert a test field
+      if (realFields.isEmpty) {
+        print('⚠️ No fields found, inserting test field...');
+        await _realDataService.insertTestField();
+        
+        // Try to fetch again
+        realFields = await _realDataService.getApprovedFields();
+        print('🔄 After test insert, found ${realFields.length} fields');
+      }
       
       // Convert RealField to MapField for compatibility
       _fields = realFields.map((realField) => MapField(
@@ -102,83 +130,46 @@ class MapViewModel extends ChangeNotifier {
       
       debugPrint('Loaded ${_fields.length} real fields from database');
       
-      // If no fields found, add some sample data for demonstration
+      // If no fields found, log it.
       if (_fields.isEmpty) {
-        _fields = _generateSampleFields();
-        debugPrint('Using sample field data since no fields were found in database');
+        debugPrint('No fields were found in database');
       }
     } catch (e) {
-      // If real data service fails, try the original repository
-      try {
-        _fields = await _fieldRepository.getApprovedFields();
-        debugPrint('Loaded fields from original repository');
-      } catch (e2) {
-        // If both fail, use sample data as fallback
-        _fields = _generateSampleFields();
-        debugPrint('Using sample field data due to errors: $e, $e2');
-      }
+      _setError('Failed to load fields: $e');
+      _fields = [];
     }
   }
 
   // Load goalkeepers from database
   Future<void> _loadGoalkeepers() async {
     try {
-      _goalkeepers = await _realDataService.getGoalkeepers();
+      if (_userLocation != null) {
+        _goalkeepers = await _realDataService.getGoalkeepersNearLocation(
+          latitude: _userLocation!.latitude,
+          longitude: _userLocation!.longitude,
+          radiusKm: _maxDistance,
+        );
+      } else {
+        _goalkeepers = await _realDataService.getGoalkeepers();
+      }
       debugPrint('Loaded ${_goalkeepers.length} real goalkeepers from database');
     } catch (e) {
       debugPrint('Failed to load goalkeepers: $e');
       _goalkeepers = [];
     }
   }
-  
-  // Generate sample fields around Lisbon for demonstration
-  List<MapField> _generateSampleFields() {
-    final Random random = Random(42); // Fixed seed for consistent results
-    const centerLat = 38.7223;
-    const centerLng = -9.1393;
-    final fields = <MapField>[];
-    
-    final fieldNames = [
-      'Campo da Ajuda',
-      'Estádio Universitário',
-      'Campo do Benfica',
-      'Complexo Desportivo de Algés',
-      'Campo Municipal da Amadora',
-      'Estádio José Gomes',
-      'Campo da Reboleira',
-      'Complexo do Jamor',
-      'Campo de Carnaxide',
-      'Estádio do Restelo',
-      'Campo de Alcântara',
-      'Complexo de Monsanto',
-    ];
-    
-    const cities = ['Lisboa', 'Amadora', 'Oeiras', 'Cascais', 'Sintra'];
-    const surfaces = ['natural', 'artificial', 'hybrid'];
-    const dimensions = ['11v11', '7v7', '5v5'];
-    
-    for (int i = 0; i < fieldNames.length; i++) {
-      // Generate location within ~15km radius of Lisbon center
-      final LatLng location = _generateRandomLocation(centerLat, centerLng, 15.0);
-      
-      fields.add(MapField(
-        id: 'sample_${i + 1}',
-        name: fieldNames[i],
-        latitude: location.latitude,
-        longitude: location.longitude,
-        status: 'approved',
-        createdAt: DateTime.now().subtract(Duration(days: random.nextInt(30))),
-        city: cities[random.nextInt(cities.length)],
-        surfaceType: surfaces[random.nextInt(surfaces.length)],
-        dimensions: dimensions[random.nextInt(dimensions.length)],
-        description: 'Campo de futebol bem mantido com excelentes condições para jogos.',
-        photoUrl: null, // Could add sample images later
-      ));
-    }
-    
-    return fields;
-  }
 
+  // Load players from database
+  Future<void> _loadPlayers() async {
+    try {
+      _players = await _realDataService.getPlayers();
+      debugPrint('Loaded ${_players.length} real players from database');
+    } catch (e) {
+      debugPrint('Failed to load players: $e');
+      _players = [];
+    }
+  }
+  
   // Get user's current location
   Future<void> _getCurrentLocation() async {
     try {
@@ -268,6 +259,16 @@ class MapViewModel extends ChangeNotifier {
       return true;
     }).toList();
     
+    // Filter players
+    _filteredPlayers = _players.where((player) {
+      // City filter
+      if (_selectedCity != null && 
+          (player.city == null || player.city != _selectedCity)) {
+        return false;
+      }
+      return true;
+    }).toList();
+    
     // Update available cities based on current fields and goalkeepers
     final fieldCities = _fields
         .where((field) => field.city != null)
@@ -281,6 +282,24 @@ class MapViewModel extends ChangeNotifier {
     
     _availableCities = {...fieldCities, ...goalkeeperCities}.toList();
     _availableCities.sort();
+    
+    // Update available surfaces from fields
+    final fieldSurfaces = _fields
+        .where((field) => field.surfaceType != null && field.surfaceType!.isNotEmpty)
+        .map((field) => field.surfaceType!)
+        .toSet();
+    
+    _availableSurfaces = fieldSurfaces.toList();
+    _availableSurfaces.sort();
+    
+    // Update available sizes from fields
+    final fieldSizes = _fields
+        .where((field) => field.dimensions != null && field.dimensions!.isNotEmpty)
+        .map((field) => field.dimensions!)
+        .toSet();
+    
+    _availableSizes = fieldSizes.toList();
+    _availableSizes.sort();
     
     notifyListeners();
   }
@@ -297,7 +316,11 @@ class MapViewModel extends ChangeNotifier {
     _applyFilters();
   }
 
-  // Update distance filter
+  // Update marker type filter
+  void updateMarkerTypeFilter(Set<String> markerTypes) {
+    _selectedMarkerTypes = markerTypes;
+    _applyFilters();
+  }
   void updateDistanceFilter(double distance) {
     _maxDistance = distance;
     _applyFilters();
@@ -310,6 +333,7 @@ class MapViewModel extends ChangeNotifier {
     _maxDistance = 50.0;
     _selectedCity = null;
     _selectedAvailability = null;
+    _selectedMarkerTypes = {'Fields', 'Goalkeepers', 'Players'}; // Reset marker types
     _applyFilters();
   }
 
@@ -317,6 +341,11 @@ class MapViewModel extends ChangeNotifier {
   void filterByCity(String? city) {
     _selectedCity = city;
     _applyFilters();
+    
+    // Navigate to the selected city if it has data
+    if (city != null) {
+      _navigateToCity(city);
+    }
   }
 
   void filterByAvailability(String? availability) {
@@ -360,24 +389,6 @@ class MapViewModel extends ChangeNotifier {
       }
     });
   }
-
-  // Generate random location within radius (in kilometers)
-  LatLng _generateRandomLocation(double centerLat, double centerLng, double radiusKm) {
-    final Random random = Random();
-    
-    // Convert radius from km to degrees (approximately)
-    double radiusInDegrees = radiusKm / 111.0; // 1 degree ≈ 111 km
-    
-    // Generate random angle and distance
-    double angle = random.nextDouble() * 2 * pi;
-    double distance = sqrt(random.nextDouble()) * radiusInDegrees;
-    
-    // Calculate new coordinates
-    double deltaLat = distance * cos(angle);
-    double deltaLng = distance * sin(angle) / cos(centerLat * pi / 180);
-    
-    return LatLng(centerLat + deltaLat, centerLng + deltaLng);
-  }
   
   // Build markers for flutter_map with clustering support
   List<Marker> buildMarkers({
@@ -391,67 +402,52 @@ class MapViewModel extends ChangeNotifier {
     final List<ClusterPoint> allPoints = [];
     
     // Add field points
-    for (final field in _filteredFields) {
-      allPoints.add(ClusterPoint.fromField(field));
+    if (_selectedMarkerTypes.contains('Fields')) {
+      for (final field in _filteredFields) {
+        allPoints.add(ClusterPoint.fromField(field));
+      }
     }
     
     // Add goalkeeper points
-    for (final goalkeeper in _filteredGoalkeepers) {
-      // Generate location for goalkeeper (near a field or default location)
-      LatLng goalkeeperLocation;
-      if (_filteredFields.isNotEmpty) {
-        final randomField = _filteredFields[Random().nextInt(_filteredFields.length)];
-        goalkeeperLocation = _generateRandomLocation(
-          randomField.latitude,
-          randomField.longitude,
-          15.0, // 15km radius from field
-        );
-      } else {
-        // Default to Lisbon area if no fields
-        goalkeeperLocation = _generateRandomLocation(38.7223, -9.1393, 20.0);
-      }
-      
-      allPoints.add(ClusterPoint.fromGoalkeeper(goalkeeper, goalkeeperLocation));
-    }
-    
-    // Add sample player points around fields
-    for (final field in _filteredFields) {
-      final Random random = Random(field.name.hashCode);
-      int playerCount = 2 + random.nextInt(4); // 2-5 players per field
-      
-      for (int i = 0; i < playerCount; i++) {
-        final playerLocation = _generateRandomLocation(
-          field.latitude, 
-          field.longitude, 
-          5.0 // 5km radius
-        );
-        
-        allPoints.add(ClusterPoint.fromPlayer({
-          'id': '${field.id}_player_$i',
-          'name': 'Jogador ${i + 1}',
-        }, playerLocation));
+    if (_selectedMarkerTypes.contains('Goalkeepers')) {
+      for (final goalkeeper in _filteredGoalkeepers) {
+        if (goalkeeper.latitude != null && goalkeeper.longitude != null) {
+          allPoints.add(ClusterPoint.fromGoalkeeper(
+              goalkeeper, LatLng(goalkeeper.latitude!, goalkeeper.longitude!)));
+        }
       }
     }
     
-    // Perform clustering
+    // Add player points
+    if (_selectedMarkerTypes.contains('Players')) {
+      for (final player in _filteredPlayers) {
+        if (player.latitude != null && player.longitude != null) {
+          allPoints.add(ClusterPoint.fromPlayer(
+              player.toJson(), LatLng(player.latitude!, player.longitude!)));
+        }
+      }
+    }
+    
+    // Use the nearest zoom breakpoint for stable clustering
+    final effectiveZoom = _findNearestZoomBreakpoint(zoom);
+    
+    // Perform clustering with enhanced parameters
     final clusterResult = ClusteringService.clusterPoints(
       points: allPoints,
-      zoom: zoom,
-      minPointsForCluster: 2,
+      zoom: effectiveZoom,
+      minPointsForCluster: effectiveZoom <= 10.0 ? 3 : 2,
     );
     
-    // Add cluster markers
+    // Add enhanced cluster markers
     for (final cluster in clusterResult.clusters) {
       markers.add(
         Marker(
           point: cluster.center,
-          width: 100,
-          height: 100,
-          child: ClusterMarker(
-            cluster: cluster,
-            isActive: false,
-            zoom: zoom,
+          width: _getClusterSize(cluster.size, effectiveZoom),
+          height: _getClusterSize(cluster.size, effectiveZoom),
+          child: GestureDetector(
             onTap: () => _handleClusterTap(cluster, context),
+            child: _buildEnhancedClusterMarker(cluster, effectiveZoom),
           ),
         ),
       );
@@ -678,44 +674,55 @@ class MapViewModel extends ChangeNotifier {
         );
         
       case ClusterPointType.player:
+        final player = point.data['player'] as RealGoalkeeper;
         return Marker(
           point: point.location,
-          width: 36,
-          height: 36,
-          child: Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF64B5F6),
-                  Color(0xFF1565C0),
+          width: 40,
+          height: 40,
+          child: GestureDetector(
+            onTap: () {
+              // Handle player tap (e.g., show player profile)
+              ScaffoldMessenger.of(context!).showSnackBar(
+                SnackBar(
+                  content: Text('Player: ${player.name}'),
+                ),
+              );
+            },
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0xFF64B5F6),
+                    Color(0xFF1565C0),
+                  ],
+                ),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white,
+                  width: 3,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                  BoxShadow(
+                    color: const Color(0xFF2196F3).withOpacity(0.3),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
+                  ),
                 ],
               ),
-              shape: BoxShape.circle,
-              border: Border.all(
+              child: const Icon(
+                Icons.person,
                 color: Colors.white,
-                width: 2,
+                size: 20,
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-                BoxShadow(
-                  color: const Color(0xFF2196F3).withOpacity(0.3),
-                  blurRadius: 3,
-                  offset: const Offset(0, 1),
-                ),
-              ],
-            ),
-            child: const Icon(
-              Icons.person,
-              color: Colors.white,
-              size: 18,
             ),
           ),
         );
@@ -725,22 +732,28 @@ class MapViewModel extends ChangeNotifier {
   // Handle cluster tap - could expand cluster or show details
   void _handleClusterTap(Cluster cluster, BuildContext? context) {
     if (context == null || _mapController == null) return;
-    
-    // Calculate appropriate zoom level based on cluster size and current zoom
+
     final currentZoom = _mapController!.camera.zoom;
     final targetZoom = _calculateOptimalZoomForCluster(cluster, currentZoom);
-    
-    // Smooth zoom to cluster center
-    _mapController!.move(cluster.center, targetZoom);
-    
-    // Show cluster details in a bottom sheet only if we're not zooming in significantly
-    if (targetZoom - currentZoom < 2.0) {
-      showModalBottomSheet(
-        context: context,
-        backgroundColor: Colors.transparent,
-        isScrollControlled: true,
-        builder: (context) => _buildClusterDetailsSheet(cluster),
+
+    // Use a gentler zoom approach to prevent instability
+    try {
+      _mapController!.move(
+        cluster.center,
+        targetZoom,
       );
+      
+      // Show cluster details in a bottom sheet only if we're not zooming in significantly
+      if (targetZoom - currentZoom < 2.0) {
+        showModalBottomSheet(
+          context: context,
+          backgroundColor: Colors.transparent,
+          isScrollControlled: true,
+          builder: (context) => _buildClusterDetailsSheet(cluster),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error handling cluster tap: $e');
     }
   }
   
@@ -757,10 +770,37 @@ class MapViewModel extends ChangeNotifier {
   }
   
   // Handle zoom changes for smooth transitions
+  double _lastZoom = 12.0;
+
   void onZoomChanged(double newZoom) {
-    // This can be used to trigger smooth cluster transitions
-    // For now, we'll just notify listeners to rebuild markers
-    notifyListeners();
+    // Only update markers if the zoom level has changed significantly
+    if ((newZoom - _lastZoom).abs() > 1.0) {
+      _lastZoom = newZoom;
+      notifyListeners();
+    }
+  }
+  
+  // Check if the view model is still mounted (useful for debouncing)
+  bool get mounted => !_isDisposed;
+  bool _isDisposed = false;
+
+  static const List<double> _zoomBreakpoints = [
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
+  ];
+  
+  double _findNearestZoomBreakpoint(double zoom) {
+    double nearest = _zoomBreakpoints.first;
+    double minDiff = (zoom - nearest).abs();
+    
+    for (final breakpoint in _zoomBreakpoints) {
+      final diff = (zoom - breakpoint).abs();
+      if (diff < minDiff) {
+        minDiff = diff;
+        nearest = breakpoint;
+      }
+    }
+    
+    return nearest;
   }
   
   // Build enhanced cluster details bottom sheet
@@ -1060,8 +1100,404 @@ class MapViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Navigate to a specific city
+  void _navigateToCity(String cityName) {
+    // Find a field or goalkeeper in the selected city
+    LatLng? cityLocation;
+    
+    // First try to find from filtered fields
+    final matchingFields = _fields.where((field) => field.city == cityName);
+    final cityField = matchingFields.isNotEmpty ? matchingFields.first : null;
+    if (cityField != null) {
+      cityLocation = LatLng(cityField.latitude, cityField.longitude);
+    } else {
+      // Then try to find from goalkeepers
+      final matchingGoalkeepers = _goalkeepers.where((gk) => gk.city == cityName);
+      final cityGoalkeeper = matchingGoalkeepers.isNotEmpty ? matchingGoalkeepers.first : null;
+      if (cityGoalkeeper != null) {
+        // Generate a location near a field or use default for the city
+        if (_fields.isNotEmpty) {
+          final randomField = _fields[Random().nextInt(_fields.length)];
+          cityLocation = _generateRandomLocation(
+            randomField.latitude,
+            randomField.longitude,
+            2.0, // 2km radius
+          );
+        }
+      }
+    }
+    
+    // If we found a location, navigate to it
+    if (cityLocation != null) {
+      _moveMapToLocation(cityLocation.latitude, cityLocation.longitude);
+    } else {
+      // Default locations for major Portuguese cities
+      final cityCoordinates = {
+        'Lisboa': LatLng(38.7223, -9.1393),
+        'Porto': LatLng(41.1579, -8.6291),
+        'Braga': LatLng(41.5518, -8.4229),
+        'Coimbra': LatLng(40.2033, -8.4103),
+        'Aveiro': LatLng(40.6405, -8.6538),
+        'Faro': LatLng(37.0194, -7.9322),
+        'Setúbal': LatLng(38.5244, -8.8882),
+        'Évora': LatLng(38.5664, -7.9065),
+        'Viseu': LatLng(40.6566, -7.9122),
+        'Leiria': LatLng(39.7437, -8.8071),
+        'Amadora': LatLng(38.7536, -9.2302),
+        'Cascais': LatLng(38.6973, -9.4214),
+        'Oeiras': LatLng(38.6872, -9.3097),
+        'Sintra': LatLng(38.7930, -9.3936),
+      };
+      
+      final defaultLocation = cityCoordinates[cityName];
+      if (defaultLocation != null) {
+        _moveMapToLocation(defaultLocation.latitude, defaultLocation.longitude);
+      }
+    }
+  }
+
+  LatLng _generateRandomLocation(double latitude, double longitude, double radiusKm) {
+    final random = Random();
+    
+    // Convert radius from kilometers to degrees
+    const double kmInDegree = 111.32;
+    double radiusInDegrees = radiusKm / kmInDegree;
+
+    // Get random angle and distance
+    double u = random.nextDouble();
+    double v = random.nextDouble();
+    double w = radiusInDegrees * sqrt(u);
+    double t = 2 * pi * v;
+    
+    // Calculate new coordinates
+    double x = w * cos(t);
+    double y = w * sin(t);
+
+    // Adjust for Earth's curvature
+    double newLongitude = y / cos(latitude);
+
+    return LatLng(latitude + x, longitude + newLongitude);
+  }
+
+  // Get cluster size based on cluster size and zoom level
+  double _getClusterSize(int clusterSize, double zoom) {
+    double baseSize = 50.0;
+    
+    // Adjust size based on cluster count
+    if (clusterSize <= 3) {
+      baseSize = 46.0;
+    } else if (clusterSize <= 8) {
+      baseSize = 54.0;
+    } else if (clusterSize <= 15) {
+      baseSize = 62.0;
+    } else if (clusterSize <= 25) {
+      baseSize = 70.0;
+    } else {
+      baseSize = 78.0;
+    }
+    
+    // Adjust size based on zoom level for better visibility
+    if (zoom <= 10) {
+      baseSize *= 1.1;
+    } else if (zoom >= 16) {
+      baseSize *= 0.9;
+    }
+    
+    return baseSize;
+  }
+  
+  // Build enhanced cluster marker with modern styling
+  Widget _buildEnhancedClusterMarker(Cluster cluster, double zoom) {
+    final size = _getClusterSize(cluster.size, zoom);
+    final dominantType = cluster.dominantType;
+    final typeBreakdown = cluster.typeBreakdown;
+    
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        gradient: _getClusterGradient(dominantType),
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: Colors.white,
+          width: 3,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.15),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+            spreadRadius: 2,
+          ),
+          BoxShadow(
+            color: Color(ClusterPoint(
+              id: 'temp',
+              location: cluster.center,
+              type: dominantType,
+              data: {},
+            ).color).withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          // Subtle inner glow
+          Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                colors: [
+                  Colors.white.withOpacity(0.3),
+                  Colors.transparent,
+                ],
+                stops: const [0.0, 0.7],
+              ),
+              shape: BoxShape.circle,
+            ),
+          ),
+          
+          // Count text with better typography
+          Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  cluster.size.toString(),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                    fontSize: _getClusterTextSize(size),
+                    letterSpacing: -0.5,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black.withOpacity(0.4),
+                        offset: const Offset(0, 1),
+                        blurRadius: 3,
+                      ),
+                    ],
+                  ),
+                ),
+                if (size >= 56) // Show type indicator for larger clusters
+                  Text(
+                    _getTypeLabel(dominantType),
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.9),
+                      fontWeight: FontWeight.w600,
+                      fontSize: 8,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          
+          // Multi-type indicator (colored dots for mixed clusters)
+          if (typeBreakdown.length > 1)
+            Positioned(
+              top: 6,
+              right: 6,
+              child: _buildTypeIndicators(typeBreakdown, size),
+            ),
+          
+          // Dominant type icon for single-type clusters
+          if (typeBreakdown.length == 1)
+            Positioned(
+              top: 6,
+              right: 6,
+              child: Container(
+                width: size * 0.25,
+                height: size * 0.25,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.9),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 2,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  _getTypeIconForType(dominantType),
+                  size: size * 0.15,
+                  color: Color(ClusterPoint(
+                    id: 'temp',
+                    location: cluster.center,
+                    type: dominantType,
+                    data: {},
+                  ).color),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+  
+  // Get gradient for cluster based on dominant type
+  LinearGradient _getClusterGradient(ClusterPointType type) {
+    switch (type) {
+      case ClusterPointType.field:
+        return const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF66BB6A),
+            Color(0xFF2E7D32),
+            Color(0xFF1B5E20),
+          ],
+          stops: [0.0, 0.6, 1.0],
+        );
+      case ClusterPointType.goalkeeper:
+        return const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFFFFB74D),
+            Color(0xFFE65100),
+            Color(0xFFBF360C),
+          ],
+          stops: [0.0, 0.6, 1.0],
+        );
+      case ClusterPointType.player:
+        return const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF64B5F6),
+            Color(0xFF1565C0),
+            Color(0xFF0D47A1),
+          ],
+          stops: [0.0, 0.6, 1.0],
+        );
+    }
+  }
+  
+  // Get text size for cluster count
+  double _getClusterTextSize(double containerSize) {
+    if (containerSize <= 46) return 16;
+    if (containerSize <= 54) return 18;
+    if (containerSize <= 62) return 20;
+    if (containerSize <= 70) return 22;
+    return 24;
+  }
+  
+  // Get type label for display
+  String _getTypeLabel(ClusterPointType type) {
+    switch (type) {
+      case ClusterPointType.field:
+        return 'CAMPOS';
+      case ClusterPointType.goalkeeper:
+        return 'GR';
+      case ClusterPointType.player:
+        return 'JOGADORES';
+    }
+  }
+  
+  // Build type indicators for mixed clusters
+  Widget _buildTypeIndicators(Map<ClusterPointType, int> typeBreakdown, double size) {
+    final types = typeBreakdown.keys.toList();
+    final indicatorSize = (size * 0.15).clamp(6.0, 12.0);
+    
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: types.take(3).map((type) {
+        return Container(
+          width: indicatorSize,
+          height: indicatorSize,
+          margin: const EdgeInsets.only(bottom: 2),
+          decoration: BoxDecoration(
+            color: Color(ClusterPoint(
+              id: 'temp',
+              location: const LatLng(0, 0),
+              type: type,
+              data: {},
+            ).color),
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: Colors.white,
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 2,
+                offset: const Offset(0, 1),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+  
+  // Get list of active filters for display
+  List<String> get activeFilters {
+    final List<String> filters = [];
+    
+    if (_selectedCity != null) {
+      filters.add(_selectedCity!);
+    }
+    
+    if (_selectedAvailability != null) {
+      filters.add(_selectedAvailability!);
+    }
+    
+    if (_selectedSurfaces.isNotEmpty) {
+      filters.add('${_selectedSurfaces.length} tipo${_selectedSurfaces.length != 1 ? 's' : ''} de relva');
+    }
+    
+    if (_selectedSizes.isNotEmpty) {
+      filters.add('${_selectedSizes.length} tamanho${_selectedSizes.length != 1 ? 's' : ''}');
+    }
+    
+    if (_maxDistance < 50.0) {
+      filters.add('${_maxDistance.toInt()}km de raio');
+    }
+    
+    final disabledTypes = {'Players', 'Fields', 'Goalkeepers'}.difference(_selectedMarkerTypes);
+    if (disabledTypes.isNotEmpty) {
+      filters.add('${disabledTypes.length} tipo${disabledTypes.length != 1 ? 's' : ''} oculto${disabledTypes.length != 1 ? 's' : ''}');
+    }
+    
+    return filters;
+  }
+
+  // Remove a specific filter
+  void removeFilter(String filter) {
+    if (filter == _selectedCity) {
+      _selectedCity = null;
+    } else if (filter == _selectedAvailability) {
+      _selectedAvailability = null;
+    } else if (filter.contains('tipo') && filter.contains('relva')) {
+      _selectedSurfaces.clear();
+    } else if (filter.contains('tamanho')) {
+      _selectedSizes.clear();
+    } else if (filter.contains('km de raio')) {
+      _maxDistance = 50.0;
+    } else if (filter.contains('tipo') && filter.contains('oculto')) {
+      _selectedMarkerTypes = {'Players', 'Fields', 'Goalkeepers'};
+    }
+    _applyFilters();
+  }
+  
+  // Check if any filters are active
+  bool get hasActiveFilters {
+    return _selectedCity != null ||
+           _selectedAvailability != null ||
+           _selectedSurfaces.isNotEmpty ||
+           _selectedSizes.isNotEmpty ||
+           _maxDistance < 50.0 ||
+           _selectedMarkerTypes.length < 3;
+  }
+
   @override
   void dispose() {
+    _isDisposed = true;
     // Don't dispose the map controller since it's managed by the map screen
     super.dispose();
   }
