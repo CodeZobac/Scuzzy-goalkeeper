@@ -133,7 +133,7 @@ class FieldDetailsCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                field.city != null ? '${field.city}' : 'Localização não disponível',
+                field.address ?? 'Localização não disponível',
                 style: TextStyle(color: Colors.grey[600]),
               ),
             ],
@@ -149,8 +149,6 @@ class FieldDetailsCard extends StatelessWidget {
                 _buildTag(field.displaySurfaceType),
                 const SizedBox(width: 8),
                 _buildTag(field.dimensions ?? 'N/A'),
-                const SizedBox(width: 8),
-                _buildTag('Outdoor'),
               ],
             ),
         ],

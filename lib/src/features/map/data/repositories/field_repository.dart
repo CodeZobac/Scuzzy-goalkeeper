@@ -11,7 +11,6 @@ class FieldRepository {
       final response = await _supabase
           .from('fields')
           .select()
-          .eq('status', 'approved')
           .order('created_at', ascending: false);
 
       return (response as List)
@@ -78,7 +77,6 @@ class FieldRepository {
         'latitude': latitude,
         'longitude': longitude,
         'photo_url': photoUrl,
-        'status': 'pending',
         'submitted_by': user.id,
         'description': description,
         'surface_type': surfaceType,
@@ -105,7 +103,6 @@ class FieldRepository {
       final response = await _supabase
           .from('fields')
           .select()
-          .eq('status', 'approved')
           .eq('city', city)
           .order('created_at', ascending: false);
 
@@ -123,7 +120,6 @@ class FieldRepository {
       final response = await _supabase
           .from('fields')
           .select('city')
-          .eq('status', 'approved')
           .not('city', 'is', null);
 
       final cities = (response as List)
@@ -190,7 +186,6 @@ class FieldRepository {
       final response = await _supabase
           .from('fields')
           .select()
-          .eq('status', 'approved')
           .or('name.ilike.%$query%,description.ilike.%$query%')
           .order('created_at', ascending: false);
 
@@ -214,7 +209,6 @@ class FieldRepository {
       final response = await _supabase
           .from('fields')
           .select()
-          .eq('status', 'approved')
           .filter('location', 'dwithin', 
               'POINT($longitude $latitude)::geography,${radiusInMeters.toString()}')
           .order('created_at', ascending: false);
