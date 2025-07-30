@@ -3,11 +3,11 @@
 
 Este documento detalha os requisitos, bugs e melhorias necessárias para a aplicação Goalkeeper-Finder.
 
-## Página Announcements
+## Página Announcements L
 
 - **Filtros não funcionais:** Ao clicar nos filtros, nada é selecionado embora a interface não responde. Quando um filtro é selecionado, os filtros devem colapsar.
 
-## Ecrã de Autenticação
+## Ecrã de Autenticação L
 
 - **Botões cortados:** Os botões no ecrã de autenticação estão visualmente cortados, afetando a usabilidade.
 - **Funcionalidade "Esqueceu a palavra-passe":** A opção "Esqueceu a palavra-passe" exibe uma mensagem de "em desenvolvimento" e deve ser implementada.
@@ -28,7 +28,7 @@ Este documento detalha os requisitos, bugs e melhorias necessárias para a aplic
 - **Dados dinâmicos para cidades:** A lista de cidades no filtro deve ser carregada dinamicamente a partir da base de dados.
 - **Botão "Contratar":** O botão "Contratar" quando clico no mapa em cima de um guarda-redes não tem nenhuma ação associada. É necessário definir e implementar a sua funcionalidade. Aparece A redecionar para agendamento... E depois não sai do sítio.
 
-## Perfis de Utilizador
+## Perfis de Utilizador L
 
 - **Interface do perfil de convidado:** Os botões na página de perfil, quando o utilizador está em modo convidado, estão visualmente confusos e precisam de ser redesenhados para maior clareza.
 
