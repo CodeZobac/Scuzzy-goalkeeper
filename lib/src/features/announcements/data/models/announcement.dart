@@ -49,6 +49,12 @@ class Announcement {
   final double? organizerRating;
   final String? stadiumImageUrl;
   final double? distanceKm;
+  
+  // Field information from fields table
+  final String? fieldId;
+  final double? fieldLatitude;
+  final double? fieldLongitude;
+  final String? fieldPhotoUrl;
   final int participantCount;
   final int maxParticipants;
   final List<AnnouncementParticipant> participants;
@@ -74,6 +80,10 @@ class Announcement {
     this.organizerRating,
     this.stadiumImageUrl,
     this.distanceKm,
+    this.fieldId,
+    this.fieldLatitude,
+    this.fieldLongitude,
+    this.fieldPhotoUrl,
     this.participantCount = 0,
     this.maxParticipants = 22,
     this.participants = const [],
@@ -111,6 +121,10 @@ class Announcement {
       organizerRating: json['organizer_rating']?.toDouble(),
       stadiumImageUrl: json['stadium_image_url'],
       distanceKm: json['distance_km']?.toDouble(),
+      fieldId: json['field_id'],
+      fieldLatitude: json['field_latitude']?.toDouble(),
+      fieldLongitude: json['field_longitude']?.toDouble(),
+      fieldPhotoUrl: json['field_photo_url'],
       participantCount: json['participant_count'] ?? participantsList.length,
       maxParticipants: json['max_participants'] ?? 22,
       participants: participantsList,
@@ -139,6 +153,10 @@ class Announcement {
       'organizer_rating': organizerRating,
       'stadium_image_url': stadiumImageUrl,
       'distance_km': distanceKm,
+      'field_id': fieldId,
+      'field_latitude': fieldLatitude,
+      'field_longitude': fieldLongitude,
+      'field_photo_url': fieldPhotoUrl,
       'participant_count': participantCount,
       'max_participants': maxParticipants,
       'participants': participants.map((p) => p.toJson()).toList(),

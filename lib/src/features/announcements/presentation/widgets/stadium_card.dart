@@ -7,6 +7,9 @@ class StadiumCard extends StatelessWidget {
   final double? distance;
   final int? photoCount;
   final VoidCallback onMapTap;
+  final double? fieldLatitude;
+  final double? fieldLongitude;
+  final String? fieldPhotoUrl;
 
   const StadiumCard({
     super.key,
@@ -15,6 +18,9 @@ class StadiumCard extends StatelessWidget {
     this.distance,
     this.photoCount,
     required this.onMapTap,
+    this.fieldLatitude,
+    this.fieldLongitude,
+    this.fieldPhotoUrl,
   });
 
   @override
@@ -50,24 +56,22 @@ class StadiumCard extends StatelessWidget {
                         ),
                       ),
                       // Use location-aware distance if coordinates are available,
-                      // otherwise fallback to the existing distance from the model
+                      // otherwise show "Sem imagens de momento" if no location access
                       LocationAwareDistance(
-                        fieldLatitude: null, // No coordinates available in current model
-                        fieldLongitude: null,
+                        fieldLatitude: fieldLatitude,
+                        fieldLongitude: fieldLongitude,
                         textStyle: const TextStyle(
                           fontSize: 14,
                           color: Colors.white70,
                         ),
                         suffix: ' km de distância',
-                        child: distance != null
-                            ? Text(
-                                '${distance!.toStringAsFixed(0)} km de distância',
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.white70,
-                                ),
-                              )
-                            : const SizedBox.shrink(),
+                        child: const Text(
+                          'Sem imagens de momento',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.white70,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -88,7 +92,7 @@ class StadiumCard extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            'On the map',
+                            'Mostrar no mapa',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
@@ -122,15 +126,15 @@ class StadiumCard extends StatelessWidget {
               ),
               child: Stack(
                 children: [
-                  // Stadium image
+                  // Stadium image - use field photo if available, otherwise fallback to imageUrl
                   Container(
                     width: double.infinity,
                     height: double.infinity,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
-                      image: imageUrl != null
+                      image: (fieldPhotoUrl != null || imageUrl != null)
                           ? DecorationImage(
-                              image: NetworkImage(imageUrl!),
+                              image: NetworkImage(fieldPhotoUrl ?? imageUrl!),
                               fit: BoxFit.cover,
                               onError: (exception, stackTrace) {
                                 // Handle image loading error
@@ -138,51 +142,32 @@ class StadiumCard extends StatelessWidget {
                             )
                           : null,
                     ),
-                    child: imageUrl == null
+                    child: (fieldPhotoUrl == null && imageUrl == null)
                         ? const Center(
-                            child: Icon(
-                              Icons.sports_soccer,
-                              color: Colors.white,
-                              size: 40,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.sports_soccer,
+                                  color: Colors.white,
+                                  size: 40,
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  'Sem imagens de momento',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                              ],
                             ),
                           )
                         : null,
                   ),
                   
-                  // Photo count indicator
-                  if (photoCount != null && photoCount! > 0)
-                    Positioned(
-                      top: 12,
-                      right: 12,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-
-                          color: Colors.black.withOpacity(0.6),
-
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.photo_library,
-                              size: 12,
-                              color: Colors.white,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '+$photoCount',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+                  // Remove the hardcoded photo count indicator
+                  // Photo count is no longer displayed as requested
                 ],
               ),
             ),

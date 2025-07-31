@@ -69,6 +69,31 @@ class AnnouncementRepositoryImpl implements AnnouncementRepository {
           participantCount = 0;
         }
         
+        // Get field information if stadium name matches a field
+        String? fieldId;
+        double? fieldLatitude;
+        double? fieldLongitude;
+        String? fieldPhotoUrl;
+        
+        if (announcementData['stadium'] != null) {
+          try {
+            final fieldResponse = await _supabaseClient
+                .from('fields')
+                .select('id, latitude, longitude, photo_url')
+                .eq('name', announcementData['stadium'])
+                .maybeSingle();
+            
+            if (fieldResponse != null) {
+              fieldId = fieldResponse['id'];
+              fieldLatitude = fieldResponse['latitude']?.toDouble();
+              fieldLongitude = fieldResponse['longitude']?.toDouble();
+              fieldPhotoUrl = fieldResponse['photo_url'];
+            }
+          } catch (e) {
+            // Field not found or error, keep null values
+          }
+        }
+        
         announcements.add(Announcement.fromJson({
           ...announcementData,
           'organizer_name': organizerName,
@@ -76,6 +101,10 @@ class AnnouncementRepositoryImpl implements AnnouncementRepository {
           'organizer_rating': 4.5, // Default rating
           'participant_count': participantCount,
           'distance_km': 2.0, // Default distance
+          'field_id': fieldId,
+          'field_latitude': fieldLatitude,
+          'field_longitude': fieldLongitude,
+          'field_photo_url': fieldPhotoUrl,
         }));
       }
       
@@ -196,6 +225,31 @@ class AnnouncementRepositoryImpl implements AnnouncementRepository {
         // Keep empty participants list
       }
       
+      // Get field information if stadium name matches a field
+      String? fieldId;
+      double? fieldLatitude;
+      double? fieldLongitude;
+      String? fieldPhotoUrl;
+      
+      if (response['stadium'] != null) {
+        try {
+          final fieldResponse = await _supabaseClient
+              .from('fields')
+              .select('id, latitude, longitude, photo_url')
+              .eq('name', response['stadium'])
+              .maybeSingle();
+          
+          if (fieldResponse != null) {
+            fieldId = fieldResponse['id'];
+            fieldLatitude = fieldResponse['latitude']?.toDouble();
+            fieldLongitude = fieldResponse['longitude']?.toDouble();
+            fieldPhotoUrl = fieldResponse['photo_url'];
+          }
+        } catch (e) {
+          // Field not found or error, keep null values
+        }
+      }
+      
       return Announcement.fromJson({
         ...response,
         'organizer_name': organizerName,
@@ -204,6 +258,10 @@ class AnnouncementRepositoryImpl implements AnnouncementRepository {
         'participant_count': participants.length,
         'participants': participants.map((p) => p.toJson()).toList(),
         'distance_km': 2.0, // Default distance
+        'field_id': fieldId,
+        'field_latitude': fieldLatitude,
+        'field_longitude': fieldLongitude,
+        'field_photo_url': fieldPhotoUrl,
       });
     } catch (e) {
       throw Exception('Failed to fetch announcement by ID: $e');
