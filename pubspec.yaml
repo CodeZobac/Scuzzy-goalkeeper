@@ -54,7 +54,7 @@ dependencies:
   geolocator: ^10.1.0
 
   # Date formatting
-  intl: ^0.20.2
+  intl: ^0.19.0
 
   # Image caching
   cached_network_image: ^3.3.1
