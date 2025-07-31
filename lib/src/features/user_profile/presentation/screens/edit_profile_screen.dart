@@ -12,7 +12,7 @@ class EditProfileScreen extends StatefulWidget {
 
   const EditProfileScreen({super.key, required this.userProfile});
 
-            hintText: 'Digite a sua profissão', @override
+  @override
   State<EditProfileScreen> createState() => _EditProfileScreenState();
 }
 
