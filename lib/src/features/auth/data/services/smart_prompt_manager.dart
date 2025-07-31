@@ -126,9 +126,9 @@ class SmartPromptManager {
     String enhancedMessage = baseConfig.message;
     
     if (actionCount > 0) {
-      enhancedMessage = 'Vemos que você está interessado em participar! ${baseConfig.message}';
+      enhancedMessage = 'Vemos que está interessado em participar! ${baseConfig.message}';
     } else if (guestContext.viewedContent.length > 3) {
-      enhancedMessage = 'Você já explorou bastante conteúdo! ${baseConfig.message}';
+      enhancedMessage = 'Já explorou bastante conteúdo! ${baseConfig.message}';
     }
 
     return RegistrationPromptConfig(

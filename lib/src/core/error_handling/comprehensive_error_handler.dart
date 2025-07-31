@@ -272,7 +272,7 @@ class ComprehensiveErrorHandler {
     } else if (error is PostgrestException) {
       return 'Problema com o banco de dados. Tente novamente.';
     } else if (_isNetworkError(error)) {
-      return 'Problema de conexão. Verifique sua internet.';
+      return 'Problema de conexão. Verifique a sua internet.';
     } else {
       return 'Ocorreu um erro inesperado. Tente novamente.';
     }
@@ -302,29 +302,29 @@ class ComprehensiveErrorHandler {
     switch (errorType) {
       case 'auth_exception':
         return [
-          'Verifique suas credenciais de login',
-          'Confirme seu email se necessário',
-          'Tente redefinir sua palavra-passe',
-          'Verifique sua conexão com a internet',
+          'Verifique as suas credenciais de início de sessão',
+          'Confirme o seu email se necessário',
+          'Tente redefinir a sua palavra-passe',
+          'Verifique a sua conexão com a internet',
         ];
       case 'network_exception':
         return [
-          'Verifique sua conexão com a internet',
+          'Verifique a sua conexão com a internet',
           'Tente alternar entre Wi-Fi e dados móveis',
-          'Reinicie seu roteador',
+          'Reinicie o seu roteador',
           'Aguarde alguns minutos e tente novamente',
         ];
       case 'database_exception':
         return [
           'Aguarde alguns minutos e tente novamente',
-          'Verifique sua conexão com a internet',
+          'Verifique a sua conexão com a internet',
           'Reinicie o aplicativo',
           'Entre em contato com o suporte se persistir',
         ];
       default:
         return [
           'Reinicie o aplicativo',
-          'Verifique sua conexão com a internet',
+          'Verifique a sua conexão com a internet',
           'Aguarde alguns minutos e tente novamente',
           'Entre em contato com o suporte se necessário',
         ];

@@ -152,7 +152,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
-              'Conta criada com sucesso! Faça login para continuar.',
+              'Conta criada com sucesso! Inicie sessão para continuar.',
             ),
             backgroundColor: AppTheme.authSuccess,
             behavior: SnackBarBehavior.floating,

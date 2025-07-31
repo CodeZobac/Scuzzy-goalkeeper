@@ -576,7 +576,7 @@ class NotificationService with ChangeNotifier {
 
       // Format notification content
       final title = 'Lobby Completo!';
-      final body = 'Seu anúncio "${data.announcementTitle}" está completo ${data.participantCountDisplay}';
+      final body = 'O seu anúncio "${data.announcementTitle}" está completo ${data.participantCountDisplay}';
       
       // Prepare notification data
       final notificationData = {

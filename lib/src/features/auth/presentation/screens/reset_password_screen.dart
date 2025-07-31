@@ -482,7 +482,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen>
           TextButton(
             onPressed: _navigateToSignIn,
             child: Text(
-              'Voltar ao Login',
+              'Voltar ao Início de Sessão',
               style: AppTheme.authLinkText.copyWith(
                 fontSize: ResponsiveUtils.getResponsiveFontSize(
                   context,
@@ -573,7 +573,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen>
         SizedBox(height: ResponsiveUtils.getResponsiveSpacing(context, mobile: 16)),
 
         Text(
-          'A sua palavra-passe foi redefinida com sucesso. Agora pode fazer login com a nova palavra-passe.',
+          'A sua palavra-passe foi redefinida com sucesso. Agora pode iniciar sessão com a nova palavra-passe.',
           textAlign: TextAlign.center,
           style: AppTheme.authBodyMedium.copyWith(
             fontSize: ResponsiveUtils.getResponsiveFontSize(
@@ -589,7 +589,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen>
         SizedBox(height: ResponsiveUtils.getResponsiveSpacing(context, mobile: 40)),
 
         ModernButton(
-          text: 'Fazer Login',
+          text: 'Iniciar Sessão',
           icon: Icons.login,
           onPressed: _navigateToSignIn,
           width: double.infinity,
@@ -691,7 +691,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen>
         TextButton(
           onPressed: _navigateToSignIn,
           child: Text(
-            'Voltar ao Login',
+            'Voltar ao Início de Sessão',
             style: AppTheme.authLinkText.copyWith(
               fontSize: ResponsiveUtils.getResponsiveFontSize(
                 context,

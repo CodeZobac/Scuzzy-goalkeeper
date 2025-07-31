@@ -228,7 +228,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with ErrorH
           TextButton(
             onPressed: _navigateToSignIn,
             child: Text(
-              'Voltar ao Login',
+              'Voltar ao Início de Sessão',
               style: AppTheme.authLinkText.copyWith(
                 fontSize: ResponsiveUtils.getResponsiveFontSize(
                   context,
@@ -284,7 +284,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with ErrorH
         ),
         SizedBox(height: ResponsiveUtils.getResponsiveSpacing(context, mobile: 32)),
         ModernButton(
-          text: 'Voltar ao Login',
+          text: 'Voltar ao Início de Sessão',
           icon: Icons.arrow_back,
           onPressed: _navigateToSignIn,
           width: double.infinity,

@@ -113,7 +113,7 @@ class ContractExpirationHandler {
       await _supabase.from('notifications').insert({
         'user_id': goalkeeperUserId,
         'title': 'Contrato Expirando',
-        'body': 'Seu contrato com $contractorName para "$announcementTitle" expira em $timeLeftText',
+        'body': 'O seu contrato com $contractorName para "$announcementTitle" expira em $timeLeftText',
         'type': 'contract_expiring',
         'data': {
           'contract_id': contractId,
@@ -190,7 +190,7 @@ class ContractExpirationHandler {
       await _supabase.from('notifications').insert({
         'user_id': contractorUserId,
         'title': 'Contrato Expirado',
-        'body': 'Seu contrato com $goalkeeperName para "$announcementTitle" expirou sem resposta',
+        'body': 'O seu contrato com $goalkeeperName para "$announcementTitle" expirou sem resposta',
         'type': 'contract_expired',
         'data': {
           'contract_id': contractId,

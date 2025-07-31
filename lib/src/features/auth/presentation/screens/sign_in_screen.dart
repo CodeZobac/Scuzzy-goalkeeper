@@ -209,7 +209,7 @@ class _SignInScreenState extends State<SignInScreen> with ErrorHandlingMixin {
                 // Welcome message with responsive font size
                 Center(
                   child: Text(
-                    'Acesse sua conta',
+                    'Aceda à sua conta',
                     style: AppTheme.authHeadingSmall.copyWith(
                       color: AppTheme.authPrimaryGreen,
                       fontSize: ResponsiveUtils.getResponsiveFontSize(

@@ -88,7 +88,7 @@ class FullLobbyNotificationCard extends StatelessWidget {
                           ),
                           SizedBox(height: 2),
                           Text(
-                            'Seu anúncio atingiu a capacidade máxima',
+                            'O seu anúncio atingiu a capacidade máxima',
                             style: TextStyle(
                               fontSize: 12,
                               color: Color(0xFF757575),

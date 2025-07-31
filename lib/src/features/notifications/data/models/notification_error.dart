@@ -103,7 +103,7 @@ class NotificationError implements Exception {
       type: NotificationErrorType.networkError,
       severity: NotificationErrorSeverity.medium,
       message: message ?? 'Network error occurred',
-      userMessage: userMessage ?? 'Problema de conexão. Verifique sua internet.',
+      userMessage: userMessage ?? 'Problema de conexão. Verifique a sua internet.',
       technicalDetails: technicalDetails,
       stackTrace: stackTrace,
       context: context,

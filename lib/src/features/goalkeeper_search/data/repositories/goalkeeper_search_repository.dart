@@ -44,7 +44,7 @@ class GoalkeeperSearchRepository {
           .map<Goalkeeper>((data) => Goalkeeper.fromMap(data))
           .toList();
     } catch (e) {
-      throw Exception('Erro ao buscar guarda-redes: $e');
+      throw Exception('Erro ao pesquisar guarda-redes: $e');
     }
   }
 

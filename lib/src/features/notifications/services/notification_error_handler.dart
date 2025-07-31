@@ -277,7 +277,7 @@ class NotificationErrorHandler {
           type: NotificationErrorType.authenticationError,
           severity: NotificationErrorSeverity.high,
           message: 'Authentication failed: ${exception.message}',
-          userMessage: 'Falha na autenticação. Faça login novamente.',
+          userMessage: 'Falha na autenticação. Inicie sessão novamente.',
           technicalDetails: exception.toString(),
           context: context,
           stackTrace: stackTrace,

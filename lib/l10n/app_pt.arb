@@ -61,7 +61,7 @@
     "description": "Text shown when no image is available"
   },
   
-  "youAreNotLoggedIn": "Você não está logado",
+  "youAreNotLoggedIn": "Não tem sessão iniciada",
   "@youAreNotLoggedIn": {
     "description": "Text shown in guest profile"
   },
@@ -81,7 +81,7 @@
     "description": "Restricted access title"
   },
   
-  "thisFeatureRequiresAccount": "Esta funcionalidade requer uma conta.\\nCrie sua conta para continuar e aproveitar todos os recursos.",
+  "thisFeatureRequiresAccount": "Esta funcionalidade requer uma conta.\\nCrie a sua conta para continuar e aproveitar todos os recursos.",
   "@thisFeatureRequiresAccount": {
     "description": "Message when feature requires account"
   },
@@ -96,12 +96,12 @@
     "description": "Unlock all features text"
   },
   
-  "participateInMatches": "Participe de Partidas",
+  "participateInMatches": "Participe em Partidas",
   "@participateInMatches": {
     "description": "Participate in matches feature title"
   },
   
-  "hireGoalkeepers": "Contrate Goleiros",
+  "hireGoalkeepers": "Contratar Guarda-redes",
   "@hireGoalkeepers": {
     "description": "Hire goalkeepers feature title"
   },
@@ -111,17 +111,17 @@
     "description": "Personalized profile feature title"
   },
   
-  "findAndParticipateInGames": "Encontre e participe de jogos na sua região",
+  "findAndParticipateInGames": "Encontre e participe em jogos na sua região",
   "@findAndParticipateInGames": {
     "description": "Find and participate in games description"
   },
   
-  "findProfessionalGoalkeepers": "Encontre goleiros profissionais disponíveis",
+  "findProfessionalGoalkeepers": "Encontre guarda-redes profissionais disponíveis",
   "@findProfessionalGoalkeepers": {
     "description": "Find professional goalkeepers description"
   },
   
-  "createProfileShowSkills": "Crie seu perfil e mostre suas habilidades",
+  "createProfileShowSkills": "Crie o seu perfil e mostre as suas habilidades",
   "@createProfileShowSkills": {
     "description": "Create profile and show skills description"
   }

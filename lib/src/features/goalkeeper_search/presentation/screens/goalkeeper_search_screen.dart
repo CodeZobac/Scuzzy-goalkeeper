@@ -133,7 +133,7 @@ class _GoalkeeperSearchScreenState extends State<GoalkeeperSearchScreen>
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'Busca de Guarda-Redes',
+                        'Pesquisa de Guarda-Redes',
                         style: AppTheme.headingLarge,
                       ),
                     ],

@@ -112,7 +112,7 @@ class ContractManagementService {
           .eq('status', 'pending');
 
       if (existingContracts.isNotEmpty) {
-        throw Exception('Já existe um contrato pendente para este goleiro neste anúncio');
+        throw Exception('Já existe um contrato pendente para este guarda-redes neste anúncio');
       }
 
       // Create the contract record
@@ -219,7 +219,7 @@ class ContractManagementService {
 
       return GoalkeeperContract.fromMap(response);
     } catch (e) {
-      throw Exception('Erro ao buscar contrato: $e');
+      throw Exception('Erro ao pesquisar contrato: $e');
     }
   }
 
@@ -236,7 +236,7 @@ class ContractManagementService {
           .map<GoalkeeperContract>((data) => GoalkeeperContract.fromMap(data))
           .toList();
     } catch (e) {
-      throw Exception('Erro ao buscar contratos do goleiro: $e');
+      throw Exception('Erro ao pesquisar contratos do guarda-redes: $e');
     }
   }
 
@@ -253,7 +253,7 @@ class ContractManagementService {
           .map<GoalkeeperContract>((data) => GoalkeeperContract.fromMap(data))
           .toList();
     } catch (e) {
-      throw Exception('Erro ao buscar contratos criados: $e');
+      throw Exception('Erro ao pesquisar contratos criados: $e');
     }
   }
 
@@ -270,7 +270,7 @@ class ContractManagementService {
           .map<GoalkeeperContract>((data) => GoalkeeperContract.fromMap(data))
           .toList();
     } catch (e) {
-      throw Exception('Erro ao buscar contratos do anúncio: $e');
+      throw Exception('Erro ao pesquisar contratos do anúncio: $e');
     }
   }
 

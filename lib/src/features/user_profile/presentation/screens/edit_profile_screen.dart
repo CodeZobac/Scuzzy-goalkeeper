@@ -12,7 +12,7 @@ class EditProfileScreen extends StatefulWidget {
 
   const EditProfileScreen({super.key, required this.userProfile});
 
-  @override
+            hintText: 'Digite a sua profissão', @override
   State<EditProfileScreen> createState() => _EditProfileScreenState();
 }
 
@@ -279,7 +279,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Personalize seu perfil',
+                  'Personalize o seu perfil',
                   style: AppTheme.bodyMedium.copyWith(
                     fontSize: 16,
                     color: Colors.grey[600],
@@ -332,7 +332,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
           ),
           child: CustomTextField(
             floatingLabelBehavior: FloatingLabelBehavior.never,
-            hintText: 'Digite seu nome completo',
+            hintText: 'Digite o seu nome completo',
             labelText: 'Nome',
             prefixIcon: Icons.person_outline,
             controller: _nameController,
@@ -382,7 +382,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
           ),
           child: CustomTextField(
             floatingLabelBehavior: FloatingLabelBehavior.never,
-            hintText: 'Digite sua nacionalidade',
+            hintText: 'Digite a sua alcunha',
             labelText: 'Nacionalidade',
             prefixIcon: Icons.flag_outlined,
             controller: _nationalityController,
@@ -523,7 +523,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
           ),
           child: CustomTextField(
             floatingLabelBehavior: FloatingLabelBehavior.never,
-            hintText: 'Digite sua cidade',
+            hintText: 'Digite a sua cidade',
             labelText: 'Cidade',
             prefixIcon: Icons.location_city_outlined,
             controller: _cityController,
@@ -563,7 +563,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
           ),
           child: CustomTextField(
             floatingLabelBehavior: FloatingLabelBehavior.never,
-            hintText: 'Digite seu país',
+            hintText: 'Digite o seu país',
             labelText: 'País',
             prefixIcon: Icons.public_outlined,
             controller: _countryController,
@@ -734,7 +734,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
           ),
           child: CustomTextField(
             floatingLabelBehavior: FloatingLabelBehavior.never,
-            hintText: 'Selecione sua data de nascimento',
+            hintText: 'Selecione a sua data de nascimento',
             labelText: 'Data de Nascimento',
             prefixIcon: Icons.calendar_today_outlined,
             controller: _birthDateController,
@@ -774,7 +774,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> with TickerProvid
                   ),
                 ),
                 Text(
-                  'Ative se você é um guarda-redes',
+                  'Active se é um guarda-redes',
                   style: AppTheme.bodyMedium.copyWith(
                     fontSize: 12,
                     color: Colors.grey[600],

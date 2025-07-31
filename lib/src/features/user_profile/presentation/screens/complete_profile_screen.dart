@@ -285,7 +285,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> with Tick
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Personalize seu perfil',
+                  'Personalize o seu perfil',
                   style: AppTheme.bodyMedium.copyWith(
                     fontSize: 16,
                     color: Colors.grey[600],
@@ -338,7 +338,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> with Tick
           ),
           child: CustomTextField(
             floatingLabelBehavior: FloatingLabelBehavior.never,
-            hintText: 'Digite seu nome completo',
+            hintText: 'Digite o seu nome completo',
             labelText: 'Nome',
             prefixIcon: Icons.person_outline,
             controller: _nameController,
@@ -388,7 +388,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> with Tick
           ),
           child: CustomTextField(
             floatingLabelBehavior: FloatingLabelBehavior.never,
-            hintText: 'Digite sua nacionalidade',
+            hintText: 'Digite a sua nacionalidade',
             labelText: 'Nacionalidade',
             prefixIcon: Icons.flag_outlined,
             controller: _nationalityController,
@@ -529,7 +529,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> with Tick
           ),
           child: CustomTextField(
             floatingLabelBehavior: FloatingLabelBehavior.never,
-            hintText: 'Digite sua cidade',
+            hintText: 'Digite a sua cidade',
             labelText: 'Cidade',
             prefixIcon: Icons.location_city_outlined,
             controller: _cityController,
@@ -569,7 +569,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> with Tick
           ),
           child: CustomTextField(
             floatingLabelBehavior: FloatingLabelBehavior.never,
-            hintText: 'Digite seu país',
+            hintText: 'Digite o seu país',
             labelText: 'País',
             prefixIcon: Icons.public_outlined,
             controller: _countryController,
@@ -731,7 +731,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> with Tick
           ),
           child: CustomTextField(
             floatingLabelBehavior: FloatingLabelBehavior.never,
-            hintText: 'Selecione sua data de nascimento',
+            hintText: 'Seleccione a sua data de nascimento',
             labelText: 'Data de Nascimento',
             prefixIcon: Icons.calendar_today_outlined,
             controller: _birthDateController,
@@ -771,7 +771,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> with Tick
                   ),
                 ),
                 Text(
-                  'Ative se você é um guarda-redes',
+                  'Active se é um guarda-redes',
                   style: AppTheme.bodyMedium.copyWith(
                     fontSize: 12,
                     color: Colors.grey[600],

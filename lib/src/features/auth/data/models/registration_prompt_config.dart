@@ -19,28 +19,28 @@ class RegistrationPromptConfig {
   /// Configuration for join match prompt
   static const joinMatch = RegistrationPromptConfig(
     title: 'Participe da Partida!',
-    message: 'Para participar de partidas e se conectar com outros jogadores, você precisa criar uma conta.',
+    message: 'Para participar em partidas e conectar-se com outros jogadores, precisa de criar uma conta.',
     context: 'join_match',
   );
   
   /// Configuration for hire goalkeeper prompt
   static const hireGoalkeeper = RegistrationPromptConfig(
-    title: 'Contrate um Goleiro!',
-    message: 'Para contratar goleiros e gerenciar suas reservas, você precisa criar uma conta.',
+    title: 'Contratar um Guarda-Redes!',
+    message: 'Para contratar guarda-redes e gerir as suas reservas, precisa de criar uma conta.',
     context: 'hire_goalkeeper',
   );
   
   /// Configuration for profile access prompt
   static const profileAccess = RegistrationPromptConfig(
-    title: 'Acesse seu Perfil',
-    message: 'Crie uma conta para personalizar seu perfil e acessar recursos exclusivos.',
+    title: 'Aceder ao Seu Perfil',
+    message: 'Crie uma conta para personalizar o seu perfil e aceder a recursos exclusivos.',
     context: 'profile_access',
   );
   
   /// Configuration for create announcement prompt
   static const createAnnouncement = RegistrationPromptConfig(
     title: 'Crie um Anúncio',
-    message: 'Para criar anúncios e organizar partidas, você precisa criar uma conta.',
+    message: 'Para criar anúncios e organizar partidas, precisa de criar uma conta.',
     context: 'create_announcement',
   );
   
@@ -57,8 +57,8 @@ class RegistrationPromptConfig {
         return createAnnouncement;
       default:
         return const RegistrationPromptConfig(
-          title: 'Crie sua Conta',
-          message: 'Para acessar este recurso, você precisa criar uma conta.',
+          title: 'Crie a Sua Conta',
+          message: 'Para aceder a este recurso, precisa de criar uma conta.',
           context: 'default',
         );
     }

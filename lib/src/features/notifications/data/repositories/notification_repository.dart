@@ -386,7 +386,7 @@ class NotificationRepository {
       await _supabase.from('notifications').insert({
         'user_id': creatorUserId,
         'title': 'Lobby Completo!',
-        'body': 'Seu anúncio "${data.announcementTitle}" está completo ${data.participantCountDisplay}',
+        'body': 'O seu anúncio "${data.announcementTitle}" está completo ${data.participantCountDisplay}',
         'type': 'full_lobby',
         'data': data.toMap(),
         'category': 'full_lobbies',
@@ -439,7 +439,7 @@ class NotificationRepository {
         await _supabase.from('notifications').insert({
           'user_id': contractData['contractor_user_id'],
           'title': 'Contrato Aceito!',
-          'body': '${contractData['goalkeeper']['name']} aceitou seu contrato',
+          'body': '${contractData['goalkeeper']['name']} aceitou o seu contrato',
           'type': 'contract_accepted',
           'data': {
             'contract_id': contractId,

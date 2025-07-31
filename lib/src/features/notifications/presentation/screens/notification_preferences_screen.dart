@@ -358,7 +358,7 @@ class _NotificationPreferencesScreenState extends State<NotificationPreferencesS
             // Full lobby notifications
             NotificationPreferenceTile(
               title: 'Lobbies Completos',
-              subtitle: 'Notificações quando seus anúncios ficarem completos',
+              subtitle: 'Notificações quando os seus anúncios ficarem completos',
               icon: Icons.group,
               value: preferences.fullLobbyNotifications,
               onChanged: controller.updateFullLobbyNotifications,

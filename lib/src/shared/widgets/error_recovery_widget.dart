@@ -406,12 +406,12 @@ class AuthErrorRecoveryWidget extends StatelessWidget {
       case 'network':
         return _AuthErrorConfig(
           title: 'Problema de Conexão',
-          message: 'Não foi possível conectar aos nossos servidores. Verifique sua conexão com a internet.',
+          message: 'Não foi possível conectar aos nossos servidores. Verifique a sua conexão com a internet.',
           icon: Icons.wifi_off_outlined,
           troubleshootingSteps: [
             'Verifique se está conectado à internet',
             'Tente alternar entre Wi-Fi e dados móveis',
-            'Reinicie seu roteador se estiver usando Wi-Fi',
+            'Reinicie o seu roteador se estiver a usar Wi-Fi',
             'Aguarde alguns minutos e tente novamente',
           ],
         );
@@ -423,17 +423,17 @@ class AuthErrorRecoveryWidget extends StatelessWidget {
           troubleshootingSteps: [
             'Verifique se o email está digitado corretamente',
             'Certifique-se de que o Caps Lock não está ativado',
-            'Tente redefinir sua palavra-passe',
+            'Tente redefinir a sua palavra-passe',
             'Use a opção "Esqueceu a palavra-passe?" se necessário',
           ],
         );
       case 'email_not_confirmed':
         return _AuthErrorConfig(
           title: 'Email Não Confirmado',
-          message: 'Você precisa confirmar seu email antes de fazer login. Verifique sua caixa de entrada.',
+          message: 'Precisa de confirmar o seu email antes de iniciar sessão. Verifique a sua caixa de entrada.',
           icon: Icons.email_outlined,
           troubleshootingSteps: [
-            'Verifique sua caixa de entrada e pasta de spam',
+            'Verifique a sua caixa de entrada e pasta de spam',
             'Procure por um email de confirmação',
             'Clique no link de confirmação no email',
             'Aguarde alguns minutos após confirmar',
@@ -460,7 +460,7 @@ class AuthErrorRecoveryWidget extends StatelessWidget {
           icon: Icons.error_outline,
           troubleshootingSteps: [
             'Reinicie o aplicativo',
-            'Verifique sua conexão com a internet',
+            'Verifique a sua conexão com a internet',
             'Tente novamente em alguns minutos',
             'Entre em contato com o suporte se necessário',
           ],
@@ -509,13 +509,13 @@ class _NetworkErrorRecoveryWidgetState extends State<NetworkErrorRecoveryWidget>
     return ErrorRecoveryWidget(
       title: 'Sem Conexão',
       message: widget.customMessage ?? 
-          'Não foi possível conectar à internet. Verifique sua conexão e tente novamente.',
+          'Não foi possível conectar à internet. Verifique a sua conexão e tente novamente.',
       icon: Icons.wifi_off_outlined,
       primaryColor: Colors.orange.shade600,
       troubleshootingSteps: const [
         'Verifique se o Wi-Fi ou dados móveis estão ativados',
         'Tente alternar entre Wi-Fi e dados móveis',
-        'Reinicie seu roteador se estiver usando Wi-Fi',
+        'Reinicie o seu roteador se estiver a usar Wi-Fi',
         'Mova-se para uma área com melhor sinal',
       ],
       onRetry: _isRetrying ? null : () async {

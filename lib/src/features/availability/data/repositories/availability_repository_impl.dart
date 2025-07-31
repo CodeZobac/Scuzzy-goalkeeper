@@ -16,7 +16,7 @@ class AvailabilityRepositoryImpl implements AvailabilityRepository {
 
       return response.map((json) => Availability.fromJson(json)).toList();
     } catch (e) {
-      throw Exception('Erro ao buscar disponibilidades: $e');
+      throw Exception('Erro ao pesquisar disponibilidades: $e');
     }
   }
 

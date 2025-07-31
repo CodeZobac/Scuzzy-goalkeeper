@@ -123,7 +123,7 @@ class RegistrationPromptDialog extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Com sua conta você pode:',
+          'Com a sua conta pode:',
           style: AppTheme.authBodyMedium.copyWith(
             fontWeight: FontWeight.w600,
           ),
@@ -226,19 +226,19 @@ class RegistrationPromptDialog extends StatelessWidget {
           'Participar de partidas',
           'Conectar-se com outros jogadores',
           'Receber notificações de jogos',
-          'Gerenciar suas participações',
+          'Gerir as suas participações',
         ];
       case 'hire_goalkeeper':
         return [
           'Contratar goleiros profissionais',
-          'Gerenciar suas reservas',
+          'Gerir as suas reservas',
           'Avaliar e ser avaliado',
           'Histórico de contratações',
         ];
       case 'profile_access':
         return [
-          'Personalizar seu perfil',
-          'Acessar recursos exclusivos',
+          'Personalizar o seu perfil',
+          'Aceder a recursos exclusivos',
           'Histórico de atividades',
           'Configurações personalizadas',
         ];
@@ -246,12 +246,12 @@ class RegistrationPromptDialog extends StatelessWidget {
         return [
           'Criar anúncios de partidas',
           'Organizar eventos esportivos',
-          'Gerenciar participantes',
+          'Gerir participantes',
           'Receber notificações',
         ];
       default:
         return [
-          'Acessar todos os recursos',
+          'Aceder a todos os recursos',
           'Personalizar experiência',
           'Conectar-se com a comunidade',
           'Receber notificações',

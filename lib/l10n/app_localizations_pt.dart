@@ -45,7 +45,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get noImageAvailable => 'Nenhuma imagem disponível';
 
   @override
-  String get youAreNotLoggedIn => 'Você não está logado';
+  String get youAreNotLoggedIn => 'Não tem sessão iniciada';
 
   @override
   String get pleaseCreateAccount => 'Por favor, crie uma conta';
@@ -58,7 +58,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get thisFeatureRequiresAccount =>
-      'Esta funcionalidade requer uma conta.\\nCrie sua conta para continuar e aproveitar todos os recursos.';
+      'Esta funcionalidade requer uma conta.\\nCrie a sua conta para continuar e aproveitar todos os recursos.';
 
   @override
   String get joinCommunity => 'Junte-se à Comunidade';
@@ -67,7 +67,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get unlockAllFeatures => 'Desbloqueie todos os recursos!';
 
   @override
-  String get participateInMatches => 'Participe de Partidas';
+  String get participateInMatches => 'Participe em Partidas';
 
   @override
   String get hireGoalkeepers => 'Contrate Goleiros';
@@ -77,7 +77,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get findAndParticipateInGames =>
-      'Encontre e participe de jogos na sua região';
+      'Encontre e participe em jogos na sua região';
 
   @override
   String get findProfessionalGoalkeepers =>
@@ -85,5 +85,5 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get createProfileShowSkills =>
-      'Crie seu perfil e mostre suas habilidades';
+      'Crie o seu perfil e mostre as suas habilidades';
 }

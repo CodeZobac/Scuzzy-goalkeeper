@@ -574,15 +574,15 @@ class _MyAppState extends State<MyApp> {
   String _getContextualMessage(String? intendedDestination) {
     switch (intendedDestination) {
       case '/contract-details':
-        return 'Para visualizar detalhes de contratos e gerenciar suas reservas, você precisa criar uma conta.';
+        return 'Para visualizar detalhes de contratos e gerir as suas reservas, precisa de criar uma conta.';
       case '/notification-deep-link':
-        return 'Para acessar notificações e se manter atualizado, você precisa criar uma conta.';
+        return 'Para aceder a notificações e manter-se actualizado, precisa de criar uma conta.';
       case '/create-announcement':
-        return 'Para criar anúncios e organizar partidas, você precisa criar uma conta.';
+        return 'Para criar anúncios e organizar partidas, precisa de criar uma conta.';
       case '/notification-preferences':
-        return 'Para gerenciar suas preferências de notificação, você precisa criar uma conta.';
+        return 'Para gerir as suas preferências de notificação, precisa de criar uma conta.';
       default:
-        return 'Esta funcionalidade requer uma conta.\nCrie sua conta para continuar e aproveitar todos os recursos.';
+        return 'Esta funcionalidade requer uma conta.\nCrie a sua conta para continuar e aproveitar todos os recursos.';
     }
   }
 

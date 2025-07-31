@@ -152,7 +152,7 @@ class NetworkErrorHandler {
     } else if (message.contains('password too short')) {
       return 'A palavra-passe deve ter pelo menos 6 caracteres.';
     } else if (message.contains('email already registered')) {
-      return 'Este email já está registrado. Tente fazer login ou use outro email.';
+      return 'Este email já está registrado. Tente iniciar sessão ou use outro email.';
     } else if (message.contains('signup disabled')) {
       return 'Registro temporariamente desabilitado. Tente novamente mais tarde.';
     } else if (message.contains('too many requests')) {

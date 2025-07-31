@@ -45,7 +45,7 @@ class RatingRepository {
           .map((rating) => Rating.fromMap(rating))
           .toList();
     } catch (e) {
-      throw Exception('Erro ao carregar suas avaliações: $e');
+      throw Exception('Erro ao carregar as suas avaliações: $e');
     }
   }
 

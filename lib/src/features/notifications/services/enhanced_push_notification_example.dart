@@ -22,7 +22,7 @@ class EnhancedPushNotificationExample {
         gameDateTime: DateTime.now().add(const Duration(days: 2)),
         stadium: 'Estádio Central',
         offeredAmount: 150.0,
-        additionalNotes: 'Jogo importante, preciso de um goleiro experiente',
+        additionalNotes: 'Jogo importante, preciso de um guarda-redes experiente',
       );
 
       // Send notification (database + push)

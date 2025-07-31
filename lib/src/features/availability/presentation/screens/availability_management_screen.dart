@@ -433,7 +433,7 @@ class _AvailabilityManagementContentState extends State<_AvailabilityManagementC
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
-                                  'Configure seus horários livres',
+                                  'Configure os seus horários livres',
                                   style: AppTheme.bodyMedium.copyWith(
                                     color: Colors.white.withOpacity(0.9),
                                     fontWeight: FontWeight.w500,
@@ -686,7 +686,7 @@ class _AvailabilityManagementContentState extends State<_AvailabilityManagementC
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Adicione seus horários disponíveis\npara que jogadores possam agendá-lo',
+                  'Adicione os seus horários disponíveis\npara que jogadores possam agendá-lo',
                   style: AppTheme.bodyMedium.copyWith(
                     height: 1.5,
                   ),
@@ -724,7 +724,7 @@ class _AvailabilityManagementContentState extends State<_AvailabilityManagementC
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Suas Disponibilidades',
+          'As Suas Disponibilidades',
           style: AppTheme.headingMedium.copyWith(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -953,7 +953,7 @@ class _AvailabilityManagementContentState extends State<_AvailabilityManagementC
             ),
             const SizedBox(height: 12),
             Text(
-              '• Adicione seus horários disponíveis\n• Jogadores poderão vê-lo nos resultados de busca\n• Você receberá notificações de convites\n• Gerencie suas disponibilidades facilmente',
+              '• Adicione os seus horários disponíveis\n• Jogadores poderão vê-lo nos resultados de pesquisa\n• Receberá notificações de convites\n• Gira as suas disponibilidades facilmente',
               style: AppTheme.bodyMedium.copyWith(height: 1.5),
             ),
           ],

@@ -540,7 +540,7 @@ class _BookingScreenState extends State<BookingScreen>
     try {
       final user = Supabase.instance.client.auth.currentUser;
       if (user == null) {
-        _showError('Erro de autenticação. Faça login novamente.');
+        _showError('Erro de autenticação. Inicie sessão novamente.');
         return;
       }
 

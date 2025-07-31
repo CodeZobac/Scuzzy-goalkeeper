@@ -113,7 +113,7 @@ class ContractController extends ChangeNotifier {
       _goalkeeperContracts = await _contractService.getGoalkeeperContracts(goalkeeperUserId);
       notifyListeners();
     } catch (e) {
-      _setError('Erro ao carregar contratos do goleiro: $e');
+      _setError('Erro ao carregar contratos do guarda-redes: $e');
     }
   }
 
@@ -205,7 +205,7 @@ class ContractController extends ChangeNotifier {
     try {
       return await _contractService.getContract(contractId);
     } catch (e) {
-      _setError('Erro ao buscar contrato: $e');
+      _setError('Erro ao pesquisar contrato: $e');
       return null;
     }
   }
@@ -215,7 +215,7 @@ class ContractController extends ChangeNotifier {
     try {
       return await _contractService.getAnnouncementContracts(announcementId);
     } catch (e) {
-      _setError('Erro ao buscar contratos do anúncio: $e');
+      _setError('Erro ao pesquisar contratos do anúncio: $e');
       return [];
     }
   }

@@ -55,7 +55,7 @@ class _LocationUpdateWidgetState extends State<LocationUpdateWidget> {
     try {
       final position = await _locationService.getCurrentLocation();
       if (position == null) {
-        _showErrorSnackBar('Não foi possível obter sua localização');
+        _showErrorSnackBar('Não foi possível obter a sua localização');
         return;
       }
 
@@ -157,8 +157,8 @@ class _LocationUpdateWidgetState extends State<LocationUpdateWidget> {
             const SizedBox(height: 16),
             Text(
               _currentPosition != null
-                  ? 'Atualize sua localização para melhorar a busca por guarda-redes próximos.'
-                  : 'Defina sua localização para encontrar guarda-redes próximos.',
+                  ? 'Actualize a sua localização para melhorar a pesquisa por guarda-redes próximos.'
+                  : 'Defina a sua localização para encontrar guarda-redes próximos.',
               style: const TextStyle(
                 fontSize: 14,
                 color: Color(0xFF2C2C2C),

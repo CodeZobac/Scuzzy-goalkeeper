@@ -309,7 +309,7 @@ class _AvailabilityFormDialogState extends State<AvailabilityFormDialog>
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Configure seu horário livre',
+                        'Configure o seu horário livre',
                         style: AppTheme.bodyMedium.copyWith(
                           color: Colors.white.withOpacity(0.9),
                           fontWeight: FontWeight.w500,

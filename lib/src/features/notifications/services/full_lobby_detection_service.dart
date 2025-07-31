@@ -258,7 +258,7 @@ class FullLobbyDetectionService {
       await _sendPushNotification(
         userId: creatorUserId,
         title: 'Lobby Completo!',
-        body: 'Seu anúncio "$title" está completo ($participantCount/$maxParticipants)',
+        body: 'O seu anúncio "$title" está completo ($participantCount/$maxParticipants)',
         data: fullLobbyData.toMap(),
       );
       
