@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/config/app_config.dart';
 
 class GameDetailsRow extends StatelessWidget {
   final DateTime date;
@@ -41,8 +42,8 @@ class GameDetailsRow extends StatelessWidget {
         
         // Price
         _buildDetailItem(
-          Icons.attach_money,
-          price != null ? price!.toStringAsFixed(0) : 'Free',
+          Icons.euro,
+          price != null ? '${price!.toStringAsFixed(0)}${AppConfig.currencySymbol}' : 'Free',
           iconSize,
           textSize,
         ),

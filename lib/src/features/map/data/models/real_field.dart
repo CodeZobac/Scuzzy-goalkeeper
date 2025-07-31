@@ -11,6 +11,7 @@ class RealField {
   final String? description;
   final String? surfaceType;
   final String? dimensions;
+  final String? address;
 
   RealField({
     required this.id,
@@ -25,23 +26,35 @@ class RealField {
     this.description,
     this.surfaceType,
     this.dimensions,
+    this.address,
   });
 
   factory RealField.fromJson(Map<String, dynamic> json) {
-    return RealField(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      latitude: double.parse(json['latitude'].toString()),
-      longitude: double.parse(json['longitude'].toString()),
-      photoUrl: json['photo_url'] as String?,
-      status: json['status'] as String,
-      submittedBy: json['submitted_by'] as String?,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      city: json['city'] as String?,
-      description: json['description'] as String?,
-      surfaceType: json['surface_type'] as String?,
-      dimensions: json['dimensions'] as String?,
-    );
+    print('🔧 Parsing field JSON: $json');
+    
+    try {
+      return RealField(
+        id: json['id'] as String,
+        name: json['name'] as String,
+        latitude: double.parse(json['latitude'].toString()),
+        longitude: double.parse(json['longitude'].toString()),
+        photoUrl: json['photo_url'] as String?,
+        status: json['status'] as String? ?? 'approved', // Default to approved if no status column
+        submittedBy: json['submitted_by'] as String?,
+        createdAt: json['created_at'] != null 
+            ? DateTime.parse(json['created_at'] as String)
+            : DateTime.now(), // Default to current time if missing
+        city: json['city'] as String?,
+        description: json['description'] as String?,
+        surfaceType: json['surface_type'] as String?,
+        dimensions: json['dimensions'] as String?,
+        address: json['address'] as String?,
+      );
+    } catch (e) {
+      print('❌ Error parsing field JSON: $e');
+      print('📋 Problematic JSON: $json');
+      rethrow;
+    }
   }
 
   Map<String, dynamic> toJson() {
@@ -58,6 +71,7 @@ class RealField {
       'description': description,
       'surface_type': surfaceType,
       'dimensions': dimensions,
+      'address': address,
     };
   }
 
@@ -100,6 +114,7 @@ class RealField {
       'surface_type': surfaceType,
       'dimensions': dimensions,
       'description': description,
+      'address': address,
       'photo_url': photoUrl,
     };
   }

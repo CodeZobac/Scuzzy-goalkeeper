@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../presentation/providers/auth_state_provider.dart';
 import '../data/models/registration_prompt_config.dart';
-import '../../core/utils/guest_mode_utils.dart';
+import '../../../core/utils/guest_mode_utils.dart';
 
 /// Example widget showing how to use AuthStateProvider
 class GuestModeExample extends StatelessWidget {

@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/models/map_field.dart';
 import '../../../auth/presentation/theme/app_theme.dart';
 import '../../../../core/utils/guest_mode_utils.dart';
 import '../../../../shared/widgets/registration_prompt_dialog.dart';
 import '../../../../shared/helpers/registration_prompt_helper.dart';
+import '../../data/services/field_events_service.dart';
+import '../screens/field_availability_screen.dart';
 
-class FieldDetailsCard extends StatelessWidget {
+class FieldDetailsCard extends StatefulWidget {
   final MapField field;
   final VoidCallback? onClose;
 
@@ -16,17 +19,50 @@ class FieldDetailsCard extends StatelessWidget {
     this.onClose,
   }) : super(key: key);
 
+  @override
+  State<FieldDetailsCard> createState() => _FieldDetailsCardState();
+}
+
+class _FieldDetailsCardState extends State<FieldDetailsCard> {
+  final FieldEventsService _eventsService = FieldEventsService(Supabase.instance.client);
+  List<FieldEvent>? _upcomingEvents;
+  bool _isLoadingEvents = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUpcomingEvents();
+  }
+
+  Future<void> _loadUpcomingEvents() async {
+    try {
+      final events = await _eventsService.getUpcomingEventsForField(widget.field.name);
+      if (mounted) {
+        setState(() {
+          _upcomingEvents = events;
+          _isLoadingEvents = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _upcomingEvents = [];
+          _isLoadingEvents = false;
+        });
+      }
+    }
+  }
+
   void _handleAvailabilityPressed(BuildContext context) {
     // Check if user is in guest mode
     if (GuestModeUtils.isGuest) {
-      // Show registration prompt for hiring goalkeeper
-      RegistrationPromptHelper.showHireGoalkeeperPrompt(context);
+      // Show registration prompt for field booking
+      RegistrationPromptHelper.showJoinMatchPrompt(context);
     } else {
-      // Handle authenticated user booking flow
-      // TODO: Implement booking flow for authenticated users
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Booking functionality coming soon!'),
+      // Navigate to availability screen for authenticated users
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => FieldAvailabilityScreen(field: widget.field),
         ),
       );
     }
@@ -59,7 +95,8 @@ class FieldDetailsCard extends StatelessWidget {
             children: [
               _buildHeader(),
               _buildDetails(),
-              _buildUpcomingEvents(),
+              if (_upcomingEvents != null && _upcomingEvents!.isNotEmpty)
+                _buildUpcomingEvents(),
               _buildBookingSection(),
             ],
           ),
@@ -77,28 +114,54 @@ class FieldDetailsCard extends StatelessWidget {
             topRight: Radius.circular(24),
           ),
           child: CachedNetworkImage(
-            imageUrl: field.photoUrl ?? '',
+            imageUrl: widget.field.photoUrl ?? '',
             height: 200,
             width: double.infinity,
             fit: BoxFit.cover,
             placeholder: (context, url) => Container(
               height: 200,
-              color: Colors.grey[300],
+              color: AppTheme.authBackground,
+              child: const Center(
+                child: CircularProgressIndicator(
+                  color: AppTheme.authPrimaryGreen,
+                ),
+              ),
             ),
             errorWidget: (context, url, error) => Container(
               height: 200,
-              color: Colors.grey[300],
-              child: const Icon(Icons.error, color: Colors.red),
+              decoration: const BoxDecoration(
+                gradient: AppTheme.authPrimaryGradient,
+              ),
+              child: const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.sports_soccer,
+                      color: Colors.white,
+                      size: 40,
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Sem imagem disponível',
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
-        if (onClose != null)
+        if (widget.onClose != null)
           Positioned(
             top: 16,
             left: 16,
             child: IconButton(
               icon: const Icon(Icons.arrow_back, color: Colors.white),
-              onPressed: onClose,
+              onPressed: widget.onClose,
             ),
           ),
       ],
@@ -112,11 +175,11 @@ class FieldDetailsCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            field.name,
+            widget.field.name,
             style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Colors.black,
+              color: AppTheme.authTextPrimary,
             ),
           ),
           const SizedBox(height: 8),
@@ -128,29 +191,27 @@ class FieldDetailsCard extends StatelessWidget {
                 '4.5',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Colors.black,
+                  color: AppTheme.authTextPrimary,
                 ),
               ),
               const SizedBox(width: 8),
               Text(
-                field.city != null ? '${field.city}' : 'Localização não disponível',
-                style: TextStyle(color: Colors.grey[600]),
+                widget.field.address ?? 'Localização não disponível',
+                style: const TextStyle(color: AppTheme.authTextSecondary),
               ),
             ],
           ),
           const SizedBox(height: 16),
           Text(
-            field.description ?? 'Descrição não disponível.',
-            style: TextStyle(color: Colors.grey[800], height: 1.5),
+            widget.field.description ?? 'Descrição não disponível.',
+            style: const TextStyle(color: AppTheme.authTextSecondary, height: 1.5),
           ),
           const SizedBox(height: 16),
             Row(
               children: [
-                _buildTag(field.displaySurfaceType),
+                _buildTag(widget.field.displaySurfaceType),
                 const SizedBox(width: 8),
-                _buildTag(field.dimensions ?? 'N/A'),
-                const SizedBox(width: 8),
-                _buildTag('Outdoor'),
+                _buildTag(widget.field.dimensions ?? 'N/A'),
               ],
             ),
         ],
@@ -162,44 +223,72 @@ class FieldDetailsCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.grey[200],
+        color: AppTheme.authPrimaryGreen.withOpacity(0.1),
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppTheme.authPrimaryGreen.withOpacity(0.3),
+        ),
       ),
       child: Text(
         label,
         style: const TextStyle(
           fontWeight: FontWeight.w500,
-          color: Colors.black,
+          color: AppTheme.authPrimaryGreen,
         ),
       ),
     );
   }
 
   Widget _buildUpcomingEvents() {
+    if (_isLoadingEvents) {
+      return const Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Center(
+          child: CircularProgressIndicator(
+            color: AppTheme.authPrimaryGreen,
+          ),
+        ),
+      );
+    }
+
+    if (_upcomingEvents == null || _upcomingEvents!.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Upcoming events (9)',
-            style: TextStyle(
+          Text(
+            'Próximos eventos (${_upcomingEvents!.length})',
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Colors.black,
+              color: AppTheme.authTextPrimary,
             ),
           ),
           const SizedBox(height: 16),
-          _buildEventCard(),
+          ..._upcomingEvents!.map((event) => _buildEventCard(event)).toList(),
         ],
       ),
     );
   }
 
-  Widget _buildEventCard() {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+  Widget _buildEventCard(FieldEvent event) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        gradient: AppTheme.authPrimaryGradient,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.authPrimaryGreen.withOpacity(0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Row(
@@ -207,29 +296,64 @@ class FieldDetailsCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.grey[100],
+                color: Colors.white.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Column(
+              child: Column(
                 children: [
-                  Text('NOV', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
-                  Text('25',
-                      style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black)),
+                  Text(
+                    event.formattedDate.split('\n')[0],
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 12,
+                    ),
+                  ),
+                  Text(
+                    event.formattedDate.split('\n')[1],
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
                 ],
               ),
             ),
             const SizedBox(width: 16),
-            const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Friday Free Tournament',
-                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
-                ),
-                SizedBox(height: 4),
-                Text('12:30 pm - 4 slots - Beginners', style: TextStyle(color: Colors.black)),
-              ],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    event.title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    event.eventDetails,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                    ),
+                  ),
+                  if (event.price != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      '€${event.price!.toStringAsFixed(0)}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ),
           ],
         ),
@@ -244,28 +368,37 @@ class FieldDetailsCard extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           const Text(
-            '€24 / hour',
+            '€24 / hora',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Colors.black,
+              color: AppTheme.authTextPrimary,
             ),
           ),
           Builder(
             builder: (context) => ElevatedButton(
               onPressed: () => _handleAvailabilityPressed(context),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.amber,
+                backgroundColor: AppTheme.authPrimaryGreen,
+                foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                elevation: 0,
               ),
               child: const Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('Availability', style: TextStyle(color: Colors.black)),
+                  Text(
+                    'Disponibilidade',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   SizedBox(width: 8),
-                  Icon(Icons.arrow_forward, size: 16, color: Colors.black),
+                  Icon(Icons.arrow_forward, size: 16, color: Colors.white),
                 ],
               ),
             ),

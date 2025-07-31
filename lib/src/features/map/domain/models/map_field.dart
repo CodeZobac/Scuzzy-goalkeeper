@@ -13,6 +13,7 @@ class MapField {
   final String? surfaceType;
   final String? dimensions;
   final String? city;
+  final String? address;
 
   MapField({
     required this.id,
@@ -27,6 +28,7 @@ class MapField {
     this.surfaceType,
     this.dimensions,
     this.city,
+    this.address,
   });
 
   Map<String, dynamic> toMap() {
@@ -43,6 +45,7 @@ class MapField {
       'surface_type': surfaceType,
       'dimensions': dimensions,
       'city': city,
+      'address': address,
     };
   }
 
@@ -53,7 +56,7 @@ class MapField {
       latitude: (map['latitude'] as num?)?.toDouble() ?? 0.0,
       longitude: (map['longitude'] as num?)?.toDouble() ?? 0.0,
       photoUrl: map['photo_url'],
-      status: map['status'] ?? 'pending',
+      status: map['status'] ?? 'approved', // Default to approved if no status column
       submittedBy: map['submitted_by'],
       createdAt: map['created_at'] != null 
           ? DateTime.parse(map['created_at']) 
@@ -62,6 +65,7 @@ class MapField {
       surfaceType: map['surface_type'],
       dimensions: map['dimensions'],
       city: map['city'],
+      address: map['address'],
     );
   }
 
@@ -120,6 +124,7 @@ class MapField {
     String? surfaceType,
     String? dimensions,
     String? city,
+    String? address,
   }) {
     return MapField(
       id: id ?? this.id,
@@ -134,6 +139,7 @@ class MapField {
       surfaceType: surfaceType ?? this.surfaceType,
       dimensions: dimensions ?? this.dimensions,
       city: city ?? this.city,
+      address: address ?? this.address,
     );
   }
 }

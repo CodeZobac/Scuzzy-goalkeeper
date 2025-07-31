@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:goalkeeper/l10n/app_localizations.dart';
+import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'src/core/config/app_config.dart';
 import 'src/core/config/config_validator.dart';
@@ -36,7 +39,6 @@ import 'src/features/user_profile/presentation/screens/complete_profile_screen.d
 import 'src/features/user_profile/presentation/screens/profile_screen.dart';
 import 'src/shared/screens/splash_screen.dart';
 import 'src/shared/screens/deep_link_test_screen.dart';
-import 'package:provider/provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -371,7 +373,17 @@ class _MyAppState extends State<MyApp> {
       title: 'Goalkeeper-Finder',
       theme: AppTheme.darkTheme,
       navigatorKey: NavigationService.navigatorKey,
-initialRoute: '/deep-link-test',
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('pt', ''),
+      ],
+      locale: const Locale('pt', ''),
+      initialRoute: '/home',
       onGenerateRoute: _generateRoute,
       routes: {
         '/': (context) => const SplashScreen(),

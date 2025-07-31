@@ -1,0 +1,128 @@
+{
+  "@@locale": "pt",
+  
+  "appTitle": "Goalkeeper-Finder",
+  "@appTitle": {
+    "description": "The title of the application"
+  },
+  
+  "login": "Entrar",
+  "@login": {
+    "description": "Login button text"
+  },
+  
+  "register": "Registar",
+  "@register": {
+    "description": "Register button text"
+  },
+  
+  "createAccount": "Criar Conta",
+  "@createAccount": {
+    "description": "Create account button text"
+  },
+  
+  "alreadyHaveAccount": "Já tenho conta",
+  "@alreadyHaveAccount": {
+    "description": "Already have account button text"
+  },
+  
+  "loading": "A carregar...",
+  "@loading": {
+    "description": "Loading text"
+  },
+  
+  "profile": "Perfil",
+  "@profile": {
+    "description": "Profile tab title"
+  },
+  
+  "map": "Mapa",
+  "@map": {
+    "description": "Map tab title"
+  },
+  
+  "announcements": "Anúncios",
+  "@announcements": {
+    "description": "Announcements tab title"
+  },
+  
+  "notifications": "Notificações",
+  "@notifications": {
+    "description": "Notifications tab title"
+  },
+  
+  "home": "Início",
+  "@home": {
+    "description": "Home tab title"
+  },
+  
+  "noImageAvailable": "Nenhuma imagem disponível",
+  "@noImageAvailable": {
+    "description": "Text shown when no image is available"
+  },
+  
+  "youAreNotLoggedIn": "Você não está logado",
+  "@youAreNotLoggedIn": {
+    "description": "Text shown in guest profile"
+  },
+  
+  "pleaseCreateAccount": "Por favor, crie uma conta",
+  "@pleaseCreateAccount": {
+    "description": "Text prompting user to create account"
+  },
+  
+  "backToHome": "Voltar ao Início",
+  "@backToHome": {
+    "description": "Back to home button text"
+  },
+  
+  "restrictedAccess": "Acesso Restrito",
+  "@restrictedAccess": {
+    "description": "Restricted access title"
+  },
+  
+  "thisFeatureRequiresAccount": "Esta funcionalidade requer uma conta.\\nCrie sua conta para continuar e aproveitar todos os recursos.",
+  "@thisFeatureRequiresAccount": {
+    "description": "Message when feature requires account"
+  },
+  
+  "joinCommunity": "Junte-se à Comunidade",
+  "@joinCommunity": {
+    "description": "Join community text"
+  },
+  
+  "unlockAllFeatures": "Desbloqueie todos os recursos!",
+  "@unlockAllFeatures": {
+    "description": "Unlock all features text"
+  },
+  
+  "participateInMatches": "Participe de Partidas",
+  "@participateInMatches": {
+    "description": "Participate in matches feature title"
+  },
+  
+  "hireGoalkeepers": "Contrate Goleiros",
+  "@hireGoalkeepers": {
+    "description": "Hire goalkeepers feature title"
+  },
+  
+  "personalizedProfile": "Perfil Personalizado",
+  "@personalizedProfile": {
+    "description": "Personalized profile feature title"
+  },
+  
+  "findAndParticipateInGames": "Encontre e participe de jogos na sua região",
+  "@findAndParticipateInGames": {
+    "description": "Find and participate in games description"
+  },
+  
+  "findProfessionalGoalkeepers": "Encontre goleiros profissionais disponíveis",
+  "@findProfessionalGoalkeepers": {
+    "description": "Find professional goalkeepers description"
+  },
+  
+  "createProfileShowSkills": "Crie seu perfil e mostre suas habilidades",
+  "@createProfileShowSkills": {
+    "description": "Create profile and show skills description"
+  }
+}

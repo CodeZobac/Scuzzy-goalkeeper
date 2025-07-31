@@ -13,6 +13,8 @@ class RealGoalkeeper {
   final List<int>? communication;
   final bool profileCompleted;
   final DateTime createdAt;
+  final double? latitude;
+  final double? longitude;
 
   RealGoalkeeper({
     required this.id,
@@ -29,6 +31,8 @@ class RealGoalkeeper {
     this.communication,
     this.profileCompleted = false,
     required this.createdAt,
+    this.latitude,
+    this.longitude,
   });
 
   factory RealGoalkeeper.fromJson(Map<String, dynamic> json) {
@@ -59,6 +63,8 @@ class RealGoalkeeper {
           : null,
       profileCompleted: json['profile_completed'] as bool? ?? false,
       createdAt: DateTime.parse(json['created_at'] as String),
+      latitude: (json['latitude'] as num?)?.toDouble(),
+      longitude: (json['longitude'] as num?)?.toDouble(),
     );
   }
 
@@ -78,6 +84,8 @@ class RealGoalkeeper {
       'communication': communication,
       'profile_completed': profileCompleted,
       'created_at': createdAt.toIso8601String(),
+      'latitude': latitude,
+      'longitude': longitude,
     };
   }
 

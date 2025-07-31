@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../controllers/announcement_controller.dart';
 import '../screens/announcement_detail_screen.dart';
+import '../../../../core/config/app_config.dart';
 
 class AnnouncementsPreviewWidget extends StatefulWidget {
   const AnnouncementsPreviewWidget({super.key});
@@ -72,7 +73,7 @@ class _AnnouncementsPreviewWidgetState
                                   '${announcement.date.toLocal().toString().split(' ')[0]} at ${announcement.time.format(context)}'),
                               const SizedBox(height: 4),
                               if (announcement.price != null)
-                                Text('\$${announcement.price}'),
+                                Text('${announcement.price!.toStringAsFixed(0)}${AppConfig.currencySymbol}'),
                             ],
                           ),
                         ),

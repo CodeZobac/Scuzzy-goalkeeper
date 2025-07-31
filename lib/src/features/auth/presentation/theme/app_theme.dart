@@ -88,6 +88,13 @@ class AppTheme {
     height: 1.3,
   );
 
+  static TextStyle get headingSmall => GoogleFonts.poppins(
+    fontSize: 18,
+    fontWeight: FontWeight.w600,
+    color: primaryText,
+    height: 1.3,
+  );
+
   static TextStyle get bodyLarge => GoogleFonts.poppins(
     fontSize: 16,
     fontWeight: FontWeight.normal,
@@ -265,16 +272,6 @@ class AppTheme {
       ),
     ),
 
-    // Card Theme
-    cardTheme: const CardTheme(
-      color: secondaryBackground,
-      elevation: 8,
-      shadowColor: Colors.black26,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(16)),
-      ),
-    ),
-
     // Icon Theme
     iconTheme: const IconThemeData(
       color: secondaryText,
@@ -282,7 +279,7 @@ class AppTheme {
     ),
 
     // Color Scheme
-    colorScheme: const ColorScheme.dark(
+    colorScheme: ColorScheme.dark(
       primary: accentColor,
       secondary: successColor,
       surface: primaryBackground,
