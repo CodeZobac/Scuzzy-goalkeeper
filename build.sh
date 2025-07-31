@@ -61,11 +61,5 @@ else
 fi
 
 # Build the Flutter web app
-echo "Cleaning previous build artifacts..."
-flutter clean
-
-echo "Resolving dependencies..."
-flutter pub get
-
 echo "Building Flutter web app..."
 flutter build web
