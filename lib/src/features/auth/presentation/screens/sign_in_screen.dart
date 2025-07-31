@@ -194,15 +194,9 @@ class _SignInScreenState extends State<SignInScreen> with ErrorHandlingMixin {
 
   @override
   Widget build(BuildContext context) {
-    return AuthErrorBoundary(
-      onAuthError: () {
-        // Clear sensitive data on auth error
-        _emailController.clear();
-        _passwordController.clear();
-      },
-      child: ResponsiveAuthLayout(
-        title: 'Bem-vindo de volta!',
-        subtitle: 'Acesse a sua conta para encontrar o guarda-redes perfeito',
+    return ResponsiveAuthLayout(
+        title: '',
+        subtitle: '',
         child: StaggeredFadeInSlideUp(
           baseDelay: const Duration(milliseconds: 400),
           children: [
@@ -281,16 +275,7 @@ class _SignInScreenState extends State<SignInScreen> with ErrorHandlingMixin {
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Text('Funcionalidade em desenvolvimento'),
-                          backgroundColor: AppTheme.authPrimaryGreen,
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      );
+                      Navigator.of(context).pushNamed('/forgot-password');
                     },
                     child: Text(
                       'Esqueceu a palavra-passe?',
@@ -435,7 +420,6 @@ class _SignInScreenState extends State<SignInScreen> with ErrorHandlingMixin {
             ),
           ],
         ),
-      ),
-    );
+      );
   }
 }

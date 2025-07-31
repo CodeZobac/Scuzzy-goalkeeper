@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/models/guest_user_context.dart';
 import '../../data/models/registration_prompt_config.dart';
@@ -13,6 +14,7 @@ class AuthStateProvider extends ChangeNotifier {
   GuestUserContext? _guestContext;
   String? _intendedDestination;
   dynamic _destinationArguments;
+  bool _isInPasswordRecoveryMode = false;
   
   AuthStateProvider({
     SupabaseClient? supabaseClient,
@@ -37,6 +39,9 @@ class AuthStateProvider extends ChangeNotifier {
   /// Get the current guest context
   GuestUserContext? get guestContext => _guestContext;
   
+  /// Whether we're currently in password recovery mode
+  bool get isInPasswordRecoveryMode => _isInPasswordRecoveryMode;
+  
   /// Initialize guest context when user enters guest mode
   void initializeGuestContext() {
     if (isGuest && _guestContext == null) {
@@ -54,8 +59,28 @@ class AuthStateProvider extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  /// Handle password recovery state - clear guest mode when in recovery
+  void handlePasswordRecoveryMode() {
+    // Set password recovery mode flag to prevent automatic sign-in redirection
+    _isInPasswordRecoveryMode = true;
+    
+    // When in password recovery mode, clear any guest state
+    // This ensures the user is in the proper state for password reset
+    if (_guestContext != null) {
+      clearGuestContext();
+    }
+    
+    notifyListeners();
+  }
   
-  /// Track content viewed by guest user
+  /// Clear password recovery mode flag
+  void clearPasswordRecoveryMode() {
+    _isInPasswordRecoveryMode = false;
+    notifyListeners();
+  }
+
+  /// Track content viewing for guest users
   void trackGuestContentView(String content) {
     if (isGuest && _guestContext != null) {
       _guestContext = _guestContext!.addViewedContent(content);
@@ -66,44 +91,95 @@ class AuthStateProvider extends ChangeNotifier {
       final contentId = parts.length > 1 ? parts.sublist(1).join('_') : content;
       
       _analyticsService.trackContentView(contentType, contentId, _guestContext!);
-      notifyListeners();
+      
+      // Defer notification to avoid calling during build
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
     }
   }
   
   /// Navigate to registration with context about the action that triggered it
   Future<void> promptForRegistration(String context) async {
     if (isGuest && _guestContext != null) {
-      // Track the action attempt that triggered the prompt
-      _guestContext = _guestContext!.trackActionAttempt(context);
-      _analyticsService.trackActionAttempt(context, _guestContext!);
+      // Simple tracking for now - just increment action attempts
+      final updatedAttempts = Map<String, int>.from(_guestContext!.actionAttempts);
+      updatedAttempts[context] = (updatedAttempts[context] ?? 0) + 1;
+      _guestContext = GuestUserContext(
+        sessionId: _guestContext!.sessionId,
+        sessionStart: _guestContext!.sessionStart,
+        viewedContent: _guestContext!.viewedContent,
+        actionAttempts: updatedAttempts,
+        lastActivity: DateTime.now(),
+      );
       
-      // Check if we should show the prompt using smart management
-      if (_promptManager.shouldShowPrompt(context, _guestContext!)) {
-        _guestContext = _guestContext!.incrementPrompts();
-        _promptManager.recordPromptShown(context);
-        
-        final promptConfig = _promptManager.getOptimalPromptConfig(context, _guestContext!);
-        _analyticsService.trackPromptShown(promptConfig, _guestContext!);
-        
-        notifyListeners();
-      }
+      _analyticsService.trackActionAttempt(context, _guestContext!);
+      notifyListeners();
     }
   }
   
-  /// Check if we should show registration prompt to guest user
-  bool shouldShowRegistrationPrompt([String? context]) {
+  /// Record user response to registration prompt
+  void recordPromptResponse(String action, bool accepted) {
+    if (_guestContext == null) return;
+    
+    // Get the prompt config for this action and track the response
+    final config = getPromptConfig(action);
+    _analyticsService.trackPromptResponse(config, accepted, _guestContext!);
+  }
+  
+  /// Get personalized prompt configuration based on guest behavior
+  RegistrationPromptConfig getPromptConfig(String action) {
+    // Return basic prompt config for now
+    return RegistrationPromptConfig(
+      context: action,
+      title: 'Criar Conta',
+      message: 'Para continuar, é necessário criar uma conta.',
+      primaryButtonText: 'Criar Conta',
+      secondaryButtonText: 'Cancelar',
+    );
+  }
+  
+  /// Check if an action should show a registration prompt
+  bool shouldShowPrompt(String action) {
     if (!isGuest || _guestContext == null) return false;
     
-    if (context != null) {
-      return _promptManager.shouldShowPrompt(context, _guestContext!);
-    }
+    // Show prompt if user hasn't attempted this action before
+    return !_guestContext!.actionAttempts.containsKey(action);
+  }
+  
+  /// Get analytics summary for the current guest session
+  Map<String, dynamic> getGuestAnalyticsSummary() {
+    if (_guestContext == null) return {};
     
-    return _guestContext!.shouldShowPrompt();
+    return {
+      'session_id': _guestContext!.sessionId,
+      'start_time': _guestContext!.sessionStart.toIso8601String(),
+      'viewed_content_count': _guestContext!.viewedContent.length,
+      'action_attempts_count': _guestContext!.actionAttempts.length,
+    };
+  }
+  
+  /// Get prompt effectiveness metrics
+  Map<String, double> getPromptEffectivenessMetrics() {
+    // Basic implementation
+    return {
+      'total_prompts': 0.0,
+      'conversion_rate': 0.0,
+    };
+  }
+  
+  /// Get content engagement metrics
+  Map<String, dynamic> getContentEngagementMetrics() {
+    if (_guestContext == null) return {};
+    
+    return {
+      'content_viewed': _guestContext!.viewedContent.length,
+      'session_duration_minutes': DateTime.now().difference(_guestContext!.sessionStart).inMinutes,
+    };
   }
   
   /// Check if a specific feature requires authentication
   bool requiresAuthentication(String feature) {
-    // All features that require auth
     const authRequiredFeatures = {
       'join_match',
       'hire_goalkeeper', 
@@ -154,56 +230,12 @@ class AuthStateProvider extends ChangeNotifier {
     return result;
   }
   
-  /// Check if there's a pending intended destination
+  /// Check if there's an intended destination stored
   bool get hasIntendedDestination => _intendedDestination != null;
   
-  /// Record prompt response (accepted or dismissed)
-  void recordPromptResponse(String context, bool accepted) {
-    if (isGuest && _guestContext != null) {
-      final promptConfig = RegistrationPromptConfig.forContext(context);
-      _analyticsService.trackPromptResponse(promptConfig, accepted, _guestContext!);
-      
-      if (!accepted) {
-        _promptManager.recordPromptDismissed(context);
-      }
-    }
-  }
+  /// Get the stored intended destination without clearing it
+  String? get intendedDestination => _intendedDestination;
   
-  /// Track successful registration from guest mode
-  void trackGuestRegistration(String registrationSource) {
-    if (_guestContext != null) {
-      _analyticsService.trackGuestRegistration(_guestContext!, registrationSource);
-    }
-  }
-  
-  /// Get optimal prompt configuration for a given context
-  RegistrationPromptConfig getOptimalPromptConfig(String context) {
-    if (isGuest && _guestContext != null) {
-      return _promptManager.getOptimalPromptConfig(context, _guestContext!);
-    }
-    return RegistrationPromptConfig.forContext(context);
-  }
-  
-  /// Get guest analytics summary
-  Map<String, dynamic> getGuestAnalyticsSummary() {
-    if (_guestContext != null) {
-      return _analyticsService.getSessionSummary(_guestContext!.sessionId);
-    }
-    return {};
-  }
-  
-  /// Get prompt effectiveness metrics
-  Map<String, double> getPromptEffectivenessMetrics() {
-    return _analyticsService.getPromptEffectivenessMetrics();
-  }
-  
-  /// Get content engagement metrics
-  Map<String, int> getContentEngagementMetrics() {
-    return _analyticsService.getContentEngagementMetrics();
-  }
-  
-  /// Get prompt statistics
-  Map<String, dynamic> getPromptStatistics() {
-    return _promptManager.getPromptStatistics();
-  }
+  /// Get the stored destination arguments without clearing them  
+  dynamic get destinationArguments => _destinationArguments;
 }

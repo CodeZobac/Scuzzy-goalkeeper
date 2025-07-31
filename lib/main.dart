@@ -2,39 +2,43 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:goalkeeper/src/core/config/app_config.dart';
 import 'package:goalkeeper/l10n/app_localizations.dart';
-import 'package:goalkeeper/src/core/config/config_validator.dart';
-import 'package:goalkeeper/src/core/config/firebase_config.dart';
-import 'package:goalkeeper/src/core/error_handling/error_monitoring_service.dart';
-import 'package:goalkeeper/src/core/logging/error_logger.dart';
-import 'package:goalkeeper/src/core/navigation/navigation_service.dart';
-import 'package:goalkeeper/src/features/announcements/data/repositories/announcement_repository_impl.dart';
-import 'package:goalkeeper/src/features/announcements/presentation/controllers/announcement_controller.dart';
-import 'package:goalkeeper/src/features/announcements/presentation/screens/announcement_detail_screen.dart';
-import 'package:goalkeeper/src/features/announcements/presentation/screens/create_announcement_screen.dart';
-import 'package:goalkeeper/src/features/auth/presentation/providers/auth_state_provider.dart';
-import 'package:goalkeeper/src/features/auth/presentation/screens/sign_in_screen.dart';
-import 'package:goalkeeper/src/features/auth/presentation/screens/sign_up_screen.dart';
-import 'package:goalkeeper/src/features/auth/presentation/theme/app_theme.dart';
-import 'package:goalkeeper/src/features/goalkeeper_search/data/repositories/goalkeeper_search_repository.dart';
-import 'package:goalkeeper/src/features/goalkeeper_search/presentation/controllers/goalkeeper_search_controller.dart';
-import 'package:goalkeeper/src/features/main/presentation/screens/main_screen.dart';
-import 'package:goalkeeper/src/features/map/presentation/providers/field_selection_provider.dart';
-import 'package:goalkeeper/src/features/notifications/data/repositories/notification_repository.dart';
-import 'package:goalkeeper/src/features/notifications/presentation/controllers/notification_badge_controller.dart';
-import 'package:goalkeeper/src/features/notifications/presentation/controllers/notification_preferences_controller.dart';
-import 'package:goalkeeper/src/features/notifications/presentation/screens/notification_preferences_screen.dart';
-import 'package:goalkeeper/src/features/notifications/presentation/screens/notifications_screen.dart';
-import 'package:goalkeeper/src/features/notifications/services/notification_service.dart';
-import 'package:goalkeeper/src/features/notifications/services/notification_service_manager.dart';
-import 'package:goalkeeper/src/features/user_profile/data/repositories/user_profile_repository.dart';
-import 'package:goalkeeper/src/features/user_profile/presentation/controllers/user_profile_controller.dart';
-import 'package:goalkeeper/src/features/user_profile/presentation/screens/complete_profile_screen.dart';
-import 'package:goalkeeper/src/features/user_profile/presentation/screens/profile_screen.dart';
-import 'package:goalkeeper/src/shared/screens/splash_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'src/core/config/app_config.dart';
+import 'src/core/config/config_validator.dart';
+import 'src/core/config/firebase_config.dart';
+import 'src/core/error_handling/error_monitoring_service.dart';
+import 'src/core/logging/error_logger.dart';
+import 'src/core/navigation/navigation_service.dart';
+import 'src/core/services/deep_link_service.dart';
+import 'src/features/announcements/data/repositories/announcement_repository_impl.dart';
+import 'src/features/announcements/presentation/controllers/announcement_controller.dart';
+import 'src/features/announcements/presentation/screens/announcement_detail_screen.dart';
+import 'src/features/announcements/presentation/screens/create_announcement_screen.dart';
+import 'src/features/auth/presentation/providers/auth_state_provider.dart';
+import 'src/features/auth/presentation/screens/forgot_password_screen.dart';
+import 'src/features/auth/presentation/screens/reset_password_screen.dart';
+import 'src/features/auth/presentation/screens/sign_in_screen.dart';
+import 'src/features/auth/presentation/screens/sign_up_screen.dart';
+import 'src/features/auth/presentation/theme/app_theme.dart';
+import 'src/features/goalkeeper_search/data/repositories/goalkeeper_search_repository.dart';
+import 'src/features/goalkeeper_search/presentation/controllers/goalkeeper_search_controller.dart';
+import 'src/features/main/presentation/screens/main_screen.dart';
+import 'src/features/map/presentation/providers/field_selection_provider.dart';
+import 'src/features/notifications/data/repositories/notification_repository.dart';
+import 'src/features/notifications/presentation/controllers/notification_badge_controller.dart';
+import 'src/features/notifications/presentation/controllers/notification_preferences_controller.dart';
+import 'src/features/notifications/presentation/screens/notification_preferences_screen.dart';
+import 'src/features/notifications/presentation/screens/notifications_screen.dart';
+import 'src/features/notifications/services/notification_service.dart';
+import 'src/features/notifications/services/notification_service_manager.dart';
+import 'src/features/user_profile/data/repositories/user_profile_repository.dart';
+import 'src/features/user_profile/presentation/controllers/user_profile_controller.dart';
+import 'src/features/user_profile/presentation/screens/complete_profile_screen.dart';
+import 'src/features/user_profile/presentation/screens/profile_screen.dart';
+import 'src/shared/screens/splash_screen.dart';
+import 'src/shared/screens/deep_link_test_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -68,12 +72,16 @@ Future<void> main() async {
     // Get the core notification service for provider
     notificationService = notificationServiceManager.notificationService;
 
+    // Initialize deep link service for password reset handling
+    await DeepLinkService.instance.initialize();
+
     ErrorLogger.logInfo(
       'Application initialized successfully',
       context: 'APP_STARTUP',
       additionalData: {
         'firebase_initialized': firebaseInitialized,
         'supabase_url': AppConfig.supabaseUrl.isNotEmpty ? 'configured' : 'missing',
+        'deep_links_enabled': true,
       },
     );
   } catch (error, stackTrace) {
@@ -138,6 +146,20 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   String _getInitialRoute() {
+    // Check if app was opened via password reset URL fragment
+    // This handles web-based password reset links
+    final currentUrl = Uri.base;
+    if (currentUrl.fragment.contains('reset-password') || 
+        currentUrl.path.contains('reset-password')) {
+      return '/reset-password';
+    }
+
+    // Check if app was opened via password reset deep link (mobile)
+    if (DeepLinkService.instance.isInitialPasswordResetLink) {
+      DeepLinkService.instance.clearInitialUri();
+      return '/reset-password';
+    }
+
     // Determine initial route based on authentication state
     final isAuthenticated = Supabase.instance.client.auth.currentSession != null;
 
@@ -155,7 +177,7 @@ class _MyAppState extends State<MyApp> {
     // Both authenticated and guest users start at home
     // MainScreen will handle guest-specific behavior and content
     // This ensures consistent initialization for all users
-    return '/home';
+    return '/deep-link-test'; // Temporarily use test screen
   }
 
   Widget _buildHomeRoute(BuildContext context) {
@@ -217,6 +239,26 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     _handleAuthStateChanges();
+    _setupDeepLinkHandling();
+  }
+
+  void _setupDeepLinkHandling() {
+    // Set up deep link callback for password reset
+    DeepLinkService.instance.setDeepLinkCallback((Uri uri) {
+      if (uri.scheme == 'io.supabase.goalkeeper' && uri.host == 'reset-password') {
+        // Navigate to reset password screen when deep link is received
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            final authProvider = context.read<AuthStateProvider>();
+            authProvider.handlePasswordRecoveryMode();
+            Navigator.of(context).pushNamedAndRemoveUntil(
+              '/reset-password',
+              (route) => false,
+            );
+          }
+        });
+      }
+    });
   }
 
   void _handleAuthStateChanges() {
@@ -237,6 +279,13 @@ class _MyAppState extends State<MyApp> {
         }
 
         if (event == AuthChangeEvent.signedIn && user != null) {
+          // Check if we're in password recovery mode - if so, don't redirect to home
+          final authProvider = context.read<AuthStateProvider>();
+          if (authProvider.isInPasswordRecoveryMode) {
+            // Don't redirect during password recovery - user should stay on reset password screen
+            return;
+          }
+          
           // Initialize enhanced notification services for user
           notificationServiceManager.onUserSignIn(user.id).catchError((error) {
             debugPrint('Failed to initialize enhanced notification services: $error');
@@ -263,6 +312,24 @@ class _MyAppState extends State<MyApp> {
             } else {
               navigator.pushReplacementNamed('/home');
             }
+          }
+        } else if (event == AuthChangeEvent.passwordRecovery) {
+          // Handle password recovery event - ensure proper state management
+          final authProvider = context.read<AuthStateProvider>();
+          authProvider.handlePasswordRecoveryMode();
+          
+          ErrorLogger.logInfo(
+            'Password recovery event detected',
+            context: 'AUTH_PASSWORD_RECOVERY',
+          );
+          
+          // Navigate to reset password screen when password recovery is detected
+          final navigator = NavigationService.navigator;
+          if (navigator != null && navigator.mounted) {
+            navigator.pushNamedAndRemoveUntil(
+              '/reset-password',
+              (route) => false,
+            );
           }
         } else if (event == AuthChangeEvent.signedOut) {
           // Cleanup enhanced notification services
@@ -316,13 +383,16 @@ class _MyAppState extends State<MyApp> {
         Locale('pt', ''),
       ],
       locale: const Locale('pt', ''),
-initialRoute: '/home',
+      initialRoute: '/home',
       onGenerateRoute: _generateRoute,
       routes: {
         '/': (context) => const SplashScreen(),
         '/test-svg': (context) => const TestSvgScreen(),
         '/signin': (context) => const SignInScreen(),
         '/signup': (context) => const SignUpScreen(),
+        '/forgot-password': (context) => const ForgotPasswordScreen(),
+        '/reset-password': (context) => const ResetPasswordScreen(),
+        '/deep-link-test': (context) => const DeepLinkTestScreen(),
         '/home': (context) => _buildHomeRoute(context),
         '/complete-profile': (context) => const CompleteProfileScreen(),
         '/profile': (context) => _buildRouteForGuests(context, '/profile', 3),
