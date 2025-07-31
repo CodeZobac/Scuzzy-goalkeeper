@@ -10,7 +10,23 @@ class AnnouncementRepositoryImpl implements AnnouncementRepository {
   @override
   Future<void> createAnnouncement(Announcement announcement) async {
     try {
-      await _supabaseClient.from('announcements').insert(announcement.toJson());
+      // Only send fields that exist in the database table
+      final data = {
+        'created_by': announcement.createdBy,
+        'title': announcement.title,
+        'description': announcement.description,
+        'date': announcement.date.toIso8601String().split('T')[0], // DATE format
+        'time': '${announcement.time.hour.toString().padLeft(2, '0')}:${announcement.time.minute.toString().padLeft(2, '0')}:00', // TIME format
+        'price': announcement.price,
+        'stadium': announcement.stadium,
+        'max_participants': announcement.maxParticipants,
+        'needs_goalkeeper': announcement.needsGoalkeeper,
+        'hired_goalkeeper_id': announcement.hiredGoalkeeperId,
+        'hired_goalkeeper_name': announcement.hiredGoalkeeperName,
+        'goalkeeper_price': announcement.goalkeeperPrice,
+      };
+      
+      await _supabaseClient.from('announcements').insert(data);
     } catch (e) {
       throw Exception('Failed to create announcement: $e');
     }
@@ -53,6 +69,31 @@ class AnnouncementRepositoryImpl implements AnnouncementRepository {
           participantCount = 0;
         }
         
+        // Get field information if stadium name matches a field
+        String? fieldId;
+        double? fieldLatitude;
+        double? fieldLongitude;
+        String? fieldPhotoUrl;
+        
+        if (announcementData['stadium'] != null) {
+          try {
+            final fieldResponse = await _supabaseClient
+                .from('fields')
+                .select('id, latitude, longitude, photo_url')
+                .eq('name', announcementData['stadium'])
+                .maybeSingle();
+            
+            if (fieldResponse != null) {
+              fieldId = fieldResponse['id'];
+              fieldLatitude = fieldResponse['latitude']?.toDouble();
+              fieldLongitude = fieldResponse['longitude']?.toDouble();
+              fieldPhotoUrl = fieldResponse['photo_url'];
+            }
+          } catch (e) {
+            // Field not found or error, keep null values
+          }
+        }
+        
         announcements.add(Announcement.fromJson({
           ...announcementData,
           'organizer_name': organizerName,
@@ -60,6 +101,10 @@ class AnnouncementRepositoryImpl implements AnnouncementRepository {
           'organizer_rating': 4.5, // Default rating
           'participant_count': participantCount,
           'distance_km': 2.0, // Default distance
+          'field_id': fieldId,
+          'field_latitude': fieldLatitude,
+          'field_longitude': fieldLongitude,
+          'field_photo_url': fieldPhotoUrl,
         }));
       }
       
@@ -180,6 +225,31 @@ class AnnouncementRepositoryImpl implements AnnouncementRepository {
         // Keep empty participants list
       }
       
+      // Get field information if stadium name matches a field
+      String? fieldId;
+      double? fieldLatitude;
+      double? fieldLongitude;
+      String? fieldPhotoUrl;
+      
+      if (response['stadium'] != null) {
+        try {
+          final fieldResponse = await _supabaseClient
+              .from('fields')
+              .select('id, latitude, longitude, photo_url')
+              .eq('name', response['stadium'])
+              .maybeSingle();
+          
+          if (fieldResponse != null) {
+            fieldId = fieldResponse['id'];
+            fieldLatitude = fieldResponse['latitude']?.toDouble();
+            fieldLongitude = fieldResponse['longitude']?.toDouble();
+            fieldPhotoUrl = fieldResponse['photo_url'];
+          }
+        } catch (e) {
+          // Field not found or error, keep null values
+        }
+      }
+      
       return Announcement.fromJson({
         ...response,
         'organizer_name': organizerName,
@@ -188,6 +258,10 @@ class AnnouncementRepositoryImpl implements AnnouncementRepository {
         'participant_count': participants.length,
         'participants': participants.map((p) => p.toJson()).toList(),
         'distance_km': 2.0, // Default distance
+        'field_id': fieldId,
+        'field_latitude': fieldLatitude,
+        'field_longitude': fieldLongitude,
+        'field_photo_url': fieldPhotoUrl,
       });
     } catch (e) {
       throw Exception('Failed to fetch announcement by ID: $e');
@@ -265,19 +339,10 @@ class AnnouncementRepositoryImpl implements AnnouncementRepository {
   @override
   Future<void> endGame(int announcementId) async {
     try {
-      final response = await _supabaseClient
-          .from('bookings')
-          .select('id')
-          .eq('announcement_id', announcementId);
-
-      final bookingIds = (response as List).map((e) => e['id'] as String).toList();
-
-      for (final bookingId in bookingIds) {
-        await _supabaseClient
-            .from('bookings')
-            .update({'status': 'completed'})
-            .eq('id', bookingId);
-      }
+      await _supabaseClient
+          .from('announcements')
+          .update({'status': 'completed'})
+          .eq('id', announcementId);
     } catch (e) {
       throw Exception('Failed to end game: $e');
     }

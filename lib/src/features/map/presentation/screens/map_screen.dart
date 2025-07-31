@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/config/app_config.dart';
 import '../controllers/map_view_model.dart';
 import '../providers/field_selection_provider.dart';
@@ -38,16 +39,35 @@ class _MapScreenContent extends StatefulWidget {
 class _MapScreenContentState extends State<_MapScreenContent> {
   late MapController _mapController;
   double _currentZoom = 12.0;
+  bool _isCredibleDataNoticeVisible = true;
 
   @override
   void initState() {
     super.initState();
     _mapController = MapController();
+    _checkCredibleDataNoticeVisibility();
+    
     // Initialize the view model after the first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final viewModel = context.read<MapViewModel>();
       viewModel.setMapController(_mapController);
       viewModel.initialize();
+    });
+  }
+
+  Future<void> _checkCredibleDataNoticeVisibility() async {
+    final prefs = await SharedPreferences.getInstance();
+    final isDismissed = prefs.getBool('credible_data_notice_dismissed') ?? false;
+    setState(() {
+      _isCredibleDataNoticeVisible = !isDismissed;
+    });
+  }
+
+  Future<void> _dismissCredibleDataNotice() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('credible_data_notice_dismissed', true);
+    setState(() {
+      _isCredibleDataNoticeVisible = false;
     });
   }
 
@@ -135,8 +155,8 @@ class _MapScreenContentState extends State<_MapScreenContent> {
           // Filter button
           Container(
             decoration: BoxDecoration(
-              color: (viewModel.selectedCity != null || viewModel.selectedAvailability != null)
-                  ? const Color(0xFF6C5CE7) 
+              color: viewModel.hasActiveFilters
+                  ? const Color(0xFF4CAF50) // Updated to match new color palette
                   : Colors.white,
               borderRadius: BorderRadius.circular(28),
               boxShadow: [
@@ -145,6 +165,12 @@ class _MapScreenContentState extends State<_MapScreenContent> {
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
+                if (viewModel.hasActiveFilters)
+                  BoxShadow(
+                    color: const Color(0xFF4CAF50).withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
               ],
             ),
             child: Material(
@@ -163,22 +189,36 @@ class _MapScreenContentState extends State<_MapScreenContent> {
                       Center(
                         child: Icon(
                           Icons.tune,
-                          color: (viewModel.selectedCity != null || viewModel.selectedAvailability != null)
+                          color: viewModel.hasActiveFilters
                               ? Colors.white 
                               : Colors.black,
                           size: 24,
                         ),
                       ),
-                      if (viewModel.selectedCity != null || viewModel.selectedAvailability != null)
+                      if (viewModel.hasActiveFilters)
                         Positioned(
-                          top: 8,
-                          right: 8,
+                          top: 6,
+                          right: 6,
                           child: Container(
-                            width: 12,
-                            height: 12,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFF00D68F),
+                            padding: const EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.9),
                               shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ],
+                            ),
+                            child: Text(
+                              viewModel.activeFilters.length.toString(),
+                              style: const TextStyle(
+                                color: Color(0xFF4CAF50),
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
                           ),
                         ),
@@ -209,11 +249,24 @@ class _MapScreenContentState extends State<_MapScreenContent> {
         availableCities: viewModel.availableCities,
         selectedCity: viewModel.selectedCity,
         selectedAvailability: viewModel.selectedAvailability,
+        availableSurfaces: viewModel.availableSurfaces,
+        selectedSurfaces: viewModel.selectedSurfaces,
+        availableSizes: viewModel.availableSizes,
+        selectedSizes: viewModel.selectedSizes,
         onCitySelected: (city) {
           viewModel.filterByCity(city);
         },
         onAvailabilitySelected: (availability) {
           viewModel.filterByAvailability(availability);
+        },
+        onSurfacesSelected: (surfaces) {
+          viewModel.updateSurfaceFilter(surfaces);
+        },
+        onSizesSelected: (sizes) {
+          viewModel.updateSizeFilter(sizes);
+        },
+        onMarkerTypesSelected: (markerTypes) {
+          viewModel.updateMarkerTypeFilter(markerTypes);
         },
         onClearFilter: () {
           viewModel.clearAllFilters();
@@ -509,108 +562,363 @@ class _MapScreenContentState extends State<_MapScreenContent> {
   }
 
   void _proceedToBooking(BuildContext context, dynamic goalkeeper) {
-    // Navigate to booking screen or show booking form
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Redirecionando para agendamento...'),
-        backgroundColor: Color(0xFF4CAF50),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-    
-    // Here you would typically navigate to the booking screen
-    // Navigator.of(context).push(
-    //   MaterialPageRoute(
-    //     builder: (context) => BookingScreen(goalkeeper: goalkeeper),
-    //   ),
-    // );
-  }
-
-  Widget _buildFilterStatusIndicator() {
-    final viewModel = context.watch<MapViewModel>();
-    
-    if (viewModel.selectedCity == null && viewModel.selectedAvailability == null) {
-      return const SizedBox.shrink();
-    }
-    
-    return Positioned(
-      top: 50,
-      left: 16,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: const Color(0xFF6C5CE7),
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
+    // Show booking confirmation dialog for now
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
+        title: Row(
           children: [
-            const Icon(
-              Icons.filter_list,
-              color: Colors.white,
-              size: 20,
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF4CAF50).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.schedule,
+                color: Color(0xFF4CAF50),
+                size: 24,
+              ),
             ),
-            const SizedBox(width: 8),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (viewModel.selectedCity != null)
-                  Text(
-                    viewModel.selectedCity!,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                if (viewModel.selectedAvailability != null)
-                  Text(
-                    viewModel.selectedAvailability!,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(width: 8),
-            GestureDetector(
-              onTap: () {
-                viewModel.clearAllFilters();
-              },
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.close,
-                  color: Colors.white,
-                  size: 16,
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text(
+                'Agendar Sessão',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF2C2C2C),
                 ),
               ),
             ),
           ],
         ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Confirma que pretende agendar uma sessão com ${goalkeeper?['name'] ?? 'este guarda-redes'}?',
+              style: const TextStyle(
+                fontSize: 14,
+                color: Color(0xFF757575),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8F9FA),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.euro,
+                        color: Color(0xFF4CAF50),
+                        size: 16,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        goalkeeper?['price'] ?? '€25/hora',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF2C2C2C),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.location_on,
+                        color: Color(0xFF757575),
+                        size: 16,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        goalkeeper?['location'] ?? 'Lisboa, Portugal',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF757575),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text(
+              'Cancelar',
+              style: TextStyle(
+                color: Color(0xFF757575),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Funcionalidade de agendamento em desenvolvimento!'),
+                  backgroundColor: Color(0xFF4CAF50),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+              // TODO: Implement actual booking navigation
+              // Navigator.of(context).push(
+              //   MaterialPageRoute(
+              //     builder: (context) => BookingScreen(goalkeeper: goalkeeper),
+              //   ),
+              // );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4CAF50),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              'Confirmar',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterStatusIndicator() {
+    final viewModel = context.watch<MapViewModel>();
+    
+    if (!viewModel.hasActiveFilters) {
+      return const SizedBox.shrink();
+    }
+    
+    final activeFilters = viewModel.activeFilters;
+    final maxVisibleFilters = 2;
+    final hasMoreFilters = activeFilters.length > maxVisibleFilters;
+    
+    return Positioned(
+      top: 50,
+      left: 16,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width - 120, // Leave space for right buttons
+        ),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF4CAF50), // Modern green from our color palette
+              Color(0xFF2E7D32),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+              spreadRadius: 2,
+            ),
+            BoxShadow(
+              color: const Color(0xFF4CAF50).withOpacity(0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => _showEnhancedFilterDialog(context),
+            borderRadius: BorderRadius.circular(24),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(
+                      Icons.tune,
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Flexible(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              '${activeFilters.length} Filtro${activeFilters.length != 1 ? 's' : ''} Ativo${activeFilters.length != 1 ? 's' : ''}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.25),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                activeFilters.length.toString(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        // Show filter chips
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 4,
+                          children: [
+                            ...activeFilters.take(maxVisibleFilters).map((filter) => 
+                              _buildFilterChip(filter)
+                            ),
+                            if (hasMoreFilters)
+                              _buildMoreFiltersChip(activeFilters.length - maxVisibleFilters),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  GestureDetector(
+                    onTap: () {
+                      viewModel.clearAllFilters();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: 14,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildFilterChip(String filter) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.25),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Text(
+        filter,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+  }
+  
+  Widget _buildMoreFiltersChip(int count) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.4),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.add,
+            color: Colors.white,
+            size: 10,
+          ),
+          const SizedBox(width: 2),
+          Text(
+            '$count',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildCredibleDataNotice() {
+    if (!_isCredibleDataNoticeVisible) {
+      return const SizedBox.shrink();
+    }
+
     return Positioned(
       bottom: 100,
       left: 16,
       right: 16,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
@@ -665,20 +973,41 @@ class _MapScreenContentState extends State<_MapScreenContent> {
                 ],
               ),
             ),
-            GestureDetector(
-              onTap: () => _showCredibleDataInfo(context),
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                GestureDetector(
+                  onTap: () => _showCredibleDataInfo(context),
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.info_outline,
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                  ),
                 ),
-                child: const Icon(
-                  Icons.info_outline,
-                  color: Colors.white,
-                  size: 16,
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: _dismissCredibleDataNotice,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
           ],
         ),

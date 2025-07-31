@@ -138,8 +138,13 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
   }
 
   void _onMapTap() {
-    // Navigate to map screen using NavigationService
-    NavigationService.pushToMap(context);
+    // Navigate to map screen using NavigationService with field coordinates
+    NavigationService.pushToMap(
+      context,
+      fieldLatitude: _announcement.fieldLatitude,
+      fieldLongitude: _announcement.fieldLongitude,
+      fieldName: _announcement.stadium,
+    );
   }
 
   Widget _buildLoadingState() {
@@ -360,7 +365,9 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                         stadiumName: _announcement.stadium!,
                         imageUrl: _announcement.stadiumImageUrl,
                         distance: _announcement.distanceKm,
-                        photoCount: 24, // Hardcoded as per design
+                        fieldLatitude: _announcement.fieldLatitude,
+                        fieldLongitude: _announcement.fieldLongitude,
+                        fieldPhotoUrl: _announcement.fieldPhotoUrl,
                         onMapTap: _onMapTap,
                       ),
                     

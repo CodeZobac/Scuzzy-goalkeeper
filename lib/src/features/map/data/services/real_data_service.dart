@@ -5,19 +5,100 @@ import '../models/real_field.dart';
 class RealDataService {
   final SupabaseClient _supabase = Supabase.instance.client;
 
+  /// Insert a test field to verify database connectivity (for debugging)
+  Future<void> insertTestField() async {
+    try {
+      print('🧪 Inserting test field...');
+      
+      final testField = {
+        'name': 'Campo de Teste',
+        'latitude': 38.7223,
+        'longitude': -9.1393,
+        'city': 'Lisboa',
+        'surface_type': 'Synthetic',
+        'dimensions': '11-a-side',
+        'description': 'Campo de teste para a aplicação.',
+        'photo_url': 'https://i.imgur.com/O38ITaA.jpeg',
+      };
+      
+      final response = await _supabase
+          .from('fields')
+          .insert(testField)
+          .select()
+          .single();
+      
+      print('✅ Test field inserted successfully: ${response['id']}');
+      
+    } catch (e) {
+      print('❌ Error inserting test field: $e');
+    }
+  }
+
+  /// Test method to fetch ALL fields (for debugging)
+  Future<void> testFieldsFetch() async {
+    try {
+      print('🧪 Testing database connection and fields table...');
+      
+      // First, try to fetch all fields regardless of status
+      final allFields = await _supabase
+          .from('fields')
+          .select('*');
+      
+      print('📊 Total fields in database: ${(allFields as List).length}');
+      
+      if (allFields.isNotEmpty) {
+        print('📋 First field sample: ${allFields.first}');
+        
+        // Check status distribution
+        final statusCounts = <String, int>{};
+        for (final field in allFields) {
+          final status = field['status'] as String? ?? 'null';
+          statusCounts[status] = (statusCounts[status] ?? 0) + 1;
+        }
+        print('📊 Status distribution: $statusCounts');
+      }
+      
+      // Now try to fetch only approved fields
+      final approvedFields = await _supabase
+          .from('fields')
+          .select('*')
+          .eq('status', 'approved');
+      
+      print('✅ Approved fields count: ${(approvedFields as List).length}');
+      
+    } catch (e) {
+      print('❌ Error in test fetch: $e');
+    }
+  }
+
   /// Fetch all approved fields from the database
   Future<List<RealField>> getApprovedFields() async {
     try {
+      print('🔍 Fetching approved fields from database...');
       final response = await _supabase
           .from('fields')
           .select('*')
-          .eq('status', 'approved')
           .order('created_at', ascending: false);
 
-      return (response as List)
-          .map((field) => RealField.fromJson(field))
+      print('📊 Raw response from database: $response');
+      print('📊 Response length: ${(response as List).length}');
+
+      if (response.isEmpty) {
+        print('⚠️ No approved fields found in database');
+        return [];
+      }
+
+      final fields = (response as List)
+          .map((field) {
+            print('🏟️ Processing field: ${field['name']} - Status: ${field['status']}');
+            return RealField.fromJson(field);
+          })
           .toList();
+
+      print('✅ Successfully loaded ${fields.length} approved fields');
+      return fields;
     } catch (e) {
+      print('❌ Error fetching fields: $e');
       throw Exception('Failed to fetch fields: $e');
     }
   }
@@ -29,6 +110,8 @@ class RealDataService {
           .from('users')
           .select('*')
           .eq('is_goalkeeper', true)
+          .not('latitude', 'is', null)
+          .not('longitude', 'is', null)
           .order('created_at', ascending: false);
 
       return (response as List)
@@ -46,15 +129,39 @@ class RealDataService {
     double radiusKm = 50.0,
   }) async {
     try {
-      // For now, get all goalkeepers and filter by city
-      // In a production app, you'd want to use PostGIS for proper geospatial queries
-      final allGoalkeepers = await getGoalkeepers();
-      
-      // Simple city-based filtering for now
-      // You could enhance this with actual distance calculation
-      return allGoalkeepers;
+      final response = await _supabase.rpc(
+        'get_goalkeepers_within_radius',
+        params: {
+          'lat': latitude,
+          'long': longitude,
+          'radius': radiusKm * 1000, // Convert km to meters
+        },
+      );
+
+      return (response as List)
+          .map((user) => RealGoalkeeper.fromJson(user))
+          .toList();
     } catch (e) {
       throw Exception('Failed to fetch nearby goalkeepers: $e');
+    }
+  }
+
+  /// Fetch all players (non-goalkeepers) from the database
+  Future<List<RealGoalkeeper>> getPlayers() async {
+    try {
+      final response = await _supabase
+          .from('users')
+          .select('*')
+          .eq('is_goalkeeper', false)
+          .not('latitude', 'is', null)
+          .not('longitude', 'is', null)
+          .order('created_at', ascending: false);
+
+      return (response as List)
+          .map((user) => RealGoalkeeper.fromJson(user))
+          .toList();
+    } catch (e) {
+      throw Exception('Failed to fetch players: $e');
     }
   }
 
@@ -81,7 +188,6 @@ class RealDataService {
       final response = await _supabase
           .from('fields')
           .select('*')
-          .eq('status', 'approved')
           .ilike('city', '%$city%')
           .order('created_at', ascending: false);
 
@@ -99,7 +205,6 @@ class RealDataService {
       final response = await _supabase
           .from('fields')
           .select('city')
-          .eq('status', 'approved')
           .not('city', 'is', null);
 
       final cities = (response as List)

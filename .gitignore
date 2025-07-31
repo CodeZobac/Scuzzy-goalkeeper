@@ -15,6 +15,7 @@ migrate_working_dir/
 *.ipr
 *.iws
 .idea/
+build.sh
 
 # The .vscode folder contains launch configuration and tasks you configure in
 # VS Code which you may wish to be included in version control, so this line
@@ -22,6 +23,7 @@ migrate_working_dir/
 #.vscode/
 
 # Flutter/Dart/Pub related
+**/build/
 **/doc/api/
 **/ios/Flutter/.last_build_id
 .dart_tool/
@@ -29,8 +31,6 @@ migrate_working_dir/
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
-/build/
-
 
 # Symbolication related
 app.*.symbols
@@ -48,3 +48,6 @@ app.*.map.json
 lib/src/core/config/app_config.dart
 
 .kiro/settings
+
+# FVM Version Cache
+.fvm/

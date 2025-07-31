@@ -163,6 +163,11 @@ class GuestAnnouncementRepository implements AnnouncementRepository {
     };
   }
 
+  @override
+  Future<void> endGame(int announcementId) async {
+    throw Exception('Ending games requires authentication. Please sign up or log in.');
+  }
+
   /// Generate mock participants for demonstration
   List<AnnouncementParticipant> _generateMockParticipants(int count) {
     final mockNames = [

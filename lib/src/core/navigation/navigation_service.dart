@@ -85,8 +85,20 @@ class NavigationService {
   }
 
   // Navigation to map screen with smooth transition
-  static Future<T?> pushToMap<T extends Object?>(BuildContext context) {
-    return Navigator.of(context).pushNamed<T>('/map');
+  static Future<T?> pushToMap<T extends Object?>(BuildContext context, {
+    double? fieldLatitude,
+    double? fieldLongitude,
+    String? fieldName,
+  }) {
+    final arguments = <String, dynamic>{};
+    if (fieldLatitude != null) arguments['fieldLatitude'] = fieldLatitude;
+    if (fieldLongitude != null) arguments['fieldLongitude'] = fieldLongitude;
+    if (fieldName != null) arguments['fieldName'] = fieldName;
+    
+    return Navigator.of(context).pushNamed<T>(
+      '/map',
+      arguments: arguments.isNotEmpty ? arguments : null,
+    );
   }
 
   // Navigation to announcements screen

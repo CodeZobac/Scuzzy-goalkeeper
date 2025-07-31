@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class StadiumImageCard extends StatelessWidget {
   final String? stadiumName;
@@ -38,30 +39,39 @@ class StadiumImageCard extends StatelessWidget {
         child: Stack(
           children: [
             // Stadium image
-            Container(
-              width: double.infinity,
-              height: double.infinity,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                image: imageUrl != null
-                    ? DecorationImage(
-                        image: NetworkImage(imageUrl!),
-                        fit: BoxFit.cover,
-                        onError: (exception, stackTrace) {
-                          // Handle image loading error
-                        },
-                      )
-                    : null,
-              ),
-              child: imageUrl == null
-                  ? const Center(
-                      child: Icon(
-                        Icons.sports_soccer,
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: CachedNetworkImage(
+                imageUrl: imageUrl ?? '',
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
+                placeholder: (context, url) => const Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                ),
+                errorWidget: (context, url, error) => const Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
                         color: Colors.white,
-                        size: 40,
+                        size: 32,
                       ),
-                    )
-                  : null,
+                      SizedBox(height: 8),
+                      Text(
+                        'Nenhuma imagem disponível',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
             
             // Overlay gradient
@@ -101,7 +111,7 @@ class StadiumImageCard extends StatelessWidget {
                       ),
                     if (distanceKm != null)
                       Text(
-                        '${distanceKm!.toStringAsFixed(1)} km away',
+                        '${distanceKm!.toStringAsFixed(1)} km de distância',
                         style: const TextStyle(
                           fontSize: 12,
                           color: Colors.white70,

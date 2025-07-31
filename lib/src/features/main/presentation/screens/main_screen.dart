@@ -6,6 +6,7 @@ import 'package:goalkeeper/src/features/announcements/presentation/screens/annou
 import 'package:goalkeeper/src/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:goalkeeper/src/features/user_profile/presentation/screens/enhanced_profile_screen.dart';
 import 'package:goalkeeper/src/features/user_profile/presentation/screens/guest_profile_screen.dart';
+import 'package:goalkeeper/l10n/app_localizations.dart';
 import 'package:goalkeeper/src/features/auth/presentation/providers/auth_state_provider.dart';
 import '../../../../shared/widgets/app_navbar.dart';
 
@@ -149,7 +150,7 @@ class _MainScreenState extends State<MainScreen> {
         children: [
           // Main content
           _getSelectedScreen(),
-          // Floating login button for guest users
+          // Floating login button for guest users - positioned to avoid map controls
           Consumer<AuthStateProvider>(
             builder: (context, authProvider, child) {
               // Hide button if user is not a guest or is on the profile tab
@@ -157,6 +158,16 @@ class _MainScreenState extends State<MainScreen> {
                 return const SizedBox.shrink();
               }
               
+              // Only show on map screen, and position it strategically
+              if (_selectedItem == NavbarItem.map) {
+                return Positioned(
+                  top: MediaQuery.of(context).padding.top + 130, // Below map controls
+                  left: 16,
+                  child: _buildGuestLoginButton(),
+                );
+              }
+              
+              // For other screens, show in top right
               return Positioned(
                 top: MediaQuery.of(context).padding.top + 16,
                 right: 16,
@@ -227,9 +238,9 @@ class _MainScreenState extends State<MainScreen> {
                   size: 20,
                 ),
                 const SizedBox(width: 8),
-                const Text(
-                  'Entrar',
-                  style: TextStyle(
+                Text(
+                  AppLocalizations.of(context)?.login ?? 'Entrar',
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 14,
                     fontWeight: FontWeight.w600,

@@ -206,8 +206,9 @@ class _MapScreenContentState extends State<_MapScreenContent> {
     }
     
     return Positioned(
-      top: 50,
+      top: 110, // Adjusted position to avoid overlap with floating buttons
       left: 16,
+      right: 16, // Allow it to take full width for better wrapping
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
@@ -221,57 +222,48 @@ class _MapScreenContentState extends State<_MapScreenContent> {
             ),
           ],
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.filter_list,
-              color: Colors.white,
-              size: 20,
-            ),
-            const SizedBox(width: 8),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (viewModel.selectedCity != null)
-                  Text(
-                    viewModel.selectedCity!,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.filter_list,
+                color: Colors.white,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Wrap(
+                spacing: 8.0, // gap between adjacent chips
+                runSpacing: 4.0, // gap between lines
+                children: viewModel.activeFilters.map((filter) => Chip(
+                  label: Text(filter),
+                  labelStyle: const TextStyle(color: Color(0xFF6C5CE7), fontSize: 12, fontWeight: FontWeight.w600),
+                  backgroundColor: Colors.white,
+                  deleteIcon: const Icon(Icons.close, size: 16, color: Color(0xFF6C5CE7)),
+                  onDeleted: () => viewModel.removeFilter(filter), // Assuming a removeFilter method exists
+                )).toList(),
+              ),
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: () {
+                  viewModel.clearAllFilters();
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                if (viewModel.selectedAvailability != null)
-                  Text(
-                    viewModel.selectedAvailability!,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  child: const Icon(
+                    Icons.close,
+                    color: Colors.white,
+                    size: 16,
                   ),
-              ],
-            ),
-            const SizedBox(width: 8),
-            GestureDetector(
-              onTap: () {
-                viewModel.clearAllFilters();
-              },
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.close,
-                  color: Colors.white,
-                  size: 16,
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:goalkeeper/src/features/notifications/data/models/models.dart';
 import 'notification_action_buttons.dart';
+import '../../../../core/config/app_config.dart';
 
 class ContractNotificationCard extends StatelessWidget {
   final AppNotification notification;
@@ -241,13 +242,13 @@ class ContractNotificationCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           const Icon(
-            Icons.attach_money,
+            Icons.euro,
             size: 16,
             color: Color(0xFF00A85A),
           ),
           const SizedBox(width: 4),
           Text(
-            'R\$ ${amount.toStringAsFixed(0)}',
+            '${amount.toStringAsFixed(0)}${AppConfig.currencySymbol}',
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
