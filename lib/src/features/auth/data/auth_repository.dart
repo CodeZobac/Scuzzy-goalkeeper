@@ -26,8 +26,8 @@ class AuthRepository {
 
   Future<void> resetPasswordForEmail(String email) async {
     // Configure the redirect URL for password reset
-    // For web development, use localhost. For mobile, use custom scheme
-    const String redirectUrl = 'http://localhost:3001/#/reset-password';
+    // Use production URL for deployed app, localhost for development
+    const String redirectUrl = 'https://goalkeeper-e4b09.web.app/#/reset-password';
     
     await _supabase.auth.resetPasswordForEmail(
       email,
