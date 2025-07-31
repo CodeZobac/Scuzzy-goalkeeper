@@ -65,6 +65,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with ErrorH
     });
 
     try {
+      // Use the updated auth repository method with proper redirect URL
       await _authRepository.resetPasswordForEmail(_emailController.text);
       setState(() {
         _emailSent = true;
@@ -270,7 +271,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with ErrorH
         ),
         SizedBox(height: ResponsiveUtils.getResponsiveSpacing(context, mobile: 16)),
         Text(
-          'Verifique a sua caixa de entrada para o link de recuperação de palavra-passe.',
+          'Verifique a sua caixa de entrada para o link de recuperação de palavra-passe. O link irá abrir a aplicação automaticamente.',
           textAlign: TextAlign.center,
           style: AppTheme.authBodyMedium.copyWith(
             fontSize: ResponsiveUtils.getResponsiveFontSize(

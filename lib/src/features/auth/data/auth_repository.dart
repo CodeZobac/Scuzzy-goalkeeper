@@ -25,7 +25,20 @@ class AuthRepository {
   }
 
   Future<void> resetPasswordForEmail(String email) async {
-    await _supabase.auth.resetPasswordForEmail(email);
+    // Configure the redirect URL for password reset
+    // For web development, use localhost. For mobile, use custom scheme
+    const String redirectUrl = 'http://localhost:3001/#/reset-password';
+    
+    await _supabase.auth.resetPasswordForEmail(
+      email,
+      redirectTo: redirectUrl,
+    );
+  }
+
+  Future<void> updatePassword(String newPassword) async {
+    await _supabase.auth.updateUser(
+      UserAttributes(password: newPassword),
+    );
   }
 
   Session? get currentUserSession => _supabase.auth.currentSession;
