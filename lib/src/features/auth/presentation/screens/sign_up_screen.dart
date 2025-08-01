@@ -587,41 +587,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
 
                 // Link para Login
-                Center(
-                  child: RichText(
-                    text: TextSpan(
-                      text: 'Já tem uma conta? ',
-                      style: AppTheme.authBodyMedium.copyWith(
-                        fontSize: ResponsiveUtils.getResponsiveFontSize(
-                          context,
-                          mobile: 14,
-                          tablet: 15,
-                          desktop: 16,
-                        ),
-                      ),
-                      children: [
-                        WidgetSpan(
-                          child: GestureDetector(
-                            onTap: _navigateToSignIn,
-                            child: Text(
-                              'Entre',
-                              style: AppTheme.authLinkText.copyWith(
-                                fontWeight: FontWeight.w700,
-                                decoration: TextDecoration.underline,
-                                decorationColor: AppTheme.authPrimaryGreen,
-                                fontSize: ResponsiveUtils.getResponsiveFontSize(
-                                  context,
-                                  mobile: 14,
-                                  tablet: 15,
-                                  desktop: 16,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                ModernButton(
+                  text: 'Voltar ao Login',
+                  onPressed: _navigateToSignIn,
+                  width: double.infinity,
+                  height: ResponsiveUtils.getResponsiveValue(
+                    context,
+                    mobile: 54.0,
+                    tablet: 56.0,
+                    desktop: 58.0,
                   ),
+                  backgroundColor: AppTheme.authSecondaryGreen,
+                  textColor: Colors.white,
                 ),
 
                 SizedBox(
