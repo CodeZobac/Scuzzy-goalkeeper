@@ -39,6 +39,7 @@ import 'src/features/user_profile/presentation/screens/complete_profile_screen.d
 import 'src/features/user_profile/presentation/screens/profile_screen.dart';
 import 'src/shared/screens/splash_screen.dart';
 import 'src/shared/screens/deep_link_test_screen.dart';
+import 'src/core/state/password_reset_state.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -145,18 +146,71 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  
   String _getInitialRoute() {
     // Check if app was opened via password reset URL fragment
     // This handles web-based password reset links
     final currentUrl = Uri.base;
-    if (currentUrl.fragment.contains('reset-password') || 
-        currentUrl.path.contains('reset-password')) {
+    
+    // Debug: Print URL information
+    print('=== PASSWORD RESET DEBUG ===');
+    print('Full URL: ${currentUrl.toString()}');
+    print('Fragment: ${currentUrl.fragment}');
+    print('Query Parameters: ${currentUrl.queryParameters}');
+    print('Path: ${currentUrl.path}');
+    
+    // Check for password reset in URL fragment (common pattern: #/reset-password)
+    final hasResetPasswordFragment = currentUrl.fragment.contains('reset-password') || 
+                                   currentUrl.path.contains('reset-password');
+    
+    // Check for Supabase auth tokens (code parameter or access_token in fragment)
+    final hasSupabaseAuthCode = currentUrl.queryParameters.containsKey('code') ||
+                              currentUrl.fragment.contains('access_token=') ||
+                              currentUrl.fragment.contains('refresh_token=') ||
+                              currentUrl.fragment.contains('token_type=');
+    
+    print('Has reset-password fragment: $hasResetPasswordFragment');
+    print('Has Supabase auth code: $hasSupabaseAuthCode');
+    print('=== END DEBUG ===');
+    
+    // If we have reset-password fragment, always treat as password reset initially
+    if (hasResetPasswordFragment) {
+      // Set GLOBAL flag to prevent any redirects
+      PasswordResetState.setInProgress();
+      
+      // Set password recovery mode IMMEDIATELY when app is opened via reset link
+      // Don't wait for post frame callback
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          final authProvider = context.read<AuthStateProvider>();
+          authProvider.handlePasswordRecoveryMode();
+        }
+      });
+      
+      ErrorLogger.logInfo(
+        'Password reset URL detected - recovery mode set IMMEDIATELY',
+        context: 'PASSWORD_RESET_URL_DETECTED',
+        additionalData: {
+          'fragment': currentUrl.fragment,
+          'query_params': currentUrl.queryParameters.toString(),
+          'full_url': currentUrl.toString(),
+          'has_auth_tokens': hasSupabaseAuthCode,
+        },
+      );
+      
       return '/reset-password';
     }
 
     // Check if app was opened via password reset deep link (mobile)
     if (DeepLinkService.instance.isInitialPasswordResetLink) {
       DeepLinkService.instance.clearInitialUri();
+      // Set password recovery mode for mobile deep links
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          final authProvider = context.read<AuthStateProvider>();
+          authProvider.handlePasswordRecoveryMode();
+        }
+      });
       return '/reset-password';
     }
 
@@ -177,7 +231,7 @@ class _MyAppState extends State<MyApp> {
     // Both authenticated and guest users start at home
     // MainScreen will handle guest-specific behavior and content
     // This ensures consistent initialization for all users
-    return '/deep-link-test'; // Temporarily use test screen
+    return '/home';
   }
 
   Widget _buildHomeRoute(BuildContext context) {
@@ -273,17 +327,89 @@ class _MyAppState extends State<MyApp> {
         final event = data.event;
         final user = data.session?.user;
 
+        // Log all auth state changes for debugging
+        ErrorLogger.logInfo(
+          'Auth state change detected',
+          context: 'AUTH_STATE_CHANGE',
+          additionalData: {
+            'event': event.toString(),
+            'has_user': user != null,
+            'has_session': data.session != null,
+          },
+        );
+
         // The splash screen handles the initial navigation. This listener handles auth changes while the app is running.
         if (event == AuthChangeEvent.initialSession) {
           return;
         }
 
         if (event == AuthChangeEvent.signedIn && user != null) {
-          // Check if we're in password recovery mode - if so, don't redirect to home
           final authProvider = context.read<AuthStateProvider>();
-          if (authProvider.isInPasswordRecoveryMode) {
-            // Don't redirect during password recovery - user should stay on reset password screen
+          
+          // FIRST: Check GLOBAL password reset flag (ULTIMATE BLOCKER)
+          if (PasswordResetState.isInProgress) {
+            print('🚫 GLOBAL BLOCK: Password reset in progress - BLOCKING ALL NAVIGATION');
+            ErrorLogger.logInfo(
+              '🚫 GLOBAL BLOCKED: Sign-in event during password reset - staying on reset screen',
+              context: 'AUTH_GLOBAL_PASSWORD_RESET_BLOCKED',
+            );
             return;
+          }
+          
+          // SECOND: Check if we're already in password recovery mode
+          if (authProvider.isInPasswordRecoveryMode) {
+            ErrorLogger.logInfo(
+              '🚫 BLOCKED: Sign-in event during password recovery mode - staying on reset screen',
+              context: 'AUTH_PASSWORD_RECOVERY_MODE_SIGNIN_BLOCKED',
+            );
+            return;
+          }
+          
+          // THIRD: Check if the current URL indicates a password reset flow
+          final currentUrl = Uri.base;
+          final hasResetPasswordFragment = currentUrl.fragment.contains('reset-password');
+          final hasSupabaseAuthCode = currentUrl.queryParameters.containsKey('code') ||
+                                    currentUrl.fragment.contains('access_token=') ||
+                                    currentUrl.fragment.contains('refresh_token=');
+          
+          print('🔍 SIGNIN EVENT DEBUG:');
+          print('  Recovery mode: ${authProvider.isInPasswordRecoveryMode}');
+          print('  Has reset fragment: $hasResetPasswordFragment');
+          print('  Has auth code: $hasSupabaseAuthCode');
+          print('  URL: ${currentUrl.toString()}');
+          
+          // If URL has both reset-password and auth tokens, this is definitely a password reset
+          if (hasResetPasswordFragment && hasSupabaseAuthCode) {
+            authProvider.handlePasswordRecoveryMode();
+            ErrorLogger.logInfo(
+              '🚫 BLOCKED: Sign-in from password reset URL detected - blocking redirect',
+              context: 'AUTH_PASSWORD_RESET_SIGNIN_BLOCKED',
+              additionalData: {
+                'url': currentUrl.toString(),
+                'fragment': currentUrl.fragment,
+                'query_params': currentUrl.queryParameters.toString(),
+              },
+            );
+            
+            // DON'T navigate anywhere - let the reset password screen handle the success
+            return;
+          }
+          
+          // FOURTH: Check if we're currently on the reset password screen
+          final navigator = NavigationService.navigator;
+          if (navigator != null && navigator.mounted) {
+            final currentContext = navigator.context;
+            final currentRoute = ModalRoute.of(currentContext)?.settings.name;
+            if (currentRoute == '/reset-password') {
+              // If we're on reset screen, assume it's password reset
+              authProvider.handlePasswordRecoveryMode();
+              ErrorLogger.logInfo(
+                'Sign-in on reset password screen - setting recovery mode',
+                context: 'AUTH_RESET_SCREEN_SIGNIN',
+              );
+              // DON'T navigate anywhere - let the reset password screen handle the success
+              return;
+            }
           }
           
           // Initialize enhanced notification services for user
@@ -305,12 +431,12 @@ class _MyAppState extends State<MyApp> {
           await userProfileController.getUserProfile();
           final profile = userProfileController.userProfile;
           // Use the global navigator key to avoid context issues
-          final navigator = NavigationService.navigator;
-          if (navigator != null && navigator.mounted) {
+          final profileNavigator = NavigationService.navigator;
+          if (profileNavigator != null && profileNavigator.mounted) {
             if (profile != null && !profile.profileCompleted) {
-              navigator.pushReplacementNamed('/complete-profile');
+              profileNavigator.pushReplacementNamed('/complete-profile');
             } else {
-              navigator.pushReplacementNamed('/home');
+              profileNavigator.pushReplacementNamed('/home');
             }
           }
         } else if (event == AuthChangeEvent.passwordRecovery) {
@@ -331,6 +457,9 @@ class _MyAppState extends State<MyApp> {
               (route) => false,
             );
           }
+          
+          // IMPORTANT: Return early to prevent automatic sign-in during password recovery
+          return;
         } else if (event == AuthChangeEvent.signedOut) {
           // Cleanup enhanced notification services
           notificationServiceManager.onUserSignOut().catchError((error) {
@@ -383,7 +512,7 @@ class _MyAppState extends State<MyApp> {
         Locale('pt', ''),
       ],
       locale: const Locale('pt', ''),
-      initialRoute: '/home',
+      initialRoute: _getInitialRoute(),
       onGenerateRoute: _generateRoute,
       routes: {
         '/': (context) => const SplashScreen(),

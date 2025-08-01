@@ -8,6 +8,7 @@ import 'package:goalkeeper/src/features/user_profile/presentation/screens/enhanc
 import 'package:goalkeeper/src/features/user_profile/presentation/screens/guest_profile_screen.dart';
 import 'package:goalkeeper/l10n/app_localizations.dart';
 import 'package:goalkeeper/src/features/auth/presentation/providers/auth_state_provider.dart';
+import 'package:goalkeeper/src/features/auth/presentation/widgets/password_reset_notification_popover.dart';
 import '../../../../shared/widgets/app_navbar.dart';
 
 class MainScreen extends StatefulWidget {
@@ -21,6 +22,8 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   NavbarItem _selectedItem = NavbarItem.home;
+  bool _showPasswordResetPopover = false;
+  bool _passwordResetPopoverDismissed = false;
 
   @override
   void initState() {
@@ -40,6 +43,63 @@ class _MainScreenState extends State<MainScreen> {
           _selectedItem = _getNavbarItemFromIndex(tabIndex);
         });
       }
+      
+      // Check for password reset code in URL
+      _checkForPasswordResetCode();
+    });
+  }
+
+  /// Check if URL contains password reset code and show popover
+  void _checkForPasswordResetCode() {
+    final currentUrl = Uri.base;
+    final authProvider = context.read<AuthStateProvider>();
+    
+    // Check for Supabase auth code (password reset verification)
+    final hasSupabaseAuthCode = currentUrl.queryParameters.containsKey('code') ||
+                              currentUrl.fragment.contains('access_token=') ||
+                              currentUrl.fragment.contains('refresh_token=');
+    
+    // Check if this looks like a password reset flow
+    final hasResetContext = currentUrl.fragment.contains('type=recovery') ||
+                           currentUrl.queryParameters.containsKey('type') && 
+                           currentUrl.queryParameters['type'] == 'recovery';
+    
+    // Don't show popover if we're in password recovery mode (already handled)
+    final isInRecoveryMode = authProvider.isInPasswordRecoveryMode;
+    
+    print('🔍 PASSWORD RESET CHECK:');
+    print('  Has auth code: $hasSupabaseAuthCode');
+    print('  Has reset context: $hasResetContext');
+    print('  Is in recovery mode: $isInRecoveryMode');
+    print('  Popover dismissed: $_passwordResetPopoverDismissed');
+    print('  URL: ${currentUrl.toString()}');
+    
+    // Show popover if we have auth code, not in recovery mode, and it hasn't been dismissed
+    if (hasSupabaseAuthCode && !isInRecoveryMode && !_passwordResetPopoverDismissed) {
+      setState(() {
+        _showPasswordResetPopover = true;
+      });
+      
+      print('✅ Showing password reset popover');
+    }
+  }
+
+  /// Navigate to password reset screen with current URL context
+  void _navigateToPasswordReset() {
+    setState(() {
+      _showPasswordResetPopover = false;
+      _passwordResetPopoverDismissed = true;
+    });
+    
+    // Navigate to reset password screen
+    Navigator.of(context).pushNamed('/reset-password');
+  }
+
+  /// Dismiss the password reset popover
+  void _dismissPasswordResetPopover() {
+    setState(() {
+      _showPasswordResetPopover = false;
+      _passwordResetPopoverDismissed = true;
     });
   }
 
@@ -150,6 +210,14 @@ class _MainScreenState extends State<MainScreen> {
         children: [
           // Main content
           _getSelectedScreen(),
+          
+          // Password reset notification popover
+          if (_showPasswordResetPopover)
+            PasswordResetNotificationPopover(
+              onResetPassword: _navigateToPasswordReset,
+              onDismiss: _dismissPasswordResetPopover,
+            ),
+          
           // Floating login button for guest users - positioned to avoid map controls
           Consumer<AuthStateProvider>(
             builder: (context, authProvider, child) {
@@ -175,6 +243,7 @@ class _MainScreenState extends State<MainScreen> {
               );
             },
           ),
+          
           // Floating transparent navbar
           Positioned(
             bottom: 0,
