@@ -347,4 +347,71 @@ class AnnouncementRepositoryImpl implements AnnouncementRepository {
       throw Exception('Failed to end game: $e');
     }
   }
+
+  @override
+  Future<void> markAnnouncementAsViewed(int announcementId, String userId) async {
+    try {
+      await _supabaseClient.from('announcement_views').upsert({
+        'user_id': userId,
+        'announcement_id': announcementId,
+        'viewed_at': DateTime.now().toIso8601String(),
+      });
+    } catch (e) {
+      throw Exception('Failed to mark announcement as viewed: $e');
+    }
+  }
+
+  @override
+  Future<bool> isAnnouncementViewed(int announcementId, String userId) async {
+    try {
+      final response = await _supabaseClient
+          .from('announcement_views')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('announcement_id', announcementId)
+          .maybeSingle();
+      
+      return response != null;
+    } catch (e) {
+      throw Exception('Failed to check if announcement is viewed: $e');
+    }
+  }
+
+  @override
+  Future<List<int>> getViewedAnnouncementIds(String userId) async {
+    try {
+      final response = await _supabaseClient
+          .from('announcement_views')
+          .select('announcement_id')
+          .eq('user_id', userId);
+      
+      return (response as List).map((e) => e['announcement_id'] as int).toList();
+    } catch (e) {
+      throw Exception('Failed to get viewed announcement IDs: $e');
+    }
+  }
+
+  @override
+  Future<int> getUnviewedAnnouncementsCount(String userId) async {
+    try {
+      // Get all announcement IDs
+      final allAnnouncementsResponse = await _supabaseClient
+          .from('announcements')
+          .select('id')
+          .order('created_at', ascending: false);
+      
+      final allAnnouncementIds = (allAnnouncementsResponse as List)
+          .map((e) => e['id'] as int)
+          .toSet();
+      
+      // Get viewed announcement IDs
+      final viewedIds = await getViewedAnnouncementIds(userId);
+      final viewedIdsSet = viewedIds.toSet();
+      
+      // Calculate unviewed count
+      return allAnnouncementIds.difference(viewedIdsSet).length;
+    } catch (e) {
+      throw Exception('Failed to get unviewed announcements count: $e');
+    }
+  }
 }

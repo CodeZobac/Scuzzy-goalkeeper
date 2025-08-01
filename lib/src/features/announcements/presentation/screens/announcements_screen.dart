@@ -161,49 +161,97 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
   }
 
   Widget _buildLoadingState() {
-    return const LoadingStateWidget(
-      message: 'A carregar anúncios...',
+    return RefreshIndicator(
+      onRefresh: () => Provider.of<AnnouncementController>(context, listen: false).refreshAnnouncements(),
+      color: const Color(0xFF4CAF50),
+      backgroundColor: Colors.white,
+      strokeWidth: 2.5,
+      displacement: 40,
+      child: const SingleChildScrollView(
+        physics: AlwaysScrollableScrollPhysics(),
+        child: SizedBox(
+          height: 400,
+          child: LoadingStateWidget(
+            message: 'A carregar anúncios...',
+          ),
+        ),
+      ),
     );
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(
-            Icons.campaign_outlined,
-            size: 80,
-            color: Color(0xFF757575),
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Ainda não há anúncios',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF2C2C2C),
+    return RefreshIndicator(
+      onRefresh: () => Provider.of<AnnouncementController>(context, listen: false).refreshAnnouncements(),
+      color: const Color(0xFF4CAF50),
+      backgroundColor: Colors.white,
+      strokeWidth: 2.5,
+      displacement: 40,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: SizedBox(
+          height: 400,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.campaign_outlined,
+                  size: 80,
+                  color: Color(0xFF757575),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Ainda não há anúncios',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF2C2C2C),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Seja o primeiro a criar um anúncio',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFF757575),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  'Deslize para baixo para atualizar',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF9E9E9E),
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 8),
-          const Text(
-            'Seja o primeiro a criar um anúncio',
-            style: TextStyle(
-              fontSize: 14,
-              color: Color(0xFF757575),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildErrorState(AnnouncementController controller) {
-    return ErrorStateWidget(
-      errorMessage: controller.errorMessage,
-      onRetry: () => controller.retry(),
-      isRetrying: controller.isLoading,
-      onDismiss: () => controller.clearError(),
+    return RefreshIndicator(
+      onRefresh: () => controller.refreshAnnouncements(),
+      color: const Color(0xFF4CAF50),
+      backgroundColor: Colors.white,
+      strokeWidth: 2.5,
+      displacement: 40,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: SizedBox(
+          height: 400,
+          child: ErrorStateWidget(
+            errorMessage: controller.errorMessage,
+            onRetry: () => controller.retry(),
+            isRetrying: controller.isLoading,
+            onDismiss: () => controller.clearError(),
+          ),
+        ),
+      ),
     );
   }
 
@@ -213,6 +261,9 @@ class _AnnouncementsScreenState extends State<AnnouncementsScreen> {
     return RefreshIndicator(
       onRefresh: () => controller.refreshAnnouncements(),
       color: const Color(0xFF4CAF50),
+      backgroundColor: Colors.white,
+      strokeWidth: 2.5,
+      displacement: 40,
       child: ListView.builder(
         padding: const EdgeInsets.symmetric(vertical: 8),
         itemCount: filteredAnnouncements.length,

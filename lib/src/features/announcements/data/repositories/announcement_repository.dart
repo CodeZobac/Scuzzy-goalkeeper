@@ -14,4 +14,10 @@ abstract class AnnouncementRepository {
   Future<Map<String, dynamic>> getOrganizerInfo(String userId);
   Future<Map<String, dynamic>> getStadiumInfo(String stadiumName);
   Future<void> endGame(int announcementId);
+  
+  // Announcement views tracking
+  Future<void> markAnnouncementAsViewed(int announcementId, String userId);
+  Future<bool> isAnnouncementViewed(int announcementId, String userId);
+  Future<List<int>> getViewedAnnouncementIds(String userId);
+  Future<int> getUnviewedAnnouncementsCount(String userId);
 }

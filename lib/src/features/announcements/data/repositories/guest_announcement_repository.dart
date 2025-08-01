@@ -168,6 +168,30 @@ class GuestAnnouncementRepository implements AnnouncementRepository {
     throw Exception('Ending games requires authentication. Please sign up or log in.');
   }
 
+  @override
+  Future<void> markAnnouncementAsViewed(int announcementId, String userId) async {
+    // For guest users, we don't track views
+    return;
+  }
+
+  @override
+  Future<bool> isAnnouncementViewed(int announcementId, String userId) async {
+    // Guest users don't have view tracking
+    return true;
+  }
+
+  @override
+  Future<List<int>> getViewedAnnouncementIds(String userId) async {
+    // Guest users don't have view tracking
+    return [];
+  }
+
+  @override
+  Future<int> getUnviewedAnnouncementsCount(String userId) async {
+    // Guest users don't have view tracking, so no unviewed count
+    return 0;
+  }
+
   /// Generate mock participants for demonstration
   List<AnnouncementParticipant> _generateMockParticipants(int count) {
     final mockNames = [

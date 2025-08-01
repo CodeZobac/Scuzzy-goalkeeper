@@ -7,11 +7,13 @@ import '../../../../shared/widgets/location_aware_distance.dart';
 class AnnouncementCard extends StatelessWidget {
   final Announcement announcement;
   final VoidCallback onTap;
+  final bool isViewed;
 
   const AnnouncementCard({
     super.key,
     required this.announcement,
     required this.onTap,
+    this.isViewed = true,
   });
 
   @override
@@ -21,9 +23,15 @@ class AnnouncementCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
+        border: isViewed ? null : Border.all(
+          color: const Color(0xFF0BA95F).withOpacity(0.3),
+          width: 2,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: isViewed 
+                ? Colors.black.withOpacity(0.1)
+                : const Color(0xFF0BA95F).withOpacity(0.15),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),

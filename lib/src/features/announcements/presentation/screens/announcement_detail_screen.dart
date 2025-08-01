@@ -36,6 +36,22 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
     _announcement = widget.announcement;
     _checkJoinStatus();
     _loadAnnouncementDetails();
+    _markAnnouncementAsViewed();
+  }
+
+  Future<void> _markAnnouncementAsViewed() async {
+    final authProvider = Provider.of<AuthStateProvider>(context, listen: false);
+    if (authProvider.isGuest) return;
+
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) return;
+
+    try {
+      final controller = Provider.of<AnnouncementController>(context, listen: false);
+      await controller.markAnnouncementAsViewed(_announcement.id, userId);
+    } catch (e) {
+      // Silently handle error - view tracking is not critical
+    }
   }
 
   Future<void> _loadAnnouncementDetails() async {

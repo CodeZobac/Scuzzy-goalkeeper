@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../data/models/announcement.dart';
 import '../../data/repositories/announcement_repository.dart';
@@ -226,6 +227,50 @@ class AnnouncementController extends ChangeNotifier {
       await _announcementRepository.endGame(announcementId);
     } catch (e) {
       rethrow;
+    }
+  }
+
+  /// Mark an announcement as viewed by the user
+  Future<void> markAnnouncementAsViewed(int announcementId, String userId) async {
+    try {
+      await _announcementRepository.markAnnouncementAsViewed(announcementId, userId);
+      notifyListeners();
+    } catch (e) {
+      // Don't throw error for view tracking - it's not critical
+      debugPrint('Failed to mark announcement as viewed: $e');
+    }
+  }
+
+  /// Check if an announcement has been viewed by the user
+  Future<bool> isAnnouncementViewed(int announcementId, String userId) async {
+    try {
+      return await _announcementRepository.isAnnouncementViewed(announcementId, userId);
+    } catch (e) {
+      // Return false if we can't check - assume not viewed
+      debugPrint('Failed to check if announcement is viewed: $e');
+      return false;
+    }
+  }
+
+  /// Get the count of unviewed announcements for the user
+  Future<int> getUnviewedAnnouncementsCount(String userId) async {
+    try {
+      return await _announcementRepository.getUnviewedAnnouncementsCount(userId);
+    } catch (e) {
+      // Return 0 if we can't get count
+      debugPrint('Failed to get unviewed announcements count: $e');
+      return 0;
+    }
+  }
+
+  /// Get list of viewed announcement IDs for the user
+  Future<List<int>> getViewedAnnouncementIds(String userId) async {
+    try {
+      return await _announcementRepository.getViewedAnnouncementIds(userId);
+    } catch (e) {
+      // Return empty list if we can't get viewed IDs
+      debugPrint('Failed to get viewed announcement IDs: $e');
+      return [];
     }
   }
 }
