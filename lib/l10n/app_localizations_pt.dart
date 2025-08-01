@@ -70,7 +70,7 @@ class AppLocalizationsPt extends AppLocalizations {
   String get participateInMatches => 'Participe em Partidas';
 
   @override
-  String get hireGoalkeepers => 'Contrate Goleiros';
+  String get hireGoalkeepers => 'Contratar Guarda-redes';
 
   @override
   String get personalizedProfile => 'Perfil Personalizado';
@@ -81,7 +81,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get findProfessionalGoalkeepers =>
-      'Encontre goleiros profissionais disponíveis';
+      'Encontre guarda-redes profissionais disponíveis';
 
   @override
   String get createProfileShowSkills =>

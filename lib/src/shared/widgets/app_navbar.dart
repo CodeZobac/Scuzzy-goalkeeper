@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../features/auth/presentation/theme/app_theme.dart';
 import '../../features/auth/presentation/providers/auth_state_provider.dart';
 import '../../features/announcements/presentation/controllers/announcement_controller.dart';
@@ -87,14 +88,13 @@ class _AppNavbarState extends State<AppNavbar>
                   children: [
                     Consumer2<AnnouncementController, AuthStateProvider>(
                       builder: (context, announcementController, authProvider, child) {
-                        return _NavbarIcon(
-                          icon: Icons.campaign,
+                        return _AnnouncementNavbarIcon(
                           isSelected: widget.selectedItem == NavbarItem.home,
                           onTap: () => _onItemTap(NavbarItem.home),
-                          badgeCount: announcementController.announcements.length,
                           currentScreen: widget.selectedItem,
                           isGuestMode: authProvider.isGuest,
-                          requiresAuth: false,
+                          announcementController: announcementController,
+                          userId: authProvider.isGuest ? null : Supabase.instance.client.auth.currentUser?.id,
                         );
                       },
                     ),
@@ -286,6 +286,150 @@ class _NavbarIcon extends StatelessWidget {
                   ),
                   child: Text(
                     badgeCount! > 99 ? '99+' : badgeCount.toString(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AnnouncementNavbarIcon extends StatefulWidget {
+  final bool isSelected;
+  final VoidCallback onTap;
+  final NavbarItem? currentScreen;
+  final bool isGuestMode;
+  final AnnouncementController announcementController;
+  final String? userId;
+
+  const _AnnouncementNavbarIcon({
+    required this.isSelected,
+    required this.onTap,
+    this.currentScreen,
+    this.isGuestMode = false,
+    required this.announcementController,
+    this.userId,
+  });
+
+  @override
+  State<_AnnouncementNavbarIcon> createState() => _AnnouncementNavbarIconState();
+}
+
+class _AnnouncementNavbarIconState extends State<_AnnouncementNavbarIcon> {
+  int _unviewedCount = 0;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUnviewedCount();
+  }
+
+  @override
+  void didUpdateWidget(_AnnouncementNavbarIcon oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Reload count if user changed or announcements changed
+    if (oldWidget.userId != widget.userId || 
+        oldWidget.announcementController.announcements.length != widget.announcementController.announcements.length) {
+      _loadUnviewedCount();
+    }
+  }
+
+  Future<void> _loadUnviewedCount() async {
+    if (widget.isGuestMode || widget.userId == null) {
+      setState(() {
+        _unviewedCount = 0;
+      });
+      return;
+    }
+
+    if (_isLoading) return;
+    
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final count = await widget.announcementController.getUnviewedAnnouncementsCount(widget.userId!);
+      if (mounted) {
+        setState(() {
+          _unviewedCount = count;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _unviewedCount = 0;
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Color _getIconColor(BuildContext context) {
+    // For map screen, always use white icons (dark background)
+    if (widget.currentScreen == NavbarItem.map) {
+      return Colors.white;
+    }
+    
+    // For other screens, use dark icons on light backgrounds
+    return widget.isSelected ? const Color(0xFF0BA95F) : const Color(0xFF757575);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: widget.onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        decoration: widget.isSelected ? BoxDecoration(
+          color: const Color(0xFF0BA95F).withOpacity(0.2),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: const Color(0xFF0BA95F).withOpacity(0.4),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF0BA95F).withOpacity(0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ) : null,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Icon(
+              Icons.campaign,
+              size: 28,
+              color: _getIconColor(context),
+            ),
+            if (_unviewedCount > 0 && !widget.isGuestMode)
+              Positioned(
+                right: -6,
+                top: -6,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: AppTheme.errorColor,
+                    shape: BoxShape.circle,
+                  ),
+                  constraints: const BoxConstraints(
+                    minWidth: 16,
+                    minHeight: 16,
+                  ),
+                  child: Text(
+                    _unviewedCount > 99 ? '99+' : _unviewedCount.toString(),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 10,

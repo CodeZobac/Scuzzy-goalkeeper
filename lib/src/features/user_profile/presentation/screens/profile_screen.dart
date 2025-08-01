@@ -250,22 +250,28 @@ class _ProfileScreenState extends State<ProfileScreen>
       backgroundColor: Colors.transparent,
       elevation: 0,
       actions: [
-        IconButton(
-          onPressed: () {
-            Navigator.of(context).pushNamed('/notifications');
-          },
-          icon: const Icon(
-            Icons.notifications_outlined,
-            color: AppTheme.primaryText,
+        Container(
+          margin: const EdgeInsets.only(right: 8),
+          decoration: BoxDecoration(
+            gradient: AppTheme.authPrimaryGradient,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.authPrimaryGreen.withOpacity(0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-        ),
-        IconButton(
-          onPressed: () {
-            _showSettingsMenu(context);
-          },
-          icon: const Icon(
-            Icons.settings_outlined,
-            color: AppTheme.primaryText,
+          child: IconButton(
+            onPressed: () {
+              _showSettingsMenu(context);
+            },
+            icon: const Icon(
+              Icons.settings_outlined,
+              color: Colors.white,
+              size: 20,
+            ),
           ),
         ),
       ],
@@ -785,10 +791,11 @@ class _ProfileScreenState extends State<ProfileScreen>
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: AppTheme.secondaryBackground,
-          borderRadius: const BorderRadius.only(
+        decoration: const BoxDecoration(
+          color: AppTheme.authCardBackground,
+          borderRadius: BorderRadius.only(
             topLeft: Radius.circular(20),
             topRight: Radius.circular(20),
           ),
@@ -801,7 +808,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               height: 4,
               margin: const EdgeInsets.only(top: 12),
               decoration: BoxDecoration(
-                color: AppTheme.secondaryText.withOpacity(0.3),
+                color: AppTheme.authTextSecondary.withOpacity(0.3),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -811,7 +818,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                 children: [
                   Text(
                     'Configurações',
-                    style: AppTheme.headingMedium,
+                    style: AppTheme.authHeadingMedium.copyWith(
+                      color: AppTheme.authTextPrimary,
+                    ),
                   ),
                   const SizedBox(height: 20),
                   _buildSettingsOption(
@@ -859,34 +868,65 @@ class _ProfileScreenState extends State<ProfileScreen>
     required VoidCallback onTap,
     bool isDestructive = false,
   }) {
-    return ListTile(
-      leading: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: isDestructive
-              ? AppTheme.errorColor.withOpacity(0.1)
-              : AppTheme.accentColor.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Icon(
-          icon,
-          color: isDestructive ? AppTheme.errorColor : AppTheme.accentColor,
-          size: 20,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: AppTheme.authBackground,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppTheme.authInputBorder.withOpacity(0.5),
         ),
       ),
-      title: Text(
-        title,
-        style: AppTheme.bodyLarge.copyWith(
-          fontWeight: FontWeight.w600,
-          color: isDestructive ? AppTheme.errorColor : AppTheme.primaryText,
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            gradient: isDestructive
+                ? LinearGradient(
+                    colors: [
+                      AppTheme.authError.withOpacity(0.1),
+                      AppTheme.authError.withOpacity(0.05),
+                    ],
+                  )
+                : AppTheme.authPrimaryGradient,
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: [
+              BoxShadow(
+                color: (isDestructive ? AppTheme.authError : AppTheme.authPrimaryGreen)
+                    .withOpacity(0.2),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Icon(
+            icon,
+            color: isDestructive ? AppTheme.authError : Colors.white,
+            size: 20,
+          ),
         ),
+        title: Text(
+          title,
+          style: AppTheme.authBodyLarge.copyWith(
+            fontWeight: FontWeight.w600,
+            color: isDestructive ? AppTheme.authError : AppTheme.authTextPrimary,
+          ),
+        ),
+        subtitle: Text(
+          subtitle,
+          style: AppTheme.authBodyMedium.copyWith(
+            color: AppTheme.authTextSecondary,
+          ),
+        ),
+        trailing: Icon(
+          Icons.arrow_forward_ios,
+          color: isDestructive ? AppTheme.authError : AppTheme.authPrimaryGreen,
+          size: 16,
+        ),
+        onTap: onTap,
       ),
-      subtitle: Text(
-        subtitle,
-        style: AppTheme.bodyMedium,
-      ),
-      onTap: onTap,
     );
   }
 
@@ -894,32 +934,101 @@ class _ProfileScreenState extends State<ProfileScreen>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.secondaryBackground,
-        title: Text(
-          'Terminar Sessão',
-          style: AppTheme.bodyLarge.copyWith(fontWeight: FontWeight.w600),
+        backgroundColor: AppTheme.authCardBackground,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppTheme.authError.withOpacity(0.1),
+                    AppTheme.authError.withOpacity(0.05),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.logout_outlined,
+                color: AppTheme.authError,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              'Terminar Sessão',
+              style: AppTheme.authHeadingSmall.copyWith(
+                color: AppTheme.authTextPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
         content: Text(
           'Tem a certeza que quer terminar a sessão?',
-          style: AppTheme.bodyMedium,
+          style: AppTheme.authBodyMedium.copyWith(
+            color: AppTheme.authTextSecondary,
+          ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              'Cancelar',
-              style: AppTheme.bodyMedium.copyWith(color: AppTheme.secondaryText),
+          Container(
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: AppTheme.authInputBorder,
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              ),
+              child: Text(
+                'Cancelar',
+                style: AppTheme.authBodyMedium.copyWith(
+                  color: AppTheme.authTextSecondary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ),
           ),
-          TextButton(
-            onPressed: () async {
-              Navigator.of(context).pop();
-              // Sign out using Supabase auth
-              await Supabase.instance.client.auth.signOut();
-            },
-            child: Text(
-              'Terminar Sessão',
-              style: AppTheme.bodyMedium.copyWith(color: AppTheme.errorColor),
+          const SizedBox(width: 8),
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppTheme.authError,
+                  AppTheme.authError.withOpacity(0.8),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.authError.withOpacity(0.3),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                // Sign out using Supabase auth
+                await Supabase.instance.client.auth.signOut();
+              },
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              ),
+              child: Text(
+                'Terminar Sessão',
+                style: AppTheme.authButtonText.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ),
         ],

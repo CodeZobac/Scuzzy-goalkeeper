@@ -169,7 +169,7 @@ abstract class AppLocalizations {
   /// Text shown in guest profile
   ///
   /// In pt, this message translates to:
-  /// **'Você não está logado'**
+  /// **'Não tem sessão iniciada'**
   String get youAreNotLoggedIn;
 
   /// Text prompting user to create account
@@ -193,7 +193,7 @@ abstract class AppLocalizations {
   /// Message when feature requires account
   ///
   /// In pt, this message translates to:
-  /// **'Esta funcionalidade requer uma conta.\\nCrie sua conta para continuar e aproveitar todos os recursos.'**
+  /// **'Esta funcionalidade requer uma conta.\\nCrie a sua conta para continuar e aproveitar todos os recursos.'**
   String get thisFeatureRequiresAccount;
 
   /// Join community text
@@ -211,13 +211,13 @@ abstract class AppLocalizations {
   /// Participate in matches feature title
   ///
   /// In pt, this message translates to:
-  /// **'Participe de Partidas'**
+  /// **'Participe em Partidas'**
   String get participateInMatches;
 
   /// Hire goalkeepers feature title
   ///
   /// In pt, this message translates to:
-  /// **'Contrate Goleiros'**
+  /// **'Contratar Guarda-redes'**
   String get hireGoalkeepers;
 
   /// Personalized profile feature title
@@ -229,19 +229,19 @@ abstract class AppLocalizations {
   /// Find and participate in games description
   ///
   /// In pt, this message translates to:
-  /// **'Encontre e participe de jogos na sua região'**
+  /// **'Encontre e participe em jogos na sua região'**
   String get findAndParticipateInGames;
 
   /// Find professional goalkeepers description
   ///
   /// In pt, this message translates to:
-  /// **'Encontre goleiros profissionais disponíveis'**
+  /// **'Encontre guarda-redes profissionais disponíveis'**
   String get findProfessionalGoalkeepers;
 
   /// Create profile and show skills description
   ///
   /// In pt, this message translates to:
-  /// **'Crie seu perfil e mostre suas habilidades'**
+  /// **'Crie o seu perfil e mostre as suas habilidades'**
   String get createProfileShowSkills;
 }
 
