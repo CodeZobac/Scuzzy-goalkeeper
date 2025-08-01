@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../widgets/responsive_auth_layout.dart';
@@ -14,6 +15,7 @@ import '../../../../core/error_handling/error_boundary.dart';
 import '../../../../core/error_handling/network_error_handler.dart';
 import '../../../../core/error_handling/comprehensive_error_handler.dart';
 import '../../../../core/logging/error_logger.dart';
+import '../../../../core/state/password_reset_state.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   const ResetPasswordScreen({super.key});
@@ -95,27 +97,73 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen>
       authProvider.clearGuestContext();
     }
 
-    // Listen for password recovery events
+    // ALWAYS set password recovery mode when on this screen
+    // This prevents automatic redirects
+    authProvider.handlePasswordRecoveryMode();
+
+    // Check if we have a current session - this indicates we came from a password reset link
+    final currentSession = Supabase.instance.client.auth.currentSession;
+    
+    // Check URL for password reset context
+    final currentUrl = Uri.base;
+    final hasResetPasswordFragment = currentUrl.fragment.contains('reset-password');
+    final hasSupabaseAuthCode = currentUrl.queryParameters.containsKey('code') ||
+                              currentUrl.fragment.contains('access_token=');
+    
+    print('=== RESET SCREEN DEBUG ===');
+    print('Has session: ${currentSession != null}');
+    print('Has reset fragment: $hasResetPasswordFragment');
+    print('Has auth code: $hasSupabaseAuthCode');
+    print('URL: ${currentUrl.toString()}');
+    print('=== END RESET DEBUG ===');
+    
+    // If we have a session OR we're on a reset URL, this is valid
+    if (currentSession != null || hasResetPasswordFragment) {
+      setState(() {
+        _isValidSession = true;
+      });
+      
+      ErrorLogger.logInfo(
+        'Password recovery session detected on reset screen',
+        context: 'PASSWORD_RESET_SCREEN_VALID',
+        additionalData: {
+          'session_valid': true,
+          'has_session': currentSession != null,
+          'has_reset_fragment': hasResetPasswordFragment,
+          'has_auth_code': hasSupabaseAuthCode,
+        },
+      );
+      return;
+    }
+
+    // Listen for password recovery events (for cases where session is created after this check)
     Supabase.instance.client.auth.onAuthStateChange.listen((data) {
       if (data.event == AuthChangeEvent.passwordRecovery) {
         setState(() {
           _isValidSession = true;
         });
         
+        authProvider.handlePasswordRecoveryMode();
+        
         ErrorLogger.logInfo(
-          'Password recovery session detected',
+          'Password recovery event received',
           context: 'PASSWORD_RESET',
           additionalData: {'session_valid': true},
         );
       }
     });
 
-    // Check if we already have a valid session for password recovery
-    final currentSession = Supabase.instance.client.auth.currentSession;
-    if (currentSession != null) {
+    // If no session exists, show invalid session view
+    if (currentSession == null) {
       setState(() {
-        _isValidSession = true;
+        _isValidSession = false;
       });
+      
+      ErrorLogger.logInfo(
+        'No session found for password recovery',
+        context: 'PASSWORD_RESET',
+        additionalData: {'session_valid': false},
+      );
     }
   }
 
@@ -187,6 +235,13 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen>
       
       // Clear password recovery mode flag to allow normal navigation
       authProvider.clearPasswordRecoveryMode();
+      
+      // Sign out the user after successful password reset
+      // This ensures they need to sign in with their new password
+      await Supabase.instance.client.auth.signOut();
+      
+      // Clear the global password reset flag
+      PasswordResetState.clear();
 
     } on AuthException catch (e) {
       ErrorLogger.logError(
@@ -261,11 +316,23 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen>
   }
 
   void _navigateToSignIn() {
+    // Clear the password reset state flags first
+    final authProvider = context.read<AuthStateProvider>();
+    authProvider.clearPasswordRecoveryMode();
+    PasswordResetState.clear();
+    
+    // Set a flag to indicate we're coming from password reset completion
+    // This will prevent the popover from showing again
+    authProvider.setPasswordResetCompleted();
+    
+    // Navigate to signin
     Navigator.of(context).pushNamedAndRemoveUntil(
       '/signin',
       (route) => false,
     );
   }
+
+
 
   @override
   Widget build(BuildContext context) {
