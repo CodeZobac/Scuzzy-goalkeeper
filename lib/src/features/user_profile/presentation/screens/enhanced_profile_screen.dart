@@ -11,6 +11,8 @@ import '../widgets/fut_profile_card.dart';
 import '../widgets/stats_dashboard.dart';
 import '../widgets/profile_info_card.dart';
 import '../widgets/achievements_section.dart';
+import '../../../notifications/presentation/widgets/notification_preferences_popover.dart';
+import '../../../notifications/presentation/controllers/notification_preferences_controller.dart';
 
 class EnhancedProfileScreen extends StatefulWidget {
   const EnhancedProfileScreen({super.key});
@@ -269,35 +271,24 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen>
       actions: [
         IconButton(
           onPressed: () {
-            Navigator.of(context).pushNamed('/notifications');
-          },
-          icon: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppTheme.secondaryBackground.withOpacity(0.8),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.notifications_outlined,
-              color: AppTheme.primaryText,
-              size: 20,
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        IconButton(
-          onPressed: () {
             _showSettingsMenu(context);
           },
           icon: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppTheme.secondaryBackground.withOpacity(0.8),
+              gradient: AppTheme.authPrimaryGradient,
               borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.authPrimaryGreen.withOpacity(0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: const Icon(
               Icons.settings_outlined,
-              color: AppTheme.primaryText,
+              color: Colors.white,
               size: 20,
             ),
           ),
@@ -776,11 +767,18 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen>
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         decoration: BoxDecoration(
-          color: AppTheme.secondaryBackground,
+          color: AppTheme.authCardBackground,
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(24),
             topRight: Radius.circular(24),
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 20,
+              offset: const Offset(0, -5),
+            ),
+          ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -790,7 +788,7 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen>
               height: 5,
               margin: const EdgeInsets.only(top: 16),
               decoration: BoxDecoration(
-                color: AppTheme.secondaryText.withOpacity(0.3),
+                color: AppTheme.authTextSecondary.withOpacity(0.3),
                 borderRadius: BorderRadius.circular(3),
               ),
             ),
@@ -800,7 +798,7 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen>
                 children: [
                   Text(
                     'Configurações',
-                    style: AppTheme.headingMedium,
+                    style: AppTheme.authHeadingMedium.copyWith(fontSize: 22),
                   ),
                   const SizedBox(height: 24),
                   _buildSettingsOption(
@@ -809,7 +807,7 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen>
                     subtitle: 'Gerir notificações push',
                     onTap: () {
                       Navigator.of(context).pop();
-                      Navigator.of(context).pushNamed('/notifications');
+                      _showNotificationPreferences(context);
                     },
                   ),
                   _buildSettingsOption(
@@ -841,34 +839,65 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen>
   }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: AppTheme.authBackground,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppTheme.authInputBorder,
+          width: 1,
+        ),
+      ),
       child: ListTile(
         leading: Container(
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: isDestructive
-                ? AppTheme.errorColor.withOpacity(0.1)
-                : const Color(0xFFFF8C00).withOpacity(0.1),
+            gradient: isDestructive
+                ? LinearGradient(
+                    colors: [
+                      AppTheme.authError.withOpacity(0.1),
+                      AppTheme.authError.withOpacity(0.05),
+                    ],
+                  )
+                : AppTheme.authPrimaryGradient,
             borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: (isDestructive ? AppTheme.authError : AppTheme.authPrimaryGreen).withOpacity(0.2),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: Icon(
             icon,
-            color: isDestructive ? AppTheme.errorColor : const Color(0xFFFF8C00),
+            color: isDestructive ? AppTheme.authError : Colors.white,
             size: 24,
           ),
         ),
         title: Text(
           title,
-          style: AppTheme.bodyLarge.copyWith(
+          style: AppTheme.authBodyLarge.copyWith(
             fontWeight: FontWeight.w600,
-            color: isDestructive ? AppTheme.errorColor : AppTheme.primaryText,
+            color: isDestructive ? AppTheme.authError : AppTheme.authTextPrimary,
           ),
         ),
         subtitle: Text(
           subtitle,
-          style: AppTheme.bodyMedium,
+          style: AppTheme.authBodyMedium,
         ),
         onTap: onTap,
+      ),
+    );
+  }
+
+  void _showNotificationPreferences(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => ChangeNotifierProvider(
+        create: (context) => NotificationPreferencesController(),
+        child: const NotificationPreferencesPopover(),
       ),
     );
   }
@@ -877,34 +906,80 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.secondaryBackground,
+        backgroundColor: AppTheme.authCardBackground,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
-        title: Text(
-          'Terminar Sessão',
-          style: AppTheme.bodyLarge.copyWith(fontWeight: FontWeight.w600),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppTheme.authError.withOpacity(0.1),
+                    AppTheme.authError.withOpacity(0.05),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.logout_outlined,
+                color: AppTheme.authError,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              'Terminar Sessão',
+              style: AppTheme.authBodyLarge.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AppTheme.authTextPrimary,
+              ),
+            ),
+          ],
         ),
         content: Text(
           'Tem a certeza que quer terminar a sessão?',
-          style: AppTheme.bodyMedium,
+          style: AppTheme.authBodyMedium,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+                side: BorderSide(color: AppTheme.authInputBorder),
+              ),
+            ),
             child: Text(
               'Cancelar',
-              style: AppTheme.bodyMedium.copyWith(color: AppTheme.secondaryText),
+              style: AppTheme.authBodyMedium.copyWith(
+                color: AppTheme.authTextSecondary,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
+          const SizedBox(width: 8),
           TextButton(
             onPressed: () async {
               Navigator.of(context).pop();
               await Supabase.instance.client.auth.signOut();
             },
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              backgroundColor: AppTheme.authError,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
             child: Text(
               'Terminar Sessão',
-              style: AppTheme.bodyMedium.copyWith(color: AppTheme.errorColor),
+              style: AppTheme.authBodyMedium.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
