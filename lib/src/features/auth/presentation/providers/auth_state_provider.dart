@@ -71,12 +71,19 @@ class AuthStateProvider extends ChangeNotifier {
       clearGuestContext();
     }
     
+    // Log the password recovery mode activation for debugging
+    debugPrint('🔒 Password recovery mode ACTIVATED - blocking all navigation');
+    
     notifyListeners();
   }
   
   /// Clear password recovery mode flag
   void clearPasswordRecoveryMode() {
     _isInPasswordRecoveryMode = false;
+    
+    // Log the password recovery mode deactivation for debugging
+    debugPrint('🔓 Password recovery mode CLEARED');
+    
     notifyListeners();
   }
 
@@ -238,4 +245,24 @@ class AuthStateProvider extends ChangeNotifier {
   
   /// Get the stored destination arguments without clearing them  
   dynamic get destinationArguments => _destinationArguments;
+  
+  /// Debug method to force clear password recovery mode
+  void debugClearPasswordRecoveryMode() {
+    _isInPasswordRecoveryMode = false;
+    debugPrint('🔓 DEBUG: Password recovery mode FORCE CLEARED');
+    notifyListeners();
+  }
+
+  /// Set flag to indicate password reset was completed
+  /// This prevents the popover from showing again
+  void setPasswordResetCompleted() {
+    // Clear any existing guest context
+    clearGuestContext();
+    
+    // Clear password recovery mode
+    clearPasswordRecoveryMode();
+    
+    debugPrint('✅ Password reset completed - state cleared');
+    notifyListeners();
+  }
 }
