@@ -43,7 +43,7 @@ class GameDetailsRow extends StatelessWidget {
         // Price
         _buildDetailItem(
           Icons.euro,
-          price != null ? '${price!.toStringAsFixed(0)}${AppConfig.currencySymbol}' : 'Free',
+          price != null ? price!.toStringAsFixed(0) : 'Free',
           iconSize,
           textSize,
         ),

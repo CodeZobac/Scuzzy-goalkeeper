@@ -714,7 +714,7 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen>
           scale: _fabScaleAnimation.value,
           child: Container(
             margin: EdgeInsets.only(
-              bottom: MediaQuery.of(context).padding.bottom + 35,
+              bottom: MediaQuery.of(context).padding.bottom + 70,
               left: 16,
               right: 16,
             ),

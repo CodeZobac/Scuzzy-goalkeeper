@@ -69,8 +69,14 @@ class _AppNavbarState extends State<AppNavbar>
           offset: Offset(0, 100 * (1 - _slideAnimation.value)),
           child: Container(
             height: 70 + MediaQuery.of(context).padding.bottom,
-            decoration: const BoxDecoration(
-              color: Colors.transparent,
+            decoration: BoxDecoration(
+              color: widget.selectedItem == NavbarItem.profile 
+                  ? Colors.black.withOpacity(0.25)
+                  : Colors.transparent,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
             ),
             child: SafeArea(
               top: false,
@@ -161,8 +167,8 @@ class _NavbarIcon extends StatelessWidget {
   });
 
   Color _getIconColor(BuildContext context) {
-    // For map screen, always use white icons (dark background)
-    if (currentScreen == NavbarItem.map) {
+    // For map and profile screens, use white icons for better visibility
+    if (currentScreen == NavbarItem.map || currentScreen == NavbarItem.profile) {
       return Colors.white;
     }
     
@@ -175,31 +181,69 @@ class _NavbarIcon extends StatelessWidget {
     return isSelected ? const Color(0xFF0BA95F) : const Color(0xFF757575);
   }
 
+  BoxDecoration? _getIconDecoration() {
+    if (!isSelected) return null;
+    
+    // For profile screen, use green background with white text for better visibility
+    if (currentScreen == NavbarItem.profile) {
+      return BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF4CAF50), Color(0xFF45A049)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF4CAF50).withOpacity(0.4),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      );
+    }
+    
+    // For map screen, use semi-transparent styling
+    if (currentScreen == NavbarItem.map) {
+      return BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.3),
+          width: 1,
+        ),
+      );
+    }
+    
+    // Default styling for other screens
+    return BoxDecoration(
+      color: isGuestMode && requiresAuth 
+          ? const Color(0xFF0BA95F).withOpacity(0.1)
+          : const Color(0xFF0BA95F).withOpacity(0.2),
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(
+        color: isGuestMode && requiresAuth 
+            ? const Color(0xFF0BA95F).withOpacity(0.2)
+            : const Color(0xFF0BA95F).withOpacity(0.4),
+        width: 1,
+      ),
+      boxShadow: isGuestMode && requiresAuth ? [] : [
+        BoxShadow(
+          color: const Color(0xFF0BA95F).withOpacity(0.3),
+          blurRadius: 8,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-        decoration: isSelected ? BoxDecoration(
-          color: isGuestMode && requiresAuth 
-              ? const Color(0xFF0BA95F).withOpacity(0.1)
-              : const Color(0xFF0BA95F).withOpacity(0.2),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isGuestMode && requiresAuth 
-                ? const Color(0xFF0BA95F).withOpacity(0.2)
-                : const Color(0xFF0BA95F).withOpacity(0.4),
-            width: 1,
-          ),
-          boxShadow: isGuestMode && requiresAuth ? [] : [
-            BoxShadow(
-              color: const Color(0xFF0BA95F).withOpacity(0.3),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ) : null,
+        decoration: _getIconDecoration(),
         child: Stack(
           clipBehavior: Clip.none,
           children: [
