@@ -90,7 +90,13 @@ class AchievementService {
   bool _isAchievementUnlocked(String achievementId, UserProfile userProfile) {
     switch (achievementId) {
       case 'profile_complete':
-        return getProfileCompletionPercentage(userProfile) >= 100;
+        return userProfile.name.isNotEmpty &&
+            userProfile.gender != null &&
+            userProfile.city != null &&
+            userProfile.birthDate != null &&
+            userProfile.club != null &&
+            userProfile.nationality != null &&
+            userProfile.country != null;
       case 'goalkeeper':
         return userProfile.isGoalkeeper;
       case 'professional':
