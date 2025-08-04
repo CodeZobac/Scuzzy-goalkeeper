@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../../../shared/widgets/location_aware_distance.dart';
 
 class StadiumCard extends StatelessWidget {
@@ -88,19 +89,19 @@ class StadiumCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            'Mostrar no mapa',
-                            style: TextStyle(
+                            AppLocalizations.of(context)!.showOnMap,
+                            style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
                               color: Colors.white,
                             ),
                           ),
-                          SizedBox(width: 8),
-                          Icon(
+                          const SizedBox(width: 8),
+                          const Icon(
                             Icons.arrow_forward,
                             size: 16,
                             color: Colors.white,

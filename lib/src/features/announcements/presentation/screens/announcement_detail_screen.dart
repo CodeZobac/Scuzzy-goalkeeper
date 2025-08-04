@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../../l10n/app_localizations.dart';
 import '../../data/models/announcement.dart';
 import '../controllers/announcement_controller.dart';
 import '../widgets/organizer_profile.dart';
@@ -124,7 +125,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
         if (mounted) {
           AnnouncementErrorHandler.showSuccessSnackBar(
             context,
-            'Successfully left the event',
+            AppLocalizations.of(context)!.successfullyLeftEvent,
           );
         }
       } else {
@@ -132,7 +133,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
         if (mounted) {
           AnnouncementErrorHandler.showSuccessSnackBar(
             context,
-            'Successfully joined the event!',
+            AppLocalizations.of(context)!.successfullyJoinedEvent,
           );
         }
       }
@@ -281,19 +282,26 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                                 final isJoined = !authProvider.isGuest && controller.isUserParticipant(_announcement.id);
                                 final isFull = _announcement.participantCount >= _announcement.maxParticipants;
                                 final isGuest = authProvider.isGuest;
+                                final isGameEnded = _announcement.status != 'active';
                                 
                                 return SizedBox(
                                   width: double.infinity,
                                   height: 48,
                                   child: ElevatedButton(
-                                    onPressed: (isLoading || (isFull && !isJoined && !isGuest)) ? null : _toggleJoinStatus,
+                                    onPressed: (isLoading || (isFull && !isJoined && !isGuest) || isGameEnded) ? null : _toggleJoinStatus,
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: isJoined 
-                                          ? const Color(0xFF757575) 
-                                          : (isFull && !isJoined && !isGuest)
-                                              ? const Color(0xFFBDBDBD)
-                                              : const Color(0xFFFF9800),
-                                      foregroundColor: Colors.white,
+                                      backgroundColor: isGameEnded
+                                          ? (_announcement.status == 'completed' 
+                                              ? const Color(0xFF4CAF50) // Green for completed games
+                                              : const Color(0xFFE57373)) // Light red for terminated games
+                                          : isJoined 
+                                              ? const Color(0xFF757575) 
+                                              : (isFull && !isJoined && !isGuest)
+                                                  ? const Color(0xFF9E9E9E) // Darker gray for better contrast
+                                                  : const Color(0xFFFF9800),
+                                      foregroundColor: isGameEnded
+                                          ? Colors.white
+                                          : Colors.white,
                                       elevation: 0,
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(12),
@@ -309,13 +317,15 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                                             ),
                                           )
                                         : Text(
-                                            isGuest
-                                                ? 'Join Event'
-                                                : isJoined 
-                                                    ? 'Leave Event' 
-                                                    : (isFull && !isJoined)
-                                                        ? 'Event Full'
-                                                        : 'Join Event',
+                                            isGameEnded
+                                                ? (_announcement.status == 'completed' ? AppLocalizations.of(context)!.gameFinished : AppLocalizations.of(context)!.gameCancelled)
+                                                : isGuest
+                                                    ? AppLocalizations.of(context)!.joinEvent
+                                                    : isJoined 
+                                                        ? AppLocalizations.of(context)!.leaveEvent
+                                                        : (isFull && !isJoined)
+                                                            ? AppLocalizations.of(context)!.eventFull
+                                                            : AppLocalizations.of(context)!.joinEvent,
                                             style: const TextStyle(
                                               fontSize: 16,
                                               fontWeight: FontWeight.w600,
@@ -326,7 +336,8 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                               },
                             ),
                             const SizedBox(height: 16),
-                            if (_announcement.createdBy == Supabase.instance.client.auth.currentUser?.id)
+                            if (_announcement.createdBy == Supabase.instance.client.auth.currentUser?.id && 
+                                _announcement.status == 'active')
                               SizedBox(
                                 width: double.infinity,
                                 height: 48,
@@ -339,8 +350,10 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                                       if (mounted) {
                                         AnnouncementErrorHandler.showSuccessSnackBar(
                                           context,
-                                          'Successfully ended the game',
+                                          AppLocalizations.of(context)!.gameEndedSuccessfully,
                                         );
+                                        // Navigate back since the game is now terminated
+                                        Navigator.of(context).pop();
                                       }
                                     } catch (e) {
                                       if (mounted) {
@@ -359,9 +372,9 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                   ),
-                                  child: const Text(
-                                    'End Game',
-                                    style: TextStyle(
+                                  child: Text(
+                                    AppLocalizations.of(context)!.endGame,
+                                    style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
                                     ),
