@@ -151,9 +151,10 @@ class _CustomTextFieldState extends State<CustomTextField>
                       )
                     : null,
                 filled: true,
-                fillColor: _isFocused
-                    ? AppTheme.secondaryBackground
-                    : AppTheme.secondaryBackground.withOpacity(0.8),
+                fillColor: Theme.of(context).inputDecorationTheme.fillColor ??
+                    (_isFocused
+                        ? AppTheme.secondaryBackground
+                        : AppTheme.secondaryBackground.withOpacity(0.8)),
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 20,
                   vertical: 16,
