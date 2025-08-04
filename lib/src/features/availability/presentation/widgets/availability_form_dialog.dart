@@ -110,11 +110,7 @@ class _AvailabilityFormDialogState extends State<AvailabilityFormDialog>
                 width: double.infinity,
                 constraints: const BoxConstraints(maxHeight: 600),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Color(0xFF1A1A2E), Color(0xFF16213E)],
-                  ),
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(28),
                   boxShadow: [
                     BoxShadow(
@@ -172,7 +168,7 @@ class _AvailabilityFormDialogState extends State<AvailabilityFormDialog>
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFFF8C00), Color(0xFFFF7F00)],
+          colors: [AppTheme.accentColor, Color(0xFF008A4A)],
         ),
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(28),
@@ -180,7 +176,7 @@ class _AvailabilityFormDialogState extends State<AvailabilityFormDialog>
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFFF8C00).withOpacity(0.3),
+            color: AppTheme.accentColor.withOpacity(0.3),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -407,7 +403,7 @@ class _AvailabilityFormDialogState extends State<AvailabilityFormDialog>
           'Data Disponível',
           style: AppTheme.bodyLarge.copyWith(
             fontWeight: FontWeight.w700,
-            color: AppTheme.primaryText,
+            color: Colors.black87,
           ),
         ),
         const SizedBox(height: 12),
@@ -418,22 +414,15 @@ class _AvailabilityFormDialogState extends State<AvailabilityFormDialog>
             width: double.infinity,
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  AppTheme.secondaryBackground.withOpacity(0.8),
-                  AppTheme.secondaryBackground.withOpacity(0.6),
-                ],
-              ),
+              color: Colors.grey.shade50,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: const Color(0xFFFF8C00).withOpacity(0.3),
+                color: AppTheme.accentColor.withOpacity(0.3),
                 width: 2,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFFFF8C00).withOpacity(0.1),
+                  color: AppTheme.accentColor.withOpacity(0.1),
                   blurRadius: 15,
                   offset: const Offset(0, 5),
                 ),
@@ -445,7 +434,7 @@ class _AvailabilityFormDialogState extends State<AvailabilityFormDialog>
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFFFF8C00), Color(0xFFFF7F00)],
+                      colors: [AppTheme.accentColor, Color(0xFF008A4A)],
                     ),
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -466,8 +455,8 @@ class _AvailabilityFormDialogState extends State<AvailabilityFormDialog>
                             : 'Selecionar data',
                         style: AppTheme.bodyLarge.copyWith(
                           color: _selectedDate != null 
-                              ? AppTheme.primaryText 
-                              : AppTheme.secondaryText,
+                              ? Colors.black87 
+                              : Colors.black54,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -476,7 +465,7 @@ class _AvailabilityFormDialogState extends State<AvailabilityFormDialog>
                         Text(
                           'Data selecionada',
                           style: AppTheme.bodyMedium.copyWith(
-                            color: const Color(0xFFFF8C00),
+                            color: AppTheme.accentColor,
                             fontSize: 12,
                           ),
                         ),
@@ -486,7 +475,7 @@ class _AvailabilityFormDialogState extends State<AvailabilityFormDialog>
                 ),
                 Icon(
                   Icons.arrow_forward_ios,
-                  color: const Color(0xFFFF8C00),
+                  color: AppTheme.accentColor,
                   size: 16,
                 ),
               ],
@@ -505,7 +494,7 @@ class _AvailabilityFormDialogState extends State<AvailabilityFormDialog>
           'Horário',
           style: AppTheme.bodyLarge.copyWith(
             fontWeight: FontWeight.w700,
-            color: AppTheme.primaryText,
+            color: Colors.black87,
           ),
         ),
         const SizedBox(height: 12),
@@ -541,22 +530,15 @@ class _AvailabilityFormDialogState extends State<AvailabilityFormDialog>
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              AppTheme.secondaryBackground.withOpacity(0.8),
-              AppTheme.secondaryBackground.withOpacity(0.6),
-            ],
-          ),
+          color: Colors.grey.shade50,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: const Color(0xFFFF8C00).withOpacity(0.3),
+            color: AppTheme.accentColor.withOpacity(0.3),
             width: 2,
           ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFFF8C00).withOpacity(0.1),
+              color: AppTheme.accentColor.withOpacity(0.1),
               blurRadius: 15,
               offset: const Offset(0, 5),
             ),
@@ -568,7 +550,7 @@ class _AvailabilityFormDialogState extends State<AvailabilityFormDialog>
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFFFF8C00), Color(0xFFFF7F00)],
+                  colors: [AppTheme.accentColor, Color(0xFF008A4A)],
                 ),
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -582,7 +564,7 @@ class _AvailabilityFormDialogState extends State<AvailabilityFormDialog>
             Text(
               label,
               style: AppTheme.bodyMedium.copyWith(
-                color: AppTheme.secondaryText,
+                color: Colors.black54,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -591,8 +573,8 @@ class _AvailabilityFormDialogState extends State<AvailabilityFormDialog>
               time != null ? time.format(context) : '--:--',
               style: AppTheme.bodyLarge.copyWith(
                 color: time != null 
-                    ? AppTheme.primaryText 
-                    : AppTheme.secondaryText,
+                    ? Colors.black87 
+                    : Colors.black54,
                 fontWeight: FontWeight.w700,
                 fontSize: 18,
               ),
@@ -610,17 +592,17 @@ class _AvailabilityFormDialogState extends State<AvailabilityFormDialog>
           child: Container(
             height: 56,
             decoration: BoxDecoration(
-              color: AppTheme.secondaryBackground.withOpacity(0.6),
+              color: AppTheme.errorColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: AppTheme.secondaryText.withOpacity(0.3),
+                color: AppTheme.errorColor.withOpacity(0.3),
                 width: 1,
               ),
             ),
             child: TextButton(
               onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
               style: TextButton.styleFrom(
-                foregroundColor: AppTheme.secondaryText,
+                foregroundColor: AppTheme.errorColor,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
@@ -629,6 +611,7 @@ class _AvailabilityFormDialogState extends State<AvailabilityFormDialog>
                 'Cancelar',
                 style: AppTheme.bodyLarge.copyWith(
                   fontWeight: FontWeight.w600,
+                  color: AppTheme.errorColor,
                 ),
               ),
             ),
@@ -642,12 +625,12 @@ class _AvailabilityFormDialogState extends State<AvailabilityFormDialog>
               gradient: const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Color(0xFFFF8C00), Color(0xFFFF7F00)],
+                colors: [AppTheme.accentColor, Color(0xFF008A4A)],
               ),
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFFFF8C00).withOpacity(0.4),
+                  color: AppTheme.accentColor.withOpacity(0.4),
                   blurRadius: 15,
                   offset: const Offset(0, 8),
                 ),
@@ -705,11 +688,11 @@ class _AvailabilityFormDialogState extends State<AvailabilityFormDialog>
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.dark(
-              primary: const Color(0xFFFF8C00),
+            colorScheme: ColorScheme.light(
+              primary: AppTheme.accentColor,
               onPrimary: Colors.white,
-              surface: AppTheme.secondaryBackground,
-              onSurface: AppTheme.primaryText,
+              surface: Colors.white,
+              onSurface: Colors.black87,
             ),
           ),
           child: child!,
@@ -732,11 +715,11 @@ class _AvailabilityFormDialogState extends State<AvailabilityFormDialog>
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.dark(
-              primary: const Color(0xFFFF8C00),
+            colorScheme: ColorScheme.light(
+              primary: AppTheme.accentColor,
               onPrimary: Colors.white,
-              surface: AppTheme.secondaryBackground,
-              onSurface: AppTheme.primaryText,
+              surface: Colors.white,
+              onSurface: Colors.black87,
             ),
           ),
           child: child!,
@@ -759,11 +742,11 @@ class _AvailabilityFormDialogState extends State<AvailabilityFormDialog>
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.dark(
-              primary: const Color(0xFFFF8C00),
+            colorScheme: ColorScheme.light(
+              primary: AppTheme.accentColor,
               onPrimary: Colors.white,
-              surface: AppTheme.secondaryBackground,
-              onSurface: AppTheme.primaryText,
+              surface: Colors.white,
+              onSurface: Colors.black87,
             ),
           ),
           child: child!,
