@@ -64,6 +64,10 @@ class Announcement {
   final String? hiredGoalkeeperId;
   final String? hiredGoalkeeperName;
   final double? goalkeeperPrice;
+  
+  // Game status and termination fields
+  final String status;
+  final DateTime? endedAt;
 
   Announcement({
     required this.id,
@@ -91,6 +95,8 @@ class Announcement {
     this.hiredGoalkeeperId,
     this.hiredGoalkeeperName,
     this.goalkeeperPrice,
+    this.status = 'active',
+    this.endedAt,
   });
 
   factory Announcement.fromJson(Map<String, dynamic> json) {
@@ -133,6 +139,9 @@ class Announcement {
       hiredGoalkeeperId: json['hired_goalkeeper_id'],
       hiredGoalkeeperName: json['hired_goalkeeper_name'],
       goalkeeperPrice: json['goalkeeper_price']?.toDouble(),
+      // Status and termination fields
+      status: json['status'] ?? 'active',
+      endedAt: json['ended_at'] != null ? DateTime.parse(json['ended_at']) : null,
     );
   }
 
@@ -165,6 +174,9 @@ class Announcement {
       'hired_goalkeeper_id': hiredGoalkeeperId,
       'hired_goalkeeper_name': hiredGoalkeeperName,
       'goalkeeper_price': goalkeeperPrice,
+      // Status and termination fields
+      'status': status,
+      'ended_at': endedAt?.toIso8601String(),
     };
   }
 }

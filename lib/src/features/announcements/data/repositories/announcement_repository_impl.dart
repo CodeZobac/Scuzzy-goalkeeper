@@ -35,10 +35,11 @@ class AnnouncementRepositoryImpl implements AnnouncementRepository {
   @override
   Future<List<Announcement>> getAnnouncements() async {
     try {
-      // First, get basic announcements data
+      // First, get basic announcements data (exclude terminated games)
       final response = await _supabaseClient
           .from('announcements')
           .select('*')
+          .neq('status', 'terminated')
           .order('created_at', ascending: false);
       
       final announcements = <Announcement>[];
@@ -341,7 +342,10 @@ class AnnouncementRepositoryImpl implements AnnouncementRepository {
     try {
       await _supabaseClient
           .from('announcements')
-          .update({'status': 'completed'})
+          .update({
+            'status': 'terminated',
+            'ended_at': DateTime.now().toIso8601String(),
+          })
           .eq('id', announcementId);
     } catch (e) {
       throw Exception('Failed to end game: $e');
