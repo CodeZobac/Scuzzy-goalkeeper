@@ -10,6 +10,7 @@ import 'package:goalkeeper/l10n/app_localizations.dart';
 import 'package:goalkeeper/src/features/auth/presentation/providers/auth_state_provider.dart';
 import 'package:goalkeeper/src/features/auth/presentation/widgets/password_reset_notification_popover.dart';
 import '../../../../shared/widgets/app_navbar.dart';
+import '../../../../core/utils/url_utils.dart';
 
 class MainScreen extends StatefulWidget {
   final int? initialTabIndex;
@@ -101,6 +102,12 @@ class _MainScreenState extends State<MainScreen> {
       _showPasswordResetPopover = false;
       _passwordResetPopoverDismissed = true;
     });
+    
+    // CRITICAL: Clear URL parameters when dismissing popover
+    // This prevents the popover from showing again and avoids eternal recovery mode
+    UrlUtils.clearUrlParameters();
+    
+    print('✅ Password reset popover dismissed - URL parameters cleared');
   }
 
   NavbarItem _getNavbarItemFromIndex(int index) {
