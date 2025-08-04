@@ -12,7 +12,7 @@ class AuthRepository {
     await _supabase.auth.signUp(
       email: email,
       password: password,
-      data: {'name': name},
+      data: {'full_name': name},
     );
   }
 
