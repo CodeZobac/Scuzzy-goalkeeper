@@ -309,7 +309,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> with Tick
           data: Theme.of(context).copyWith(
             inputDecorationTheme: InputDecorationTheme(
               filled: true,
-              fillColor: const Color(0xFF4CAF50).withOpacity(0.8),
+              fillColor: Colors.white,
               hintStyle: TextStyle(
                 color: Colors.grey[800],
                 fontSize: 14,
@@ -359,7 +359,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> with Tick
           data: Theme.of(context).copyWith(
             inputDecorationTheme: InputDecorationTheme(
               filled: true,
-              fillColor: const Color(0xFF4CAF50).withOpacity(0.8),
+              fillColor: Colors.white,
               hintStyle: TextStyle(
                 color: Colors.grey[800],
                 fontSize: 14,
@@ -409,7 +409,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> with Tick
           data: Theme.of(context).copyWith(
             inputDecorationTheme: InputDecorationTheme(
               filled: true,
-              fillColor: const Color(0xFF4CAF50).withOpacity(0.8),
+              fillColor: Colors.white,
               hintStyle: TextStyle(
                 color: Colors.grey[800],
                 fontSize: 14,
@@ -450,7 +450,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> with Tick
             data: Theme.of(context).copyWith(
               inputDecorationTheme: InputDecorationTheme(
                 filled: true,
-                fillColor: const Color(0xFF4CAF50).withOpacity(0.8),
+                fillColor: Colors.white,
                 hintStyle: TextStyle(
                   color: Colors.grey[800],
                   fontSize: 14,
@@ -500,7 +500,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> with Tick
           data: Theme.of(context).copyWith(
             inputDecorationTheme: InputDecorationTheme(
               filled: true,
-              fillColor: const Color(0xFF4CAF50).withOpacity(0.8),
+              fillColor: Colors.white,
               hintStyle: TextStyle(
                 color: Colors.grey[800],
                 fontSize: 14,
@@ -540,7 +540,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> with Tick
           data: Theme.of(context).copyWith(
             inputDecorationTheme: InputDecorationTheme(
               filled: true,
-              fillColor: const Color(0xFF4CAF50).withOpacity(0.8),
+              fillColor: Colors.white,
               hintStyle: TextStyle(
                 color: Colors.grey[800],
                 fontSize: 14,
@@ -702,7 +702,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> with Tick
           data: Theme.of(context).copyWith(
             inputDecorationTheme: InputDecorationTheme(
               filled: true,
-              fillColor: const Color(0xFF4CAF50).withOpacity(0.8),
+              fillColor: Colors.white,
               hintStyle: TextStyle(
                 color: Colors.grey[800],
                 fontSize: 14,
