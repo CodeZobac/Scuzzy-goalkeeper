@@ -243,6 +243,66 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Crie o seu perfil e mostre as suas habilidades'**
   String get createProfileShowSkills;
+
+  /// Join event button text
+  ///
+  /// In pt, this message translates to:
+  /// **'Participar no Evento'**
+  String get joinEvent;
+
+  /// Leave event button text
+  ///
+  /// In pt, this message translates to:
+  /// **'Sair do Evento'**
+  String get leaveEvent;
+
+  /// Event full button text
+  ///
+  /// In pt, this message translates to:
+  /// **'Evento Lotado'**
+  String get eventFull;
+
+  /// End game button text
+  ///
+  /// In pt, this message translates to:
+  /// **'Terminar Jogo'**
+  String get endGame;
+
+  /// Show on map button text
+  ///
+  /// In pt, this message translates to:
+  /// **'Mostrar no Mapa'**
+  String get showOnMap;
+
+  /// Success message when game is ended
+  ///
+  /// In pt, this message translates to:
+  /// **'Jogo terminado com sucesso'**
+  String get gameEndedSuccessfully;
+
+  /// Success message when joining event
+  ///
+  /// In pt, this message translates to:
+  /// **'Participou no evento com sucesso!'**
+  String get successfullyJoinedEvent;
+
+  /// Success message when leaving event
+  ///
+  /// In pt, this message translates to:
+  /// **'Saiu do evento com sucesso'**
+  String get successfullyLeftEvent;
+
+  /// Text shown when game is finished
+  ///
+  /// In pt, this message translates to:
+  /// **'Jogo Terminado'**
+  String get gameFinished;
+
+  /// Text shown when game is cancelled
+  ///
+  /// In pt, this message translates to:
+  /// **'Jogo Cancelado'**
+  String get gameCancelled;
 }
 
 class _AppLocalizationsDelegate

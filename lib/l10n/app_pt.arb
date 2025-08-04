@@ -124,5 +124,55 @@
   "createProfileShowSkills": "Crie o seu perfil e mostre as suas habilidades",
   "@createProfileShowSkills": {
     "description": "Create profile and show skills description"
+  },
+  
+  "joinEvent": "Participar no Evento",
+  "@joinEvent": {
+    "description": "Join event button text"
+  },
+  
+  "leaveEvent": "Sair do Evento",
+  "@leaveEvent": {
+    "description": "Leave event button text"
+  },
+  
+  "eventFull": "Evento Lotado",
+  "@eventFull": {
+    "description": "Event full button text"
+  },
+  
+  "endGame": "Terminar Jogo",
+  "@endGame": {
+    "description": "End game button text"
+  },
+  
+  "showOnMap": "Mostrar no Mapa",
+  "@showOnMap": {
+    "description": "Show on map button text"
+  },
+  
+  "gameEndedSuccessfully": "Jogo terminado com sucesso",
+  "@gameEndedSuccessfully": {
+    "description": "Success message when game is ended"
+  },
+  
+  "successfullyJoinedEvent": "Participou no evento com sucesso!",
+  "@successfullyJoinedEvent": {
+    "description": "Success message when joining event"
+  },
+  
+  "successfullyLeftEvent": "Saiu do evento com sucesso",
+  "@successfullyLeftEvent": {
+    "description": "Success message when leaving event"
+  },
+  
+  "gameFinished": "Jogo Terminado",
+  "@gameFinished": {
+    "description": "Text shown when game is finished"
+  },
+  
+  "gameCancelled": "Jogo Cancelado",
+  "@gameCancelled": {
+    "description": "Text shown when game is cancelled"
   }
 }

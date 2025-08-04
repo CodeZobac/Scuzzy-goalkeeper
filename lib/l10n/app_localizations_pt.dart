@@ -86,4 +86,34 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get createProfileShowSkills =>
       'Crie o seu perfil e mostre as suas habilidades';
+
+  @override
+  String get joinEvent => 'Participar no Evento';
+
+  @override
+  String get leaveEvent => 'Sair do Evento';
+
+  @override
+  String get eventFull => 'Evento Lotado';
+
+  @override
+  String get endGame => 'Terminar Jogo';
+
+  @override
+  String get showOnMap => 'Mostrar no Mapa';
+
+  @override
+  String get gameEndedSuccessfully => 'Jogo terminado com sucesso';
+
+  @override
+  String get successfullyJoinedEvent => 'Participou no evento com sucesso!';
+
+  @override
+  String get successfullyLeftEvent => 'Saiu do evento com sucesso';
+
+  @override
+  String get gameFinished => 'Jogo Terminado';
+
+  @override
+  String get gameCancelled => 'Jogo Cancelado';
 }
