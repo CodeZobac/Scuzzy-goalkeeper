@@ -13,6 +13,7 @@ class AuthRepository {
       email: email,
       password: password,
       data: {'full_name': name},
+      emailRedirectTo: 'https://goalkeeper-e4b09.web.app/#/email-confirmed',
     );
   }
 
