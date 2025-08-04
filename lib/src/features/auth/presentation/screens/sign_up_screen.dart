@@ -7,6 +7,7 @@ import '../widgets/animation_widgets.dart';
 import '../theme/app_theme.dart';
 import '../../data/auth_repository.dart';
 import '../../../../shared/utils/responsive_utils.dart';
+import '../../../../core/utils/url_utils.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -29,6 +30,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _confirmPasswordFocusNode = FocusNode();
 
   bool _isLoading = false;
+  bool _showVerificationMessage = false;
   bool _acceptTerms = false;
   String? _nameError;
   String? _emailError;
@@ -149,17 +151,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Conta criada com sucesso! Inicie sessão para continuar.',
-            ),
-            backgroundColor: AppTheme.authSuccess,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-
-        Navigator.of(context).pushReplacementNamed('/signin');
+        setState(() {
+          _showVerificationMessage = true;
+        });
       }
     } catch (e) {
       if (mounted) {
@@ -194,285 +188,433 @@ class _SignUpScreenState extends State<SignUpScreen> {
       child: StaggeredFadeInSlideUp(
         baseDelay: const Duration(milliseconds: 400),
         children: [
-          Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+          if (_showVerificationMessage)
+            Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Welcome message with responsive font size
-                Center(
-                  child: Text(
-                    'Criar nova conta',
-                    style: AppTheme.authHeadingSmall.copyWith(
-                      color: AppTheme.authPrimaryGreen,
-                      fontSize: ResponsiveUtils.getResponsiveFontSize(
-                        context,
-                        mobile: 20,
-                        tablet: 22,
-                        desktop: 24,
+                const Icon(
+                  Icons.check_circle_outline,
+                  color: AppTheme.authSuccess,
+                  size: 80,
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  'Email enviado!',
+                  style: AppTheme.authHeadingSmall.copyWith(
+                    color: AppTheme.authSuccess,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Enviámos um link de verificação para o seu email. Por favor, verifique a sua caixa de entrada para continuar.',
+                  textAlign: TextAlign.center,
+                  style: AppTheme.authBodyMedium,
+                ),
+                const SizedBox(height: 32),
+                ModernButton(
+                  text: 'Voltar ao Início de Sessão',
+                  icon: Icons.login,
+                  onPressed: () {
+                    UrlUtils.clearUrlParameters();
+                    _navigateToSignIn();
+                  },
+                  width: double.infinity,
+                  height: ResponsiveUtils.getResponsiveValue(
+                    context,
+                    mobile: 56.0,
+                    tablet: 58.0,
+                    desktop: 60.0,
+                  ),
+                  elevation: 3,
+                ),
+              ],
+            )
+          else
+            Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Welcome message with responsive font size
+                  Center(
+                    child: Text(
+                      'Criar nova conta',
+                      style: AppTheme.authHeadingSmall.copyWith(
+                        color: AppTheme.authPrimaryGreen,
+                        fontSize: ResponsiveUtils.getResponsiveFontSize(
+                          context,
+                          mobile: 20,
+                          tablet: 22,
+                          desktop: 24,
+                        ),
                       ),
                     ),
                   ),
-                ),
 
-                SizedBox(
-                  height: ResponsiveUtils.getResponsiveSpacing(
-                    context,
-                    mobile: 28,
-                  ),
-                ),
-
-                // Campo de Nome
-                ModernTextField(
-                  hintText: 'Digite o seu nome completo',
-                  prefixIcon: Icons.person_outline,
-                  textInputAction: TextInputAction.next,
-                  controller: _nameController,
-                  focusNode: _nameFocusNode,
-                  validator: _validateName,
-                  errorText: _nameError,
-                  showValidationIcon: true,
-                  maxLength: 50,
-                  onChanged: (value) {
-                    if (_nameError != null) {
-                      setState(() {
-                        _nameError = null;
-                      });
-                    }
-                  },
-                  onFieldSubmitted: (_) => _emailFocusNode.requestFocus(),
-                ),
-
-                SizedBox(
-                  height: ResponsiveUtils.getResponsiveSpacing(
-                    context,
-                    mobile: 20,
-                  ),
-                ),
-
-                // Campo de Email
-                ModernTextField(
-                  hintText: 'Digite o seu email',
-                  prefixIcon: Icons.email_outlined,
-                  keyboardType: TextInputType.emailAddress,
-                  textInputAction: TextInputAction.next,
-                  controller: _emailController,
-                  focusNode: _emailFocusNode,
-                  validator: _validateEmail,
-                  errorText: _emailError,
-                  showValidationIcon: true,
-                  onChanged: (value) {
-                    if (_emailError != null) {
-                      setState(() {
-                        _emailError = null;
-                      });
-                    }
-                  },
-                  onFieldSubmitted: (_) => _passwordFocusNode.requestFocus(),
-                ),
-
-                SizedBox(
-                  height: ResponsiveUtils.getResponsiveSpacing(
-                    context,
-                    mobile: 20,
-                  ),
-                ),
-
-                // Campo de Palavra-passe
-                ModernTextField(
-                  hintText: 'Crie uma palavra-passe segura',
-                  prefixIcon: Icons.lock_outline,
-                  isPassword: true,
-                  textInputAction: TextInputAction.next,
-                  controller: _passwordController,
-                  focusNode: _passwordFocusNode,
-                  validator: _validatePassword,
-                  errorText: _passwordError,
-                  showValidationIcon: true,
-                  onChanged: (value) {
-                    if (_passwordError != null) {
-                      setState(() {
-                        _passwordError = null;
-                      });
-                    }
-                    // Revalidar confirmação de senha se ela já foi preenchida
-                    if (_confirmPasswordController.text.isNotEmpty) {
-                      _formKey.currentState?.validate();
-                    }
-                  },
-                  onFieldSubmitted: (_) =>
-                      _confirmPasswordFocusNode.requestFocus(),
-                ),
-
-                SizedBox(
-                  height: ResponsiveUtils.getResponsiveSpacing(
-                    context,
-                    mobile: 20,
-                  ),
-                ),
-
-                // Campo de Confirmação de Palavra-passe
-                ModernTextField(
-                  hintText: 'Confirme a sua palavra-passe',
-                  prefixIcon: Icons.lock_outline,
-                  isPassword: true,
-                  textInputAction: TextInputAction.done,
-                  controller: _confirmPasswordController,
-                  focusNode: _confirmPasswordFocusNode,
-                  validator: _validateConfirmPassword,
-                  errorText: _confirmPasswordError,
-                  showValidationIcon: true,
-                  onChanged: (value) {
-                    if (_confirmPasswordError != null) {
-                      setState(() {
-                        _confirmPasswordError = null;
-                      });
-                    }
-                  },
-                  onFieldSubmitted: (_) => _handleSignUp(),
-                ),
-
-                SizedBox(
-                  height: ResponsiveUtils.getResponsiveSpacing(
-                    context,
-                    mobile: 20,
-                  ),
-                ),
-
-                // Checkbox dos Termos e Condições
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.all(18),
-                  decoration: BoxDecoration(
-                    color: _acceptTerms
-                        ? AppTheme.authPrimaryGreen.withOpacity(0.05)
-                        : AppTheme.authBackground,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: _acceptTerms
-                          ? AppTheme.authPrimaryGreen.withOpacity(0.3)
-                          : AppTheme.authInputBorder,
-                      width: _acceptTerms ? 2 : 1,
+                  SizedBox(
+                    height: ResponsiveUtils.getResponsiveSpacing(
+                      context,
+                      mobile: 28,
                     ),
-                    boxShadow: _acceptTerms
-                        ? [
-                            BoxShadow(
-                              color: AppTheme.authPrimaryGreen.withOpacity(0.1),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ]
-                        : null,
                   ),
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _acceptTerms = !_acceptTerms;
-                      });
-                      HapticFeedback.selectionClick();
+
+                  // Campo de Nome
+                  ModernTextField(
+                    hintText: 'Digite o seu nome completo',
+                    prefixIcon: Icons.person_outline,
+                    textInputAction: TextInputAction.next,
+                    controller: _nameController,
+                    focusNode: _nameFocusNode,
+                    validator: _validateName,
+                    errorText: _nameError,
+                    showValidationIcon: true,
+                    maxLength: 50,
+                    onChanged: (value) {
+                      if (_nameError != null) {
+                        setState(() {
+                          _nameError = null;
+                        });
+                      }
                     },
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        AnimatedScale(
-                          scale: _acceptTerms ? 1.1 : 1.0,
-                          duration: const Duration(milliseconds: 200),
-                          child: Transform.scale(
-                            scale: 1.2,
-                            child: Checkbox(
-                              value: _acceptTerms,
-                              onChanged: (value) {
-                                setState(() {
-                                  _acceptTerms = value ?? false;
-                                });
-                                HapticFeedback.selectionClick();
-                              },
-                              activeColor: AppTheme.authPrimaryGreen,
-                              checkColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(6),
+                    onFieldSubmitted: (_) => _emailFocusNode.requestFocus(),
+                  ),
+
+                  SizedBox(
+                    height: ResponsiveUtils.getResponsiveSpacing(
+                      context,
+                      mobile: 20,
+                    ),
+                  ),
+
+                  // Campo de Email
+                  ModernTextField(
+                    hintText: 'Digite o seu email',
+                    prefixIcon: Icons.email_outlined,
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
+                    controller: _emailController,
+                    focusNode: _emailFocusNode,
+                    validator: _validateEmail,
+                    errorText: _emailError,
+                    showValidationIcon: true,
+                    onChanged: (value) {
+                      if (_emailError != null) {
+                        setState(() {
+                          _emailError = null;
+                        });
+                      }
+                    },
+                    onFieldSubmitted: (_) => _passwordFocusNode.requestFocus(),
+                  ),
+
+                  SizedBox(
+                    height: ResponsiveUtils.getResponsiveSpacing(
+                      context,
+                      mobile: 20,
+                    ),
+                  ),
+
+                  // Campo de Palavra-passe
+                  ModernTextField(
+                    hintText: 'Crie uma palavra-passe segura',
+                    prefixIcon: Icons.lock_outline,
+                    isPassword: true,
+                    textInputAction: TextInputAction.next,
+                    controller: _passwordController,
+                    focusNode: _passwordFocusNode,
+                    validator: _validatePassword,
+                    errorText: _passwordError,
+                    showValidationIcon: true,
+                    onChanged: (value) {
+                      if (_passwordError != null) {
+                        setState(() {
+                          _passwordError = null;
+                        });
+                      }
+                      // Revalidar confirmação de senha se ela já foi preenchida
+                      if (_confirmPasswordController.text.isNotEmpty) {
+                        _formKey.currentState?.validate();
+                      }
+                    },
+                    onFieldSubmitted: (_) =>
+                        _confirmPasswordFocusNode.requestFocus(),
+                  ),
+
+                  SizedBox(
+                    height: ResponsiveUtils.getResponsiveSpacing(
+                      context,
+                      mobile: 20,
+                    ),
+                  ),
+
+                  // Campo de Confirmação de Palavra-passe
+                  ModernTextField(
+                    hintText: 'Confirme a sua palavra-passe',
+                    prefixIcon: Icons.lock_outline,
+                    isPassword: true,
+                    textInputAction: TextInputAction.done,
+                    controller: _confirmPasswordController,
+                    focusNode: _confirmPasswordFocusNode,
+                    validator: _validateConfirmPassword,
+                    errorText: _confirmPasswordError,
+                    showValidationIcon: true,
+                    onChanged: (value) {
+                      if (_confirmPasswordError != null) {
+                        setState(() {
+                          _confirmPasswordError = null;
+                        });
+                      }
+                    },
+                    onFieldSubmitted: (_) => _handleSignUp(),
+                  ),
+
+                  SizedBox(
+                    height: ResponsiveUtils.getResponsiveSpacing(
+                      context,
+                      mobile: 20,
+                    ),
+                  ),
+
+                  // Checkbox dos Termos e Condições
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: _acceptTerms
+                          ? AppTheme.authPrimaryGreen.withOpacity(0.05)
+                          : AppTheme.authBackground,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: _acceptTerms
+                            ? AppTheme.authPrimaryGreen.withOpacity(0.3)
+                            : AppTheme.authInputBorder,
+                        width: _acceptTerms ? 2 : 1,
+                      ),
+                      boxShadow: _acceptTerms
+                          ? [
+                              BoxShadow(
+                                color:
+                                    AppTheme.authPrimaryGreen.withOpacity(0.1),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
                               ),
-                              side: BorderSide(
-                                color: _acceptTerms
-                                    ? AppTheme.authPrimaryGreen
-                                    : AppTheme.authTextSecondary.withOpacity(
-                                        0.6,
+                            ]
+                          : null,
+                    ),
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _acceptTerms = !_acceptTerms;
+                        });
+                        HapticFeedback.selectionClick();
+                      },
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          AnimatedScale(
+                            scale: _acceptTerms ? 1.1 : 1.0,
+                            duration: const Duration(milliseconds: 200),
+                            child: Transform.scale(
+                              scale: 1.2,
+                              child: Checkbox(
+                                value: _acceptTerms,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _acceptTerms = value ?? false;
+                                  });
+                                  HapticFeedback.selectionClick();
+                                },
+                                activeColor: AppTheme.authPrimaryGreen,
+                                checkColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                side: BorderSide(
+                                  color: _acceptTerms
+                                      ? AppTheme.authPrimaryGreen
+                                      : AppTheme.authTextSecondary.withOpacity(
+                                          0.6,
+                                        ),
+                                  width: 2,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 3),
+                              child: RichText(
+                                text: TextSpan(
+                                  style: AppTheme.authBodyMedium.copyWith(
+                                    fontSize: 14,
+                                    height: 1.4,
+                                  ),
+                                  children: [
+                                    const TextSpan(text: 'Aceito os '),
+                                    WidgetSpan(
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          // TODO: Show terms and conditions
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                'Termos e condições em desenvolvimento',
+                                              ),
+                                              behavior:
+                                                  SnackBarBehavior.floating,
+                                            ),
+                                          );
+                                        },
+                                        child: Text(
+                                          'termos e condições',
+                                          style:
+                                              AppTheme.authBodyMedium.copyWith(
+                                            color: AppTheme.authPrimaryGreen,
+                                            fontWeight: FontWeight.w600,
+                                            decoration:
+                                                TextDecoration.underline,
+                                            decorationColor:
+                                                AppTheme.authPrimaryGreen,
+                                            fontSize: 14,
+                                          ),
+                                        ),
                                       ),
-                                width: 2,
+                                    ),
+                                    const TextSpan(text: ' e a '),
+                                    WidgetSpan(
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          // TODO: Show privacy policy
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                'Política de privacidade em desenvolvimento',
+                                              ),
+                                              behavior:
+                                                  SnackBarBehavior.floating,
+                                            ),
+                                          );
+                                        },
+                                        child: Text(
+                                          'política de privacidade',
+                                          style:
+                                              AppTheme.authBodyMedium.copyWith(
+                                            color: AppTheme.authPrimaryGreen,
+                                            fontWeight: FontWeight.w600,
+                                            decoration:
+                                                TextDecoration.underline,
+                                            decorationColor:
+                                                AppTheme.authPrimaryGreen,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  SizedBox(
+                    height: ResponsiveUtils.getResponsiveSpacing(
+                      context,
+                      mobile: 24,
+                    ),
+                  ),
+
+                  // Botão de Registo
+                  ModernButton(
+                    text: 'Registar',
+                    onPressed: _isLoading ? null : _handleSignUp,
+                    isLoading: _isLoading,
+                    loadingText: 'Criando conta...',
+                    icon: Icons.person_add,
+                    width: double.infinity,
+                    height: ResponsiveUtils.getResponsiveValue(
+                      context,
+                      mobile: 54.0,
+                      tablet: 56.0,
+                      desktop: 58.0,
+                    ),
+                    elevation: 3,
+                  ),
+
+                  SizedBox(
+                    height: ResponsiveUtils.getResponsiveSpacing(
+                      context,
+                      mobile: 28,
+                    ),
+                  ),
+
+                  // Divisor "OU"
+                  Container(
+                    margin: const EdgeInsets.symmetric(vertical: 8),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            height: 1,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                                colors: [
+                                  Colors.transparent,
+                                  AppTheme.authInputBorder.withOpacity(0.4),
+                                  AppTheme.authInputBorder.withOpacity(0.6),
+                                ],
                               ),
                             ),
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 20),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.authBackground.withOpacity(0.8),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color:
+                                  AppTheme.authInputBorder.withOpacity(0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: Text(
+                            'ou',
+                            style: AppTheme.authBodyMedium.copyWith(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                              color:
+                                  AppTheme.authTextSecondary.withOpacity(0.8),
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
                         Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 3),
-                            child: RichText(
-                              text: TextSpan(
-                                style: AppTheme.authBodyMedium.copyWith(
-                                  fontSize: 14,
-                                  height: 1.4,
-                                ),
-                                children: [
-                                  const TextSpan(text: 'Aceito os '),
-                                  WidgetSpan(
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        // TODO: Show terms and conditions
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          const SnackBar(
-                                            content: Text(
-                                              'Termos e condições em desenvolvimento',
-                                            ),
-                                            behavior: SnackBarBehavior.floating,
-                                          ),
-                                        );
-                                      },
-                                      child: Text(
-                                        'termos e condições',
-                                        style: AppTheme.authBodyMedium.copyWith(
-                                          color: AppTheme.authPrimaryGreen,
-                                          fontWeight: FontWeight.w600,
-                                          decoration: TextDecoration.underline,
-                                          decorationColor:
-                                              AppTheme.authPrimaryGreen,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const TextSpan(text: ' e a '),
-                                  WidgetSpan(
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        // TODO: Show privacy policy
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          const SnackBar(
-                                            content: Text(
-                                              'Política de privacidade em desenvolvimento',
-                                            ),
-                                            behavior: SnackBarBehavior.floating,
-                                          ),
-                                        );
-                                      },
-                                      child: Text(
-                                        'política de privacidade',
-                                        style: AppTheme.authBodyMedium.copyWith(
-                                          color: AppTheme.authPrimaryGreen,
-                                          fontWeight: FontWeight.w600,
-                                          decoration: TextDecoration.underline,
-                                          decorationColor:
-                                              AppTheme.authPrimaryGreen,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
+                          child: Container(
+                            height: 1,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                                colors: [
+                                  AppTheme.authInputBorder.withOpacity(0.6),
+                                  AppTheme.authInputBorder.withOpacity(0.4),
+                                  Colors.transparent,
                                 ],
                               ),
                             ),
@@ -481,135 +623,38 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ],
                     ),
                   ),
-                ),
 
-                SizedBox(
-                  height: ResponsiveUtils.getResponsiveSpacing(
-                    context,
-                    mobile: 24,
+                  SizedBox(
+                    height: ResponsiveUtils.getResponsiveSpacing(
+                      context,
+                      mobile: 28,
+                    ),
                   ),
-                ),
 
-                // Botão de Registo
-                ModernButton(
-                  text: 'Registar',
-                  onPressed: _isLoading ? null : _handleSignUp,
-                  isLoading: _isLoading,
-                  loadingText: 'Criando conta...',
-                  icon: Icons.person_add,
-                  width: double.infinity,
-                  height: ResponsiveUtils.getResponsiveValue(
-                    context,
-                    mobile: 54.0,
-                    tablet: 56.0,
-                    desktop: 58.0,
+                  // Link para Login
+                  ModernButton(
+                    text: 'Voltar ao Login',
+                    onPressed: _navigateToSignIn,
+                    width: double.infinity,
+                    height: ResponsiveUtils.getResponsiveValue(
+                      context,
+                      mobile: 54.0,
+                      tablet: 56.0,
+                      desktop: 58.0,
+                    ),
+                    backgroundColor: AppTheme.authSecondaryGreen,
+                    textColor: Colors.white,
                   ),
-                  elevation: 3,
-                ),
 
-                SizedBox(
-                  height: ResponsiveUtils.getResponsiveSpacing(
-                    context,
-                    mobile: 28,
+                  SizedBox(
+                    height: ResponsiveUtils.getResponsiveSpacing(
+                      context,
+                      mobile: 16,
+                    ),
                   ),
-                ),
-
-                // Divisor "OU"
-                Container(
-                  margin: const EdgeInsets.symmetric(vertical: 8),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          height: 1,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.centerLeft,
-                              end: Alignment.centerRight,
-                              colors: [
-                                Colors.transparent,
-                                AppTheme.authInputBorder.withOpacity(0.4),
-                                AppTheme.authInputBorder.withOpacity(0.6),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 20),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppTheme.authBackground.withOpacity(0.8),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: AppTheme.authInputBorder.withOpacity(0.3),
-                            width: 1,
-                          ),
-                        ),
-                        child: Text(
-                          'ou',
-                          style: AppTheme.authBodyMedium.copyWith(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 12,
-                            color: AppTheme.authTextSecondary.withOpacity(0.8),
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: Container(
-                          height: 1,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.centerLeft,
-                              end: Alignment.centerRight,
-                              colors: [
-                                AppTheme.authInputBorder.withOpacity(0.6),
-                                AppTheme.authInputBorder.withOpacity(0.4),
-                                Colors.transparent,
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                SizedBox(
-                  height: ResponsiveUtils.getResponsiveSpacing(
-                    context,
-                    mobile: 28,
-                  ),
-                ),
-
-                // Link para Login
-                ModernButton(
-                  text: 'Voltar ao Login',
-                  onPressed: _navigateToSignIn,
-                  width: double.infinity,
-                  height: ResponsiveUtils.getResponsiveValue(
-                    context,
-                    mobile: 54.0,
-                    tablet: 56.0,
-                    desktop: 58.0,
-                  ),
-                  backgroundColor: AppTheme.authSecondaryGreen,
-                  textColor: Colors.white,
-                ),
-
-                SizedBox(
-                  height: ResponsiveUtils.getResponsiveSpacing(
-                    context,
-                    mobile: 16,
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
         ],
       ),
     );
