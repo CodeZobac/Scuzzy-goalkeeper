@@ -242,7 +242,15 @@ class _MainScreenState extends State<MainScreen> {
                 );
               }
               
-              // For other screens, show in top right
+              // For announcements screen, show next to the filter button
+              if (_selectedItem == NavbarItem.home) {
+                return Positioned(
+                  top: MediaQuery.of(context).padding.top + 50,
+                  right: 80,
+                  child: _buildGuestLoginButton(),
+                );
+              }
+              
               return Positioned(
                 top: MediaQuery.of(context).padding.top + 16,
                 right: 16,

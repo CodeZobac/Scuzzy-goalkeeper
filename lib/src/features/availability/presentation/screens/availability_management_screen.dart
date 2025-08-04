@@ -118,13 +118,13 @@ class _AvailabilityManagementContentState extends State<_AvailabilityManagementC
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.primaryBackground,
+      backgroundColor: Colors.white,
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF1A1A2E), Color(0xFF16213E)],
+            colors: [Colors.white, Color(0xFFF8F9FA)],
           ),
         ),
         child: Consumer<AvailabilityController>(
@@ -154,12 +154,12 @@ class _AvailabilityManagementContentState extends State<_AvailabilityManagementC
               gradient: const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Color(0xFFFF8C00), Color(0xFFFF7F00)],
+                colors: [AppTheme.accentColor, Color(0xFF008A4A)],
               ),
               borderRadius: BorderRadius.circular(25),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFFFF8C00).withOpacity(0.4),
+                  color: AppTheme.accentColor.withOpacity(0.4),
                   blurRadius: 30,
                   offset: const Offset(0, 15),
                 ),
@@ -173,7 +173,7 @@ class _AvailabilityManagementContentState extends State<_AvailabilityManagementC
           ),
           const SizedBox(height: 32),
           const CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFF8C00)),
+            valueColor: AlwaysStoppedAnimation<Color>(AppTheme.accentColor),
             strokeWidth: 3,
           ),
           const SizedBox(height: 24),
@@ -181,6 +181,7 @@ class _AvailabilityManagementContentState extends State<_AvailabilityManagementC
             'Carregando disponibilidades...',
             style: AppTheme.bodyLarge.copyWith(
               fontWeight: FontWeight.w500,
+              color: Colors.black87,
             ),
           ),
         ],
@@ -240,6 +241,7 @@ class _AvailabilityManagementContentState extends State<_AvailabilityManagementC
         style: AppTheme.headingMedium.copyWith(
           fontSize: 20,
           fontWeight: FontWeight.bold,
+          color: Colors.black87,
         ),
       ),
       centerTitle: true,
@@ -248,12 +250,12 @@ class _AvailabilityManagementContentState extends State<_AvailabilityManagementC
         icon: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: AppTheme.secondaryBackground.withOpacity(0.8),
+            color: Colors.grey.shade100,
             borderRadius: BorderRadius.circular(12),
           ),
           child: const Icon(
             Icons.arrow_back_ios,
-            color: AppTheme.primaryText,
+            color: Colors.black87,
             size: 20,
           ),
         ),
@@ -266,12 +268,12 @@ class _AvailabilityManagementContentState extends State<_AvailabilityManagementC
           icon: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppTheme.secondaryBackground.withOpacity(0.8),
+              color: Colors.grey.shade100,
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(
               Icons.help_outline,
-              color: AppTheme.primaryText,
+              color: Colors.black87,
               size: 20,
             ),
           ),
@@ -293,19 +295,19 @@ class _AvailabilityManagementContentState extends State<_AvailabilityManagementC
               gradient: const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Color(0xFFFF8C00), Color(0xFFFF7F00)],
+                colors: [AppTheme.accentColor, Color(0xFF008A4A)],
                 stops: [0.0, 1.0],
               ),
               borderRadius: BorderRadius.circular(28),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFFFF8C00).withOpacity(0.4),
+                  color: AppTheme.accentColor.withOpacity(0.4),
                   blurRadius: 25,
                   offset: const Offset(0, 12),
                   spreadRadius: 2,
                 ),
                 BoxShadow(
-                  color: const Color(0xFFFF8C00).withOpacity(0.2),
+                  color: AppTheme.accentColor.withOpacity(0.2),
                   blurRadius: 40,
                   offset: const Offset(0, 20),
                   spreadRadius: -5,
@@ -534,7 +536,7 @@ class _AvailabilityManagementContentState extends State<_AvailabilityManagementC
                   'Total',
                   '${controller.availabilities.length}',
                   Icons.event_available,
-                  const Color(0xFF4CAF50),
+                  AppTheme.accentColor,
                 ),
               ),
               const SizedBox(width: 16),
@@ -543,7 +545,7 @@ class _AvailabilityManagementContentState extends State<_AvailabilityManagementC
                   'Esta Semana',
                   '${_getThisWeekCount(controller)}',
                   Icons.today,
-                  const Color(0xFF2196F3),
+                  AppTheme.successColor,
                 ),
               ),
               const SizedBox(width: 16),
@@ -552,7 +554,7 @@ class _AvailabilityManagementContentState extends State<_AvailabilityManagementC
                   'Próximo',
                   '${_getUpcomingCount(controller)}',
                   Icons.schedule,
-                  const Color(0xFFFF9800),
+                  const Color(0xFF4ECDC4),
                 ),
               ),
             ],
@@ -566,7 +568,7 @@ class _AvailabilityManagementContentState extends State<_AvailabilityManagementC
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppTheme.secondaryBackground.withOpacity(0.8),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: color.withOpacity(0.2),
@@ -608,6 +610,7 @@ class _AvailabilityManagementContentState extends State<_AvailabilityManagementC
             label,
             style: AppTheme.bodyMedium.copyWith(
               fontSize: 12,
+              color: Colors.black87,
             ),
             textAlign: TextAlign.center,
           ),
@@ -653,18 +656,18 @@ class _AvailabilityManagementContentState extends State<_AvailabilityManagementC
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        const Color(0xFFFF8C00).withOpacity(0.1),
-                        const Color(0xFFFF7F00).withOpacity(0.05),
+                        AppTheme.accentColor.withOpacity(0.1),
+                        AppTheme.accentColor.withOpacity(0.05),
                       ],
                     ),
                     borderRadius: BorderRadius.circular(75),
                     border: Border.all(
-                      color: const Color(0xFFFF8C00).withOpacity(0.3),
+                      color: AppTheme.accentColor.withOpacity(0.3),
                       width: 3,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFFF8C00).withOpacity(0.2),
+                        color: AppTheme.accentColor.withOpacity(0.2),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),
@@ -673,14 +676,14 @@ class _AvailabilityManagementContentState extends State<_AvailabilityManagementC
                   child: Icon(
                     Icons.event_available_outlined,
                     size: 80,
-                    color: const Color(0xFFFF8C00).withOpacity(0.7),
+                    color: AppTheme.accentColor.withOpacity(0.7),
                   ),
                 ),
                 const SizedBox(height: 32),
                 Text(
                   'Nenhuma Disponibilidade',
                   style: AppTheme.headingMedium.copyWith(
-                    color: AppTheme.primaryText,
+                    color: Colors.black87,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -689,6 +692,7 @@ class _AvailabilityManagementContentState extends State<_AvailabilityManagementC
                   'Adicione os seus horários disponíveis\npara que jogadores possam agendá-lo',
                   style: AppTheme.bodyMedium.copyWith(
                     height: 1.5,
+                    color: Colors.black54,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -698,7 +702,7 @@ class _AvailabilityManagementContentState extends State<_AvailabilityManagementC
                   icon: const Icon(Icons.add, size: 20),
                   label: const Text('Adicionar Primeira Disponibilidade'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFF8C00),
+                    backgroundColor: AppTheme.accentColor,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 24,
@@ -708,7 +712,7 @@ class _AvailabilityManagementContentState extends State<_AvailabilityManagementC
                       borderRadius: BorderRadius.circular(12),
                     ),
                     elevation: 8,
-                    shadowColor: const Color(0xFFFF8C00).withOpacity(0.3),
+                    shadowColor: AppTheme.accentColor.withOpacity(0.3),
                   ),
                 ),
               ],
@@ -728,6 +732,7 @@ class _AvailabilityManagementContentState extends State<_AvailabilityManagementC
           style: AppTheme.headingMedium.copyWith(
             fontSize: 18,
             fontWeight: FontWeight.bold,
+            color: Colors.black87,
           ),
         ),
         const SizedBox(height: 16),
@@ -773,12 +778,12 @@ class _AvailabilityManagementContentState extends State<_AvailabilityManagementC
               gradient: const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Color(0xFFFF8C00), Color(0xFFFF7F00)],
+                colors: [AppTheme.accentColor, Color(0xFF008A4A)],
               ),
               borderRadius: BorderRadius.circular(30),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFFFF8C00).withOpacity(0.4),
+                  color: AppTheme.accentColor.withOpacity(0.4),
                   blurRadius: 15,
                   offset: const Offset(0, 8),
                 ),
@@ -846,17 +851,20 @@ class _AvailabilityManagementContentState extends State<_AvailabilityManagementC
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppTheme.secondaryBackground,
+        backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
         title: Text(
           'Confirmar Exclusão',
-          style: AppTheme.headingMedium.copyWith(fontSize: 18),
+          style: AppTheme.headingMedium.copyWith(
+            fontSize: 18,
+            color: Colors.black87,
+          ),
         ),
         content: Text(
           'Tem certeza que deseja remover esta disponibilidade?',
-          style: AppTheme.bodyMedium,
+          style: AppTheme.bodyMedium.copyWith(color: Colors.black87),
         ),
         actions: [
           TextButton(
@@ -864,7 +872,7 @@ class _AvailabilityManagementContentState extends State<_AvailabilityManagementC
             child: Text(
               'Cancelar',
               style: AppTheme.bodyMedium.copyWith(
-                color: AppTheme.secondaryText,
+                color: Colors.black54,
               ),
             ),
           ),
@@ -916,7 +924,7 @@ class _AvailabilityManagementContentState extends State<_AvailabilityManagementC
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppTheme.secondaryBackground,
+        backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
@@ -926,7 +934,7 @@ class _AvailabilityManagementContentState extends State<_AvailabilityManagementC
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFFFF8C00), Color(0xFFFF7F00)],
+                  colors: [AppTheme.accentColor, Color(0xFF008A4A)],
                 ),
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -939,7 +947,10 @@ class _AvailabilityManagementContentState extends State<_AvailabilityManagementC
             const SizedBox(width: 12),
             Text(
               'Ajuda',
-              style: AppTheme.headingMedium.copyWith(fontSize: 18),
+              style: AppTheme.headingMedium.copyWith(
+                fontSize: 18,
+                color: Colors.black87,
+              ),
             ),
           ],
         ),
@@ -949,12 +960,18 @@ class _AvailabilityManagementContentState extends State<_AvailabilityManagementC
           children: [
             Text(
               'Como funciona:',
-              style: AppTheme.bodyLarge.copyWith(fontWeight: FontWeight.bold),
+              style: AppTheme.bodyLarge.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
             ),
             const SizedBox(height: 12),
             Text(
               '• Adicione os seus horários disponíveis\n• Jogadores poderão vê-lo nos resultados de pesquisa\n• Receberá notificações de convites\n• Gira as suas disponibilidades facilmente',
-              style: AppTheme.bodyMedium.copyWith(height: 1.5),
+              style: AppTheme.bodyMedium.copyWith(
+                height: 1.5,
+                color: Colors.black87,
+              ),
             ),
           ],
         ),
@@ -964,7 +981,7 @@ class _AvailabilityManagementContentState extends State<_AvailabilityManagementC
             child: Text(
               'Entendi',
               style: AppTheme.bodyMedium.copyWith(
-                color: const Color(0xFFFF8C00),
+                color: AppTheme.accentColor,
                 fontWeight: FontWeight.w600,
               ),
             ),

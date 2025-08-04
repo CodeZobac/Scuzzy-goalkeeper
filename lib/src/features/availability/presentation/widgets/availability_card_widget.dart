@@ -63,7 +63,7 @@ class _AvailabilityCardWidgetState extends State<AvailabilityCardWidget>
           scale: _scaleAnimation.value,
           child: Container(
             decoration: BoxDecoration(
-              color: AppTheme.secondaryBackground,
+              color: Colors.white,
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
@@ -121,7 +121,9 @@ class _AvailabilityCardWidgetState extends State<AvailabilityCardWidget>
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            gradient: AppTheme.buttonGradient,
+            gradient: const LinearGradient(
+              colors: [AppTheme.accentColor, Color(0xFF008A4A)],
+            ),
             borderRadius: BorderRadius.circular(12),
           ),
           child: const Icon(
@@ -140,6 +142,7 @@ class _AvailabilityCardWidgetState extends State<AvailabilityCardWidget>
                 style: AppTheme.headingMedium.copyWith(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
+                  color: Colors.black87,
                 ),
               ),
               const SizedBox(height: 4),
@@ -162,10 +165,10 @@ class _AvailabilityCardWidgetState extends State<AvailabilityCardWidget>
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.primaryBackground.withOpacity(0.5),
+        color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppTheme.accentColor.withOpacity(0.1),
+          color: AppTheme.accentColor.withOpacity(0.2),
         ),
       ),
       child: Row(
@@ -181,6 +184,7 @@ class _AvailabilityCardWidgetState extends State<AvailabilityCardWidget>
             style: AppTheme.bodyLarge.copyWith(
               fontWeight: FontWeight.w600,
               fontSize: 16,
+              color: Colors.black87,
             ),
           ),
           const Spacer(),
@@ -276,7 +280,7 @@ class _AvailabilityCardWidgetState extends State<AvailabilityCardWidget>
     } else if (difference <= 3) {
       return AppTheme.accentColor;
     } else {
-      return AppTheme.secondaryText;
+      return Colors.black54;
     }
   }
 

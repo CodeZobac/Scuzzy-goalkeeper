@@ -160,7 +160,6 @@ class _AchievementsSectionState extends State<AchievementsSection>
 
   Widget _buildProgressCard() {
     final unlockedCount = _achievements.where((a) => a.isUnlocked).length;
-    final completionPercentage = _achievementService.getProfileCompletionPercentage(widget.userProfile);
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -171,80 +170,100 @@ class _AchievementsSectionState extends State<AchievementsSection>
           color: Colors.white.withOpacity(0.2),
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Row(
+          _buildCircularProgress(unlockedCount, _achievements.length),
+          const SizedBox(width: 20),
+          _buildProgressText(unlockedCount, _achievements.length),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCircularProgress(int unlockedCount, int totalAchievements) {
+    final percentage = totalAchievements > 0 ? unlockedCount / totalAchievements : 0.0;
+    return SizedBox(
+      width: 80,
+      height: 80,
+      child: TweenAnimationBuilder<double>(
+        tween: Tween<double>(begin: 0, end: percentage),
+        duration: const Duration(milliseconds: 1500),
+        curve: Curves.easeInOut,
+        builder: (context, value, child) {
+          return Stack(
+            fit: StackFit.expand,
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(
-                  Icons.trending_up,
-                  color: Colors.white,
-                  size: 20,
-                ),
+              CircularProgressIndicator(
+                value: value,
+                strokeWidth: 8,
+                backgroundColor: Colors.white.withOpacity(0.2),
+                valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Progresso do Perfil',
-                      style: AppTheme.bodyLarge.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    Text(
-                      '$unlockedCount/${_achievements.length} conquistas desbloqueadas',
-                      style: AppTheme.bodyMedium.copyWith(
-                        color: Colors.white.withOpacity(0.8),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Text(
-                '$completionPercentage%',
-                style: AppTheme.headingMedium.copyWith(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+              Center(
+                child: Text(
+                  '${(value * 100).toInt()}%',
+                  style: AppTheme.headingMedium.copyWith(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ],
-          ),
-          const SizedBox(height: 16),
-          // Progress bar
-          Container(
-            width: double.infinity,
-            height: 8,
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(4),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildProgressText(int unlockedCount, int totalAchievements) {
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Progresso das Conquistas',
+            style: AppTheme.bodyLarge.copyWith(
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
-            child: FractionallySizedBox(
-              alignment: Alignment.centerLeft,
-              widthFactor: completionPercentage / 100,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Colors.white, Color.fromARGB(255, 201, 199, 199)],
-                  ),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '$unlockedCount de $totalAchievements conquistas desbloqueadas',
+            style: AppTheme.bodyMedium.copyWith(
+              color: Colors.white.withOpacity(0.8),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _getProgressMessage(unlockedCount, totalAchievements),
+            style: AppTheme.bodyMedium.copyWith(
+              color: Colors.white,
+              fontStyle: FontStyle.italic,
             ),
           ),
         ],
       ),
     );
   }
+
+  String _getProgressMessage(int unlockedCount, int totalAchievements) {
+    final percentage = totalAchievements > 0 ? (unlockedCount / totalAchievements * 100).toInt() : 0;
+    if (percentage == 100) {
+      return 'Todas as conquistas desbloqueadas! És uma lenda!';
+    } else if (percentage >= 75) {
+      return 'Quase no topo! Continua a colecionar!';
+    } else if (percentage >= 50) {
+      return 'Metade do caminho percorrido! Bom trabalho!';
+    } else if (percentage >= 25) {
+      return 'A aventura ainda agora começou. Continua!';
+    } else {
+      return 'Explora a aplicação e desbloqueia a tua primeira conquista.';
+    }
+  }
+
+
 
   Widget _buildAchievementsGrid() {
     return AnimatedBuilder(
