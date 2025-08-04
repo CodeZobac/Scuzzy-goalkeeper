@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -163,6 +164,10 @@ class _MyAppState extends State<MyApp> {
     final hasResetPasswordFragment = currentUrl.fragment.contains('reset-password') || 
                                    currentUrl.path.contains('reset-password');
     
+    // Check for email confirmation in URL fragment (pattern: #/email-confirmed)
+    final hasEmailConfirmationFragment = currentUrl.fragment.contains('email-confirmed') || 
+                                        currentUrl.path.contains('email-confirmed');
+    
     // Check for Supabase auth tokens (code parameter or access_token in fragment)
     final hasSupabaseAuthCode = currentUrl.queryParameters.containsKey('code') ||
                               currentUrl.fragment.contains('access_token=') ||
@@ -170,11 +175,25 @@ class _MyAppState extends State<MyApp> {
                               currentUrl.fragment.contains('token_type=');
     
     print('Has reset-password fragment: $hasResetPasswordFragment');
+    print('Has email-confirmation fragment: $hasEmailConfirmationFragment');
     print('Has Supabase auth code: $hasSupabaseAuthCode');
     print('=== END DEBUG ===');
     
+    // If we have email confirmation fragment, treat as email confirmation (not password reset)
+    if (hasEmailConfirmationFragment && hasSupabaseAuthCode) {
+      ErrorLogger.logInfo(
+        'Email confirmation URL detected - allowing normal auth flow',
+        context: 'EMAIL_CONFIRMATION_URL_DETECTED',
+        additionalData: {
+          'fragment': currentUrl.fragment,
+          'query_params': currentUrl.queryParameters.toString(),
+          'full_url': currentUrl.toString(),
+        },
+      );
+      // Don't set password recovery mode for email confirmations
+    }
     // If we have reset-password fragment, always treat as password reset initially
-    if (hasResetPasswordFragment) {
+    else if (hasResetPasswordFragment) {
       // Set GLOBAL flag to prevent any redirects
       PasswordResetState.setInProgress();
       
@@ -365,9 +384,10 @@ class _MyAppState extends State<MyApp> {
             return;
           }
           
-          // THIRD: Check if the current URL indicates a password reset flow
+          // THIRD: Check if the current URL indicates a password reset flow vs email confirmation
           final currentUrl = Uri.base;
           final hasResetPasswordFragment = currentUrl.fragment.contains('reset-password');
+          final hasEmailConfirmationFragment = currentUrl.fragment.contains('email-confirmed');
           final hasSupabaseAuthCode = currentUrl.queryParameters.containsKey('code') ||
                                     currentUrl.fragment.contains('access_token=') ||
                                     currentUrl.fragment.contains('refresh_token=');
@@ -375,11 +395,25 @@ class _MyAppState extends State<MyApp> {
           print('🔍 SIGNIN EVENT DEBUG:');
           print('  Recovery mode: ${authProvider.isInPasswordRecoveryMode}');
           print('  Has reset fragment: $hasResetPasswordFragment');
+          print('  Has email confirmation fragment: $hasEmailConfirmationFragment');
           print('  Has auth code: $hasSupabaseAuthCode');
           print('  URL: ${currentUrl.toString()}');
           
+          // If URL has email confirmation fragment, allow normal sign-in flow
+          if (hasEmailConfirmationFragment && hasSupabaseAuthCode) {
+            ErrorLogger.logInfo(
+              '✅ ALLOWED: Sign-in from email confirmation URL - proceeding with normal flow',
+              context: 'AUTH_EMAIL_CONFIRMATION_SIGNIN_ALLOWED',
+              additionalData: {
+                'url': currentUrl.toString(),
+                'fragment': currentUrl.fragment,
+                'query_params': currentUrl.queryParameters.toString(),
+              },
+            );
+            // Continue with normal sign-in flow - don't return here
+          }
           // If URL has both reset-password and auth tokens, this is definitely a password reset
-          if (hasResetPasswordFragment && hasSupabaseAuthCode) {
+          else if (hasResetPasswordFragment && hasSupabaseAuthCode) {
             authProvider.handlePasswordRecoveryMode();
             ErrorLogger.logInfo(
               '🚫 BLOCKED: Sign-in from password reset URL detected - blocking redirect',
@@ -539,6 +573,9 @@ class _MyAppState extends State<MyApp> {
     final authProvider = context.read<AuthStateProvider>();
     
     switch (settings.name) {
+      case '/email-confirmed':
+        // Handle email confirmation - redirect to main screen after successful confirmation
+        return _createSlideRoute(_buildEmailConfirmationScreen());
       case '/announcement-detail':
         final announcement = settings.arguments;
         if (announcement != null) {
@@ -768,6 +805,11 @@ class _MyAppState extends State<MyApp> {
         ),
       ),
     );
+  }
+
+  /// Build email confirmation screen with auto-redirect
+  Widget _buildEmailConfirmationScreen() {
+    return _EmailConfirmationScreen();
   }
 
   /// Handle notification deep linking
@@ -1032,6 +1074,86 @@ class _DeepLinkHandlerState extends State<_DeepLinkHandler> {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _EmailConfirmationScreen extends StatefulWidget {
+  @override
+  _EmailConfirmationScreenState createState() => _EmailConfirmationScreenState();
+}
+
+class _EmailConfirmationScreenState extends State<_EmailConfirmationScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Auto-redirect to main screen after 3 seconds
+    Timer(const Duration(seconds: 3), () {
+      if (mounted) {
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          '/main',
+          (route) => false,
+        );
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppTheme.primaryBackground,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: AppTheme.primaryGradient,
+        ),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.check_circle,
+                  size: 80,
+                  color: Colors.green,
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  'Email Confirmado!',
+                  style: AppTheme.headingLarge,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'A sua conta foi ativada com sucesso.\nA redirecionar para a aplicação...',
+                  style: AppTheme.bodyLarge,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 32),
+                const CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(AppTheme.accentColor),
+                ),
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pushNamedAndRemoveUntil(
+                      '/main',
+                      (route) => false,
+                    );
+                  },
+                  child: Text(
+                    'Continuar agora',
+                    style: AppTheme.bodyLarge.copyWith(
+                      color: AppTheme.accentColor,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
