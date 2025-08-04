@@ -16,6 +16,7 @@ import '../../../../core/error_handling/network_error_handler.dart';
 import '../../../../core/error_handling/comprehensive_error_handler.dart';
 import '../../../../core/logging/error_logger.dart';
 import '../../../../core/state/password_reset_state.dart';
+import '../../../../core/utils/url_utils.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
   const ResetPasswordScreen({super.key});
@@ -242,6 +243,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen>
       
       // Clear the global password reset flag
       PasswordResetState.clear();
+      
+      // CRITICAL: Clear URL parameters to prevent eternal recovery mode
+      UrlUtils.clearUrlParameters();
 
     } on AuthException catch (e) {
       ErrorLogger.logError(
@@ -320,6 +324,18 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen>
     final authProvider = context.read<AuthStateProvider>();
     authProvider.clearPasswordRecoveryMode();
     PasswordResetState.clear();
+    
+    // CRITICAL: Clear URL parameters to prevent eternal recovery mode
+    UrlUtils.clearUrlParameters();
+    
+    ErrorLogger.logInfo(
+      'Navigating to sign-in after password reset - URL parameters cleared',
+      context: 'PASSWORD_RESET_NAVIGATION',
+      additionalData: {
+        'url_cleared': true,
+        'recovery_mode_cleared': true,
+      },
+    );
     
     // Set a flag to indicate we're coming from password reset completion
     // This will prevent the popover from showing again
@@ -756,7 +772,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen>
         SizedBox(height: ResponsiveUtils.getResponsiveSpacing(context, mobile: 16)),
 
         TextButton(
-          onPressed: _navigateToSignIn,
+          onPressed: () {
+            // Clear URL parameters before navigating
+            UrlUtils.clearUrlParameters();
+            _navigateToSignIn();
+          },
           child: Text(
             'Voltar ao Início de Sessão',
             style: AppTheme.authLinkText.copyWith(
