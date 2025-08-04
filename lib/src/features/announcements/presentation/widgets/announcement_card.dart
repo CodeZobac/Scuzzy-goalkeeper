@@ -81,24 +81,16 @@ class AnnouncementCard extends StatelessWidget {
                           ),
                           const SizedBox(height: 2),
                           // Use location-aware distance if coordinates are available,
-                          // otherwise fallback to the existing distance from the model
+                          // otherwise show nothing (no fallback to hardcoded distance)
                           LocationAwareDistance(
-                            fieldLatitude: null, // No coordinates available in current model
-                            fieldLongitude: null,
+                            fieldLatitude: announcement.fieldLatitude,
+                            fieldLongitude: announcement.fieldLongitude,
                             textStyle: const TextStyle(
                               fontSize: 12,
                               color: Color(0xFF757575),
                             ),
                             suffix: ' km de distância',
-                            child: announcement.distanceKm != null
-                                ? Text(
-                                    '${announcement.distanceKm!.toStringAsFixed(1)} km de distância',
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Color(0xFF757575),
-                                    ),
-                                  )
-                                : const SizedBox.shrink(),
+                            child: const SizedBox.shrink(), // Show nothing if no location access
                           ),
                         ],
                       ),
