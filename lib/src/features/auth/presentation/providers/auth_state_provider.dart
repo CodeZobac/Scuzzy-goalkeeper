@@ -5,6 +5,7 @@ import '../../data/models/guest_user_context.dart';
 import '../../data/models/registration_prompt_config.dart';
 import '../../data/services/guest_analytics_service.dart';
 import '../../data/services/smart_prompt_manager.dart';
+import '../../../../core/utils/url_utils.dart';
 
 /// Provider that manages authentication state and guest mode detection
 class AuthStateProvider extends ChangeNotifier {
@@ -262,7 +263,10 @@ class AuthStateProvider extends ChangeNotifier {
     // Clear password recovery mode
     clearPasswordRecoveryMode();
     
-    debugPrint('✅ Password reset completed - state cleared');
+    // CRITICAL: Clear URL parameters to prevent eternal recovery mode
+    UrlUtils.clearUrlParameters();
+    
+    debugPrint('✅ Password reset completed - state and URL cleared');
     notifyListeners();
   }
 }
