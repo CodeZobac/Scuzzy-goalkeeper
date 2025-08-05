@@ -230,53 +230,66 @@ class _FUTProfileCardState extends State<FUTProfileCard>
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              gradient: LinearGradient(
+                colors: [
+                  Colors.white.withOpacity(0.3),
+                  Colors.white.withOpacity(0.1),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: Colors.white.withOpacity(0.3),
-                width: 2,
+                color: Colors.white.withOpacity(0.4),
+                width: 1.5,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Center(
-                  child: Text(
-                    overallRatingText,
-                    style: TextStyle(
-                      fontSize: isTier ? 18 : 24,
-                      fontWeight: FontWeight.bold,
-                      fontStyle: isTier ? FontStyle.italic : FontStyle.normal,
-                      color: isTier ? _getTierColors()['accent'] : Colors.white,
-                      height: 1,
-                      shadows: [
-                        Shadow(
-                          offset: Offset(0, 1),
-                          blurRadius: 3,
-                          color: Colors.black26,
-                        ),
-                      ],
-                    ),
+                Text(
+                  overallRatingText,
+                  style: TextStyle(
+                    fontSize: isTier ? 18 : 28,
+                    fontWeight: FontWeight.w900,
+                    fontStyle: isTier ? FontStyle.italic : FontStyle.normal,
+                    color: Colors.white,
+                    height: 1,
+                    shadows: [
+                      Shadow(
+                        offset: const Offset(0, 2),
+                        blurRadius: 4,
+                        color: Colors.black.withOpacity(0.3),
+                      ),
+                    ],
                   ),
                 ),
                 if (isGoalkeeper)
                   Text(
                     _positionText,
                     style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
                       color: Colors.white,
-                      height: 1,
+                      height: 1.2,
+                      letterSpacing: 0.5,
                     ),
                   ),
                 if (!isGoalkeeper && !isTier)
-                  Text(
+                  const Text(
                     'LVL',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
                       color: Colors.white,
-                      height: 1,
+                      height: 1.2,
                     ),
                   ),
               ],
