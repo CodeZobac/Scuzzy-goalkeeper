@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:async';
 import '../widgets/responsive_auth_layout.dart';
 import '../widgets/modern_text_field.dart';
 import '../widgets/modern_button.dart';
@@ -32,10 +33,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool _isLoading = false;
   bool _showVerificationMessage = false;
   bool _acceptTerms = false;
+  bool _isValidatingEmail = false;
   String? _nameError;
   String? _emailError;
   String? _passwordError;
   String? _confirmPasswordError;
+  Timer? _emailValidationTimer;
 
   @override
   void dispose() {
@@ -47,19 +50,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
     _emailFocusNode.dispose();
     _passwordFocusNode.dispose();
     _confirmPasswordFocusNode.dispose();
+    _emailValidationTimer?.cancel();
     super.dispose();
   }
 
   String? _validateName(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Por favor, digite o seu nome';
+    if (value == null || value.trim().isEmpty) {
+      return 'O nome é obrigatório';
     }
 
-    if (value.length < 2) {
+    final trimmedValue = value.trim();
+    if (trimmedValue.length < 2) {
       return 'O nome deve ter pelo menos 2 caracteres';
     }
 
-    if (value.length > 50) {
+    if (trimmedValue.length > 50) {
       return 'O nome deve ter no máximo 50 caracteres';
     }
 
@@ -67,21 +72,53 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   String? _validateEmail(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Por favor, digite o seu email';
+    if (value == null || value.trim().isEmpty) {
+      return 'O email é obrigatório';
     }
 
     final emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
-    if (!emailRegex.hasMatch(value)) {
+    if (!emailRegex.hasMatch(value.trim())) {
       return 'Formato de email inválido';
     }
 
     return null;
   }
 
+  Future<void> _validateEmailAvailable(String email) async {
+    if (email.trim().isEmpty || _emailError != null) return;
+    
+    final emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+    if (!emailRegex.hasMatch(email.trim())) return;
+
+    setState(() {
+      _isValidatingEmail = true;
+    });
+
+    try {
+      final emailExists = await _authRepository.checkEmailExistsForSignup(email.trim());
+      if (mounted) {
+        setState(() {
+          if (emailExists) {
+            _emailError = 'Este email já está registado. Tente fazer login ou use outro email.';
+          } else {
+            _emailError = null;
+          }
+        });
+      }
+    } catch (e) {
+      // Silently handle validation errors - don't show to user during typing
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isValidatingEmail = false;
+        });
+      }
+    }
+  }
+
   String? _validatePassword(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Por favor, digite uma palavra-passe';
+      return 'A palavra-passe é obrigatória';
     }
 
     if (value.length < 8) {
@@ -103,7 +140,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   String? _validateConfirmPassword(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Por favor, confirme a sua palavra-passe';
+      return 'A confirmação da palavra-passe é obrigatória';
     }
 
     if (value != _passwordController.text) {
@@ -131,7 +168,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     if (!_acceptTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Por favor, aceite os termos e condições'),
+          content: Text('É obrigatório aceitar os termos e condições para continuar'),
           backgroundColor: AppTheme.authError,
           behavior: SnackBarBehavior.floating,
         ),
@@ -145,8 +182,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     try {
       await _authRepository.signUp(
-        name: _nameController.text,
-        email: _emailController.text,
+        name: _nameController.text.trim(),
+        email: _emailController.text.trim(),
         password: _passwordController.text,
       );
 
@@ -158,9 +195,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
     } catch (e) {
       if (mounted) {
         debugPrint('Sign up error: $e');
+        String errorMessage = 'Ocorreu um erro ao criar a conta. Tente novamente.';
+        
+        // Handle specific error messages
+        if (e.toString().contains('Este email já está registado')) {
+          errorMessage = 'Este email já está registado. Tente fazer login ou use outro email.';
+          setState(() {
+            _emailError = errorMessage;
+          });
+        }
+        
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Ocorreu um erro ao criar a conta. Tente novamente.'),
+          SnackBar(
+            content: Text(errorMessage),
             backgroundColor: AppTheme.authError,
             behavior: SnackBarBehavior.floating,
           ),
@@ -255,13 +302,37 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   SizedBox(
                     height: ResponsiveUtils.getResponsiveSpacing(
                       context,
-                      mobile: 28,
+                      mobile: 16,
                     ),
                   ),
 
-                  // Campo de Nome
+                  // Mandatory fields note
+                  Center(
+                    child: Text(
+                      '* Campos obrigatórios',
+                      style: AppTheme.authBodyMedium.copyWith(
+                        color: AppTheme.authTextSecondary,
+                        fontSize: ResponsiveUtils.getResponsiveFontSize(
+                          context,
+                          mobile: 12,
+                          tablet: 13,
+                          desktop: 14,
+                        ),
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+
+                  SizedBox(
+                    height: ResponsiveUtils.getResponsiveSpacing(
+                      context,
+                      mobile: 24,
+                    ),
+                  ),
+
+                  // Campo de Nome (obrigatório)
                   ModernTextField(
-                    hintText: 'Digite o seu nome completo',
+                    hintText: 'Digite o seu nome completo *',
                     prefixIcon: Icons.person_outline,
                     textInputAction: TextInputAction.next,
                     controller: _nameController,
@@ -287,9 +358,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                   ),
 
-                  // Campo de Email
+                  // Campo de Email (obrigatório)
                   ModernTextField(
-                    hintText: 'Digite o seu email',
+                    hintText: 'Digite o seu email *',
                     prefixIcon: Icons.email_outlined,
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
@@ -304,6 +375,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           _emailError = null;
                         });
                       }
+                      
+                      // Debounce email validation
+                      _emailValidationTimer?.cancel();
+                      _emailValidationTimer = Timer(const Duration(milliseconds: 800), () {
+                        _validateEmailAvailable(value);
+                      });
                     },
                     onFieldSubmitted: (_) => _passwordFocusNode.requestFocus(),
                   ),
@@ -315,9 +392,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                   ),
 
-                  // Campo de Palavra-passe
+                  // Campo de Palavra-passe (obrigatório)
                   ModernTextField(
-                    hintText: 'Crie uma palavra-passe segura',
+                    hintText: 'Crie uma palavra-passe segura *',
                     prefixIcon: Icons.lock_outline,
                     isPassword: true,
                     textInputAction: TextInputAction.next,
@@ -348,9 +425,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     ),
                   ),
 
-                  // Campo de Confirmação de Palavra-passe
+                  // Campo de Confirmação de Palavra-passe (obrigatório)
                   ModernTextField(
-                    hintText: 'Confirme a sua palavra-passe',
+                    hintText: 'Confirme a sua palavra-passe *',
                     prefixIcon: Icons.lock_outline,
                     isPassword: true,
                     textInputAction: TextInputAction.done,

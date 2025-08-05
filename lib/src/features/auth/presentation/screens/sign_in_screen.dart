@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:async';
 import '../widgets/responsive_auth_layout.dart';
 import '../widgets/modern_text_field.dart';
 import '../widgets/modern_button.dart';
@@ -31,8 +32,10 @@ class _SignInScreenState extends State<SignInScreen> with ErrorHandlingMixin {
   final _passwordFocusNode = FocusNode();
 
   bool _isLoading = false;
+  bool _isValidatingEmail = false;
   String? _emailError;
   String? _passwordError;
+  Timer? _emailValidationTimer;
 
   @override
   void dispose() {
@@ -40,6 +43,7 @@ class _SignInScreenState extends State<SignInScreen> with ErrorHandlingMixin {
     _passwordController.dispose();
     _emailFocusNode.dispose();
     _passwordFocusNode.dispose();
+    _emailValidationTimer?.cancel();
     super.dispose();
   }
 
@@ -54,6 +58,38 @@ class _SignInScreenState extends State<SignInScreen> with ErrorHandlingMixin {
     }
     
     return null;
+  }
+
+  Future<void> _validateEmailExists(String email) async {
+    if (email.isEmpty || _emailError != null) return;
+    
+    final emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+    if (!emailRegex.hasMatch(email)) return;
+
+    setState(() {
+      _isValidatingEmail = true;
+    });
+
+    try {
+      final emailExists = await _authRepository.checkEmailExistsForSignin(email);
+      if (mounted) {
+        setState(() {
+          if (!emailExists) {
+            _emailError = 'Este email não está registado. Verifique o email ou crie uma conta.';
+          } else {
+            _emailError = null;
+          }
+        });
+      }
+    } catch (e) {
+      // Silently handle validation errors - don't show to user during typing
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isValidatingEmail = false;
+        });
+      }
+    }
   }
 
   String? _validatePassword(String? value) {
@@ -126,24 +162,31 @@ class _SignInScreenState extends State<SignInScreen> with ErrorHandlingMixin {
       }
     } catch (e) {
       if (mounted) {
-        final errorMessage = NetworkErrorHandler.handleAuthError(e);
+        String errorMessage = NetworkErrorHandler.handleAuthError(e);
         
-        // Show user-friendly error message
-        _showErrorSnackBar(errorMessage);
-        
-        // Set field-specific errors if applicable
-        if (e is AuthException) {
+        // Handle specific error messages
+        if (e.toString().contains('Este email não está registado')) {
+          errorMessage = 'Este email não está registado. Verifique o email ou crie uma conta.';
+          setState(() {
+            _emailError = errorMessage;
+          });
+        } else if (e is AuthException) {
           if (e.message.toLowerCase().contains('invalid login credentials')) {
+            errorMessage = 'Credenciais inválidas. Verifique o email e palavra-passe.';
             setState(() {
               _emailError = 'Credenciais inválidas';
               _passwordError = 'Credenciais inválidas';
             });
           } else if (e.message.toLowerCase().contains('email not confirmed')) {
+            errorMessage = 'Email não confirmado. Verifique a sua caixa de entrada.';
             setState(() {
               _emailError = 'Email não confirmado';
             });
           }
         }
+        
+        // Show user-friendly error message
+        _showErrorSnackBar(errorMessage);
       }
     } finally {
       if (mounted) {
@@ -241,6 +284,12 @@ class _SignInScreenState extends State<SignInScreen> with ErrorHandlingMixin {
                         _emailError = null;
                       });
                     }
+                    
+                    // Debounce email validation
+                    _emailValidationTimer?.cancel();
+                    _emailValidationTimer = Timer(const Duration(milliseconds: 800), () {
+                      _validateEmailExists(value);
+                    });
                   },
                   onFieldSubmitted: _handleFieldSubmitted,
                 ),
