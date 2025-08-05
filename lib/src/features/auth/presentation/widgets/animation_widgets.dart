@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class FadeInSlideUp extends StatefulWidget {
   final Widget child;
@@ -177,5 +178,101 @@ class _ScaleInAnimationState extends State<ScaleInAnimation>
         child: widget.child,
       ),
     );
+  }
+}
+
+/// Enhanced animation widget using flutter_animate for smoother transitions
+class SmoothFadeInUp extends StatelessWidget {
+  final Widget child;
+  final Duration delay;
+  final Duration duration;
+
+  const SmoothFadeInUp({
+    super.key,
+    required this.child,
+    this.delay = Duration.zero,
+    this.duration = const Duration(milliseconds: 600),
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return child
+        .animate()
+        .fadeIn(
+          delay: delay,
+          duration: duration,
+          curve: Curves.easeOut,
+        )
+        .slideY(
+          begin: 0.3,
+          end: 0,
+          delay: delay,
+          duration: duration,
+          curve: Curves.easeOutCubic,
+        );
+  }
+}
+
+/// Staggered animation using flutter_animate
+class SmoothStaggeredAnimation extends StatelessWidget {
+  final List<Widget> children;
+  final Duration baseDelay;
+  final Duration staggerDelay;
+  final Duration duration;
+
+  const SmoothStaggeredAnimation({
+    super.key,
+    required this.children,
+    this.baseDelay = const Duration(milliseconds: 200),
+    this.staggerDelay = const Duration(milliseconds: 100),
+    this.duration = const Duration(milliseconds: 600),
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: children.asMap().entries.map((entry) {
+        final index = entry.key;
+        final child = entry.value;
+        
+        return SmoothFadeInUp(
+          delay: baseDelay + (staggerDelay * index),
+          duration: duration,
+          child: child,
+        );
+      }).toList(),
+    );
+  }
+}
+
+/// Smooth scale animation for buttons and interactive elements
+class SmoothScaleIn extends StatelessWidget {
+  final Widget child;
+  final Duration delay;
+  final Duration duration;
+
+  const SmoothScaleIn({
+    super.key,
+    required this.child,
+    this.delay = Duration.zero,
+    this.duration = const Duration(milliseconds: 400),
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return child
+        .animate()
+        .fadeIn(
+          delay: delay,
+          duration: duration,
+          curve: Curves.easeOut,
+        )
+        .scaleXY(
+          begin: 0.8,
+          end: 1,
+          delay: delay,
+          duration: duration,
+          curve: Curves.easeOutBack,
+        );
   }
 }

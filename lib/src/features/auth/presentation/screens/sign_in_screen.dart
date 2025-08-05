@@ -197,7 +197,7 @@ class _SignInScreenState extends State<SignInScreen> with ErrorHandlingMixin {
     return ResponsiveAuthLayout(
         title: '',
         subtitle: '',
-        child: StaggeredFadeInSlideUp(
+        child: SmoothStaggeredAnimation(
           baseDelay: const Duration(milliseconds: 400),
           children: [
           Form(

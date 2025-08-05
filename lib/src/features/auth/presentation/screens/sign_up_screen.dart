@@ -185,7 +185,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       title: 'Crie a sua conta',
       subtitle: 'Junte-se à nossa comunidade de futebol',
       showBackButton: true,
-      child: StaggeredFadeInSlideUp(
+      child: SmoothStaggeredAnimation(
         baseDelay: const Duration(milliseconds: 400),
         children: [
           if (_showVerificationMessage)

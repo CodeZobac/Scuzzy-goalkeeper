@@ -3,6 +3,7 @@ import 'dart:math';
 import '../theme/app_theme.dart';
 import '../../../../shared/widgets/svg_asset_manager.dart';
 import '../../../../shared/utils/responsive_utils.dart';
+import 'mobile_animated_auth_layout.dart';
 
 class ResponsiveAuthLayout extends StatefulWidget {
   final Widget child;
@@ -156,7 +157,13 @@ class _ResponsiveAuthLayoutState extends State<ResponsiveAuthLayout>
     } else if (context.isTablet) {
       return _buildTabletLayout(context);
     } else {
-      return _buildMobileLayout(context);
+      // Use the new mobile animated layout for mobile devices
+      return MobileAnimatedAuthLayout(
+        title: widget.title,
+        subtitle: widget.subtitle,
+        showBackButton: widget.showBackButton,
+        child: widget.child,
+      );
     }
   }
 
@@ -206,23 +213,7 @@ class _ResponsiveAuthLayoutState extends State<ResponsiveAuthLayout>
     );
   }
 
-  /// Mobile layout optimized for small screens
-  Widget _buildMobileLayout(BuildContext context) {
-    return Column(
-      children: [
-        _buildHeader(context),
-        Expanded(
-          child: SingleChildScrollView(
-            padding: context.authPadding.copyWith(
-              // Reduce top padding when keyboard is visible
-              top: context.isKeyboardVisible ? 8 : context.authPadding.top,
-            ),
-            child: _buildFormCard(context),
-          ),
-        ),
-      ],
-    );
-  }
+  /// Mobile layout is now handled by MobileAnimatedAuthLayout
 
   Widget _buildHeader(BuildContext context, {double? height}) {
     final screenWidth = MediaQuery.of(context).size.width;

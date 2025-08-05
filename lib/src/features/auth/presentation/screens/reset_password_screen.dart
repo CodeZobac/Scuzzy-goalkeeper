@@ -362,7 +362,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen>
             child: ResponsiveAuthLayout(
               title: '',
               subtitle: '',
-              child: StaggeredFadeInSlideUp(
+              child: SmoothStaggeredAnimation(
                 baseDelay: const Duration(milliseconds: 400),
                 children: [
                   _passwordResetSuccessful

@@ -135,7 +135,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with ErrorH
     return ResponsiveAuthLayout(
         title: '',
         subtitle: '',
-        child: StaggeredFadeInSlideUp(
+        child: SmoothStaggeredAnimation(
           baseDelay: const Duration(milliseconds: 400),
           children: [
           _emailSent
