@@ -75,6 +75,11 @@ class _ModernTextFieldState extends State<ModernTextField>
     _isObscured = widget.isPassword || widget.obscureText;
     _hasContent = widget.controller?.text.isNotEmpty ?? false;
     
+    // If there's an initial error, show validation immediately
+    if (widget.errorText != null) {
+      _showValidation = true;
+    }
+    
     // Focus animation controller
     _focusAnimationController = AnimationController(
       duration: const Duration(milliseconds: 250),
@@ -142,6 +147,13 @@ class _ModernTextFieldState extends State<ModernTextField>
     
     // Content listener
     widget.controller?.addListener(_handleContentChange);
+    
+    // Start validation animation if there's an initial error
+    if (widget.errorText != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _validationAnimationController.forward();
+      });
+    }
   }
 
   void _handleFocusChange() {
@@ -193,6 +205,28 @@ class _ModernTextFieldState extends State<ModernTextField>
     
     // Haptic feedback for errors
     HapticFeedback.lightImpact();
+  }
+
+  @override
+  void didUpdateWidget(ModernTextField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    
+    // Handle external error changes
+    if (widget.errorText != oldWidget.errorText) {
+      final hasError = widget.errorText != null;
+      
+      if (hasError) {
+        // Show error icon and trigger shake animation
+        setState(() {
+          _showValidation = true;
+        });
+        _validationAnimationController.forward();
+        _triggerShakeAnimation();
+      } else if (oldWidget.errorText != null && widget.errorText == null) {
+        // Error was cleared, validate the field normally
+        _validateField();
+      }
+    }
   }
 
   @override
@@ -254,7 +288,7 @@ class _ModernTextFieldState extends State<ModernTextField>
                       offset: const Offset(0, 3),
                     ),
                   // Success glow effect
-                  if (_isValid && _showValidation && widget.showValidationIcon)
+                  if (_isValid && _showValidation && widget.showValidationIcon && widget.errorText == null)
                     BoxShadow(
                       color: AppTheme.successColor.withOpacity(0.1 * _validationIconAnimation.value),
                       blurRadius: 10 * _validationIconAnimation.value,
@@ -317,10 +351,12 @@ class _ModernTextFieldState extends State<ModernTextField>
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppTheme.borderRadiusLarge),
                     borderSide: BorderSide(
-                      color: _isValid && _showValidation && widget.showValidationIcon
-                          ? AppTheme.successColor.withOpacity(0.6)
-                          : AppTheme.borderLight,
-                      width: _isValid && _showValidation && widget.showValidationIcon ? 2 : 1.5,
+                      color: widget.errorText != null
+                          ? AppTheme.errorColor.withOpacity(0.6)
+                          : (_isValid && _showValidation && widget.showValidationIcon
+                              ? AppTheme.successColor.withOpacity(0.6)
+                              : AppTheme.borderLight),
+                      width: (widget.errorText != null || (_isValid && _showValidation && widget.showValidationIcon)) ? 2 : 1.5,
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
@@ -377,14 +413,19 @@ class _ModernTextFieldState extends State<ModernTextField>
   Widget? _buildSuffixIcon() {
     final List<Widget> suffixWidgets = [];
 
-    // Validation icon
-    if (widget.showValidationIcon && _showValidation && _hasContent) {
+    // Validation icon - consider both internal validation and external errorText
+    final hasExternalError = widget.errorText != null;
+    final shouldShowValidationIcon = widget.showValidationIcon && 
+        (_showValidation && _hasContent || hasExternalError);
+    final isFieldValid = _isValid && !hasExternalError;
+
+    if (shouldShowValidationIcon) {
       suffixWidgets.add(
         ScaleTransition(
           scale: _validationIconAnimation,
           child: Icon(
-            _isValid ? Icons.check_circle : Icons.error,
-            color: _isValid ? AppTheme.successColor : AppTheme.errorColor,
+            isFieldValid ? Icons.check_circle : Icons.error,
+            color: isFieldValid ? AppTheme.successColor : AppTheme.errorColor,
             size: 20,
           ),
         ),
