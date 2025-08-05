@@ -335,7 +335,7 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen>
         ),
         if (controller.userProfile!.isGoalkeeper) ...[
           const SizedBox(height: AppTheme.spacing),
-          _buildAvailabilityCard(),
+          _buildAvailabilityCard(controller),
         ],
       ],
     );
@@ -347,7 +347,7 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen>
     );
   }
   
-  Widget _buildAvailabilityCard() {
+  Widget _buildAvailabilityCard(UserProfileController controller) {
     return AnimatedBuilder(
       animation: _cardAnimationController,
       builder: (context, child) {
@@ -634,11 +634,27 @@ class _EnhancedProfileScreenState extends State<EnhancedProfileScreen>
                                 const SizedBox(height: 16),
                                 Row(
                                   children: [
-                                    _buildQuickStat('Próximas', '3', Icons.event_available),
+                                    _buildQuickStat(
+                                      'Próximas',
+                                      controller.userProfile!.gamesPlayed > 0
+                                          ? controller.userProfile!.gamesPlayed.toString()
+                                          : 'N/D',
+                                      Icons.event_available,
+                                    ),
                                     const SizedBox(width: 16),
-                                    _buildQuickStat('Esta Semana', '8h', Icons.access_time),
+                                    _buildQuickStat(
+                                      'Esta Semana',
+                                      'N/D', // This can be dynamic in a future implementation
+                                      Icons.access_time,
+                                    ),
                                     const SizedBox(width: 16),
-                                    _buildQuickStat('Rating', '4.9', Icons.star),
+                                    _buildQuickStat(
+                                      'Overall',
+                                      controller.userProfile!.getOverallRating() > 0
+                                          ? controller.userProfile!.getOverallRating().toStringAsFixed(1)
+                                          : 'N/D',
+                                      Icons.star,
+                                    ),
                                   ],
                                 ),
                               ],
