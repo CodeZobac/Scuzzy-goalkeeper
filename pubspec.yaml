@@ -68,6 +68,12 @@ dependencies:
   # Animations
   flutter_animate: ^4.5.0
 
+  # HTTP client for Azure Communication Services
+  http: ^1.1.0
+
+  # Cryptographic functions for secure hashing
+  crypto: ^3.0.3
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -102,6 +108,7 @@ flutter:
     - assets/icons8-football-field.svg
     - assets/icons8-football.svg
     - assets/icons8-goalkeeper-o-mais-baddy.svg
+    - email_templates/
 
   # To add assets to your application, add an assets section, like this:
   # assets:
