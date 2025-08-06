@@ -1,10 +1,12 @@
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'services/email_validation_service.dart';
+import '../services/email_confirmation_service.dart';
 
 class AuthRepository {
   final _supabase = Supabase.instance.client;
   final _emailValidationService = EmailValidationService();
+  final EmailConfirmationService _emailConfirmationService = EmailConfirmationService();
 
   Future<void> signUp({
     required String name,
@@ -17,12 +19,28 @@ class AuthRepository {
       throw AuthException('Este email já está registado. Tente fazer login ou use outro email.');
     }
 
-    await _supabase.auth.signUp(
+    // Sign up the user with Supabase Auth
+    final response = await _supabase.auth.signUp(
       email: email,
       password: password,
       data: {'full_name': name},
       emailRedirectTo: 'https://goalkeeper-e4b09.web.app/#/email-confirmed',
     );
+
+    // If signup was successful and we have a user, send confirmation email
+    if (response.user != null) {
+      try {
+        await _emailConfirmationService.sendConfirmationEmail(
+          email,
+          response.user!.id,
+        );
+      } catch (e) {
+        // Log the error but don't fail the signup process
+        // The user account was created successfully, just the email failed
+        print('Failed to send confirmation email: $e');
+        // In a production app, you might want to queue this for retry
+      }
+    }
   }
 
   Future<void> signInWithPassword({required String email, required String password}) async {
@@ -66,5 +84,10 @@ class AuthRepository {
   /// Check if email exists for signin validation
   Future<bool> checkEmailExistsForSignin(String email) async {
     return await _emailValidationService.emailExists(email);
+  }
+
+  /// Disposes of resources used by the repository
+  void dispose() {
+    _emailConfirmationService.dispose();
   }
 }

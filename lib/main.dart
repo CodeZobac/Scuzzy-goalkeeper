@@ -22,6 +22,7 @@ import 'src/features/auth/presentation/screens/forgot_password_screen.dart';
 import 'src/features/auth/presentation/screens/reset_password_screen.dart';
 import 'src/features/auth/presentation/screens/sign_in_screen.dart';
 import 'src/features/auth/presentation/screens/sign_up_screen.dart';
+import 'src/features/auth/presentation/screens/email_confirmation_screen.dart';
 import 'src/features/auth/presentation/theme/app_theme.dart';
 import 'src/features/goalkeeper_search/data/repositories/goalkeeper_search_repository.dart';
 import 'src/features/goalkeeper_search/presentation/controllers/goalkeeper_search_controller.dart';
@@ -555,6 +556,7 @@ class _MyAppState extends State<MyApp> {
         '/signup': (context) => const SignUpScreen(),
         '/forgot-password': (context) => const ForgotPasswordScreen(),
         '/reset-password': (context) => const ResetPasswordScreen(),
+
         '/deep-link-test': (context) => const DeepLinkTestScreen(),
         '/home': (context) => _buildHomeRoute(context),
         '/complete-profile': (context) => const CompleteProfileScreen(),
@@ -571,6 +573,13 @@ class _MyAppState extends State<MyApp> {
   Route<dynamic>? _generateRoute(RouteSettings settings) {
     // Check if guest user is trying to access restricted routes
     final authProvider = context.read<AuthStateProvider>();
+    
+    // Handle email confirmation route with query parameters
+    if (settings.name?.startsWith('/auth/confirm') == true) {
+      final uri = Uri.parse(settings.name!);
+      final code = uri.queryParameters['code'];
+      return _createSlideRoute(EmailConfirmationScreen(code: code));
+    }
     
     switch (settings.name) {
       case '/email-confirmed':
