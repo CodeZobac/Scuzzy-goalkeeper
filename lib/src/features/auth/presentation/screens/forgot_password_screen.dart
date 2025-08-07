@@ -65,7 +65,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with ErrorH
     });
 
     try {
-      // Use the updated auth repository method with proper redirect URL
+      // Use the updated auth repository method with Azure email service
       await _authRepository.resetPasswordForEmail(_emailController.text);
       setState(() {
         _emailSent = true;
@@ -75,17 +75,31 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with ErrorH
         String errorMessage;
         if (e.statusCode == '429') {
           errorMessage = 'Muitas tentativas. Por favor, aguarde um pouco antes de tentar novamente.';
+        } else if (e.message.contains('Falha ao enviar email de recuperação')) {
+          errorMessage = 'Erro no serviço de email. Tente novamente em alguns minutos.';
+        } else if (e.message.contains('Este email não está registado')) {
+          errorMessage = 'Este email não está registado. Verifique o email ou crie uma conta.';
+          setState(() {
+            _emailError = errorMessage;
+          });
         } else {
           errorMessage = NetworkErrorHandler.handleAuthError(e);
         }
         _showErrorSnackBar(errorMessage);
-        setState(() {
-          _emailError = 'Erro ao enviar o email';
-        });
+        
+        // Only set email error for email-specific issues
+        if (!e.message.contains('Falha ao enviar email de recuperação')) {
+          setState(() {
+            _emailError = 'Erro ao processar o email';
+          });
+        }
       }
     } catch (e) {
       if (mounted) {
-        final errorMessage = NetworkErrorHandler.handleAuthError(e);
+        String errorMessage = 'Erro inesperado. Tente novamente.';
+        if (e.toString().contains('Azure') || e.toString().contains('email service')) {
+          errorMessage = 'Erro no serviço de email. Tente novamente em alguns minutos.';
+        }
         _showErrorSnackBar(errorMessage);
       }
     } finally {
@@ -128,6 +142,53 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with ErrorH
 
   void _navigateToSignIn() {
     Navigator.of(context).pop();
+  }
+
+  Future<void> _resendPasswordResetEmail() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await _authRepository.resendPasswordResetEmail(_emailController.text);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Row(
+              children: [
+                Icon(
+                  Icons.check_circle_outline,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text('Email de recuperação reenviado com sucesso!'),
+                ),
+              ],
+            ),
+            backgroundColor: AppTheme.authSuccess,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        String errorMessage = 'Falha ao reenviar email. Tente novamente.';
+        if (e.toString().contains('Azure') || e.toString().contains('email service')) {
+          errorMessage = 'Erro no serviço de email. Tente novamente em alguns minutos.';
+        }
+        
+        _showErrorSnackBar(errorMessage);
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -271,7 +332,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with ErrorH
         ),
         SizedBox(height: ResponsiveUtils.getResponsiveSpacing(context, mobile: 16)),
         Text(
-          'Verifique a sua caixa de entrada para o link de recuperação de palavra-passe. O link irá abrir a aplicação automaticamente.',
+          'Enviámos um email de recuperação para o seu endereço. Por favor, clique no botão de recuperação no email para redefinir a sua palavra-passe.',
           textAlign: TextAlign.center,
           style: AppTheme.authBodyMedium.copyWith(
             fontSize: ResponsiveUtils.getResponsiveFontSize(
@@ -282,7 +343,56 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> with ErrorH
             ),
           ),
         ),
-        SizedBox(height: ResponsiveUtils.getResponsiveSpacing(context, mobile: 32)),
+        SizedBox(height: ResponsiveUtils.getResponsiveSpacing(context, mobile: 24)),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppTheme.authCardBackground,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: AppTheme.authInputBorder.withOpacity(0.5),
+            ),
+          ),
+          child: Column(
+            children: [
+              Text(
+                'Não recebeu o email?',
+                style: AppTheme.authBodyMedium.copyWith(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Verifique a pasta de spam ou clique abaixo para reenviar.',
+                textAlign: TextAlign.center,
+                style: AppTheme.authBodyMedium.copyWith(
+                  fontSize: 12,
+                  color: AppTheme.authTextSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: ResponsiveUtils.getResponsiveSpacing(context, mobile: 24)),
+        ModernButton(
+          text: 'Reenviar Email de Recuperação',
+          icon: Icons.refresh,
+          onPressed: _isLoading ? null : _resendPasswordResetEmail,
+          isLoading: _isLoading,
+          loadingText: 'Reenviando...',
+          width: double.infinity,
+          height: ResponsiveUtils.getResponsiveValue(
+            context,
+            mobile: 54.0,
+            tablet: 56.0,
+            desktop: 58.0,
+          ),
+          backgroundColor: AppTheme.authSecondaryGreen,
+          textColor: Colors.white,
+          elevation: 2,
+        ),
+        SizedBox(height: ResponsiveUtils.getResponsiveSpacing(context, mobile: 16)),
         ModernButton(
           text: 'Voltar ao Início de Sessão',
           icon: Icons.arrow_back,

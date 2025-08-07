@@ -91,19 +91,29 @@ class AuthStateProvider extends ChangeNotifier {
   /// Track content viewing for guest users
   void trackGuestContentView(String content) {
     if (isGuest && _guestContext != null) {
-      _guestContext = _guestContext!.addViewedContent(content);
+      // Check if this content was already viewed recently to prevent spam
+      final now = DateTime.now();
+      final lastActivity = _guestContext!.lastActivity;
+      final timeSinceLastActivity = now.difference(lastActivity);
       
-      // Parse content to extract type and ID for analytics
+      // Only track if it's been more than 5 seconds since last activity
+      // or if it's a different content type
       final parts = content.split('_');
       final contentType = parts.isNotEmpty ? parts[0] : 'unknown';
       final contentId = parts.length > 1 ? parts.sublist(1).join('_') : content;
       
-      _analyticsService.trackContentView(contentType, contentId, _guestContext!);
+      // Check if we've already tracked this exact content recently
+      final recentContent = _guestContext!.viewedContent
+          .where((c) => c == content && timeSinceLastActivity.inSeconds < 5)
+          .isNotEmpty;
       
-      // Defer notification to avoid calling during build
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        notifyListeners();
-      });
+      if (!recentContent) {
+        _guestContext = _guestContext!.addViewedContent(content);
+        _analyticsService.trackContentView(contentType, contentId, _guestContext!);
+        
+        // Don't call notifyListeners() here to prevent rebuild loops
+        // The UI will update naturally when needed
+      }
     }
   }
   

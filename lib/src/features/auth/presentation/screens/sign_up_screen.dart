@@ -197,19 +197,41 @@ class _SignUpScreenState extends State<SignUpScreen> {
         debugPrint('Sign up error: $e');
         String errorMessage = 'Ocorreu um erro ao criar a conta. Tente novamente.';
         
-        // Handle specific error messages
+        // Handle specific error messages for Azure email service
         if (e.toString().contains('Este email já está registado')) {
           errorMessage = 'Este email já está registado. Tente fazer login ou use outro email.';
           setState(() {
             _emailError = errorMessage;
           });
+        } else if (e.toString().contains('Falha ao enviar email de confirmação')) {
+          errorMessage = 'Conta criada, mas falha ao enviar email de confirmação. Tente reenviar o email.';
+          // Still show verification message since account was created
+          setState(() {
+            _showVerificationMessage = true;
+          });
+          return; // Don't show error snackbar, show success with note
+        } else if (e.toString().contains('Azure') || e.toString().contains('email service')) {
+          errorMessage = 'Erro no serviço de email. Tente novamente em alguns minutos.';
         }
         
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(errorMessage),
+            content: Row(
+              children: [
+                const Icon(
+                  Icons.error_outline,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(errorMessage),
+                ),
+              ],
+            ),
             backgroundColor: AppTheme.authError,
             behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 5),
           ),
         );
       }
@@ -224,6 +246,71 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   void _navigateToSignIn() {
     Navigator.of(context).pop();
+  }
+
+  Future<void> _resendConfirmationEmail() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await _authRepository.resendConfirmationEmail(_emailController.text.trim());
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Row(
+              children: [
+                Icon(
+                  Icons.check_circle_outline,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text('Email de confirmação reenviado com sucesso!'),
+                ),
+              ],
+            ),
+            backgroundColor: AppTheme.authSuccess,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        String errorMessage = 'Falha ao reenviar email. Tente novamente.';
+        if (e.toString().contains('Azure') || e.toString().contains('email service')) {
+          errorMessage = 'Erro no serviço de email. Tente novamente em alguns minutos.';
+        }
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(
+                  Icons.error_outline,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(errorMessage),
+                ),
+              ],
+            ),
+            backgroundColor: AppTheme.authError,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -253,11 +340,60 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Enviámos um link de verificação para o seu email. Por favor, verifique a sua caixa de entrada para continuar.',
+                  'Enviámos um email de confirmação para o seu endereço. Por favor, clique no botão de confirmação no email para ativar a sua conta.',
                   textAlign: TextAlign.center,
                   style: AppTheme.authBodyMedium,
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 24),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.authCardBackground,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppTheme.authInputBorder.withOpacity(0.5),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        'Não recebeu o email?',
+                        style: AppTheme.authBodyMedium.copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Verifique a pasta de spam ou clique abaixo para reenviar.',
+                        textAlign: TextAlign.center,
+                        style: AppTheme.authBodyMedium.copyWith(
+                          fontSize: 12,
+                          color: AppTheme.authTextSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                ModernButton(
+                  text: 'Reenviar Email de Confirmação',
+                  icon: Icons.refresh,
+                  onPressed: _isLoading ? null : _resendConfirmationEmail,
+                  isLoading: _isLoading,
+                  loadingText: 'Reenviando...',
+                  width: double.infinity,
+                  height: ResponsiveUtils.getResponsiveValue(
+                    context,
+                    mobile: 56.0,
+                    tablet: 58.0,
+                    desktop: 60.0,
+                  ),
+                  backgroundColor: AppTheme.authSecondaryGreen,
+                  textColor: Colors.white,
+                  elevation: 2,
+                ),
+                const SizedBox(height: 16),
                 ModernButton(
                   text: 'Voltar ao Início de Sessão',
                   icon: Icons.login,

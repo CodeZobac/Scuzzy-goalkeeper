@@ -9,6 +9,7 @@ import '../widgets/modern_button.dart';
 import '../widgets/animation_widgets.dart';
 import '../theme/app_theme.dart';
 import '../../data/auth_repository.dart';
+import '../../services/auth_integration_service.dart';
 import '../providers/auth_state_provider.dart';
 import '../../../../shared/utils/responsive_utils.dart';
 import '../../../../core/error_handling/error_boundary.dart';
@@ -28,6 +29,7 @@ class ResetPasswordScreen extends StatefulWidget {
 class _ResetPasswordScreenState extends State<ResetPasswordScreen> 
     with ErrorHandlingMixin, TickerProviderStateMixin {
   final _authRepository = AuthRepository();
+  final _integrationService = AuthIntegrationService();
   final _formKey = GlobalKey<FormState>();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -86,11 +88,12 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen>
     _confirmPasswordController.dispose();
     _passwordFocusNode.dispose();
     _confirmPasswordFocusNode.dispose();
+    _integrationService.dispose();
     super.dispose();
   }
 
   /// Check if the current session is valid for password recovery
-  void _checkPasswordRecoverySession() {
+  void _checkPasswordRecoverySession() async {
     final authProvider = context.read<AuthStateProvider>();
     
     // Clear any existing guest context since we're in a password recovery flow
@@ -102,33 +105,73 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen>
     // This prevents automatic redirects
     authProvider.handlePasswordRecoveryMode();
 
-    // Check if we have a current session - this indicates we came from a password reset link
-    final currentSession = Supabase.instance.client.auth.currentSession;
-    
-    // Check URL for password reset context
+    // Check URL for authentication code (Azure-based reset)
     final currentUrl = Uri.base;
+    final azureAuthCode = currentUrl.queryParameters['code'];
+    final resetType = currentUrl.queryParameters['type'];
     final hasResetPasswordFragment = currentUrl.fragment.contains('reset-password');
-    final hasSupabaseAuthCode = currentUrl.queryParameters.containsKey('code') ||
-                              currentUrl.fragment.contains('access_token=');
+    
+    // Check for Supabase-based reset (fallback)
+    final currentSession = Supabase.instance.client.auth.currentSession;
+    final hasSupabaseAuthCode = currentUrl.fragment.contains('access_token=');
     
     print('=== RESET SCREEN DEBUG ===');
     print('Has session: ${currentSession != null}');
     print('Has reset fragment: $hasResetPasswordFragment');
-    print('Has auth code: $hasSupabaseAuthCode');
+    print('Azure auth code: $azureAuthCode');
+    print('Reset type: $resetType');
+    print('Has Supabase auth code: $hasSupabaseAuthCode');
     print('URL: ${currentUrl.toString()}');
     print('=== END RESET DEBUG ===');
     
-    // If we have a session OR we're on a reset URL, this is valid
-    if (currentSession != null || hasResetPasswordFragment) {
+    // First, try to validate Azure authentication code
+    if (azureAuthCode != null && azureAuthCode.isNotEmpty && 
+        (resetType == 'azure_reset' || resetType == 'password_reset')) {
+      try {
+        final userId = await _authRepository.validatePasswordResetCode(azureAuthCode);
+        if (userId != null) {
+          setState(() {
+            _isValidSession = true;
+          });
+          
+          ErrorLogger.logInfo(
+            'Azure password reset code validated successfully',
+            context: 'PASSWORD_RESET_SCREEN_VALID',
+            additionalData: {
+              'session_valid': true,
+              'auth_type': 'azure',
+              'user_id': userId,
+              'reset_type': resetType,
+            },
+          );
+          return;
+        }
+      } catch (e) {
+        ErrorLogger.logError(
+          e is Exception ? e : Exception(e.toString()),
+          StackTrace.current,
+          context: 'PASSWORD_RESET_CODE_VALIDATION_ERROR',
+          severity: ErrorSeverity.warning,
+          additionalData: {
+            'auth_code_length': azureAuthCode.length,
+            'reset_type': resetType,
+          },
+        );
+      }
+    }
+    
+    // Fallback to Supabase session-based reset
+    if (currentSession != null || (hasResetPasswordFragment && hasSupabaseAuthCode)) {
       setState(() {
         _isValidSession = true;
       });
       
       ErrorLogger.logInfo(
-        'Password recovery session detected on reset screen',
+        'Supabase password recovery session detected on reset screen',
         context: 'PASSWORD_RESET_SCREEN_VALID',
         additionalData: {
           'session_valid': true,
+          'auth_type': 'supabase',
           'has_session': currentSession != null,
           'has_reset_fragment': hasResetPasswordFragment,
           'has_auth_code': hasSupabaseAuthCode,
@@ -149,23 +192,21 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen>
         ErrorLogger.logInfo(
           'Password recovery event received',
           context: 'PASSWORD_RESET',
-          additionalData: {'session_valid': true},
+          additionalData: {'session_valid': true, 'auth_type': 'supabase'},
         );
       }
     });
 
-    // If no session exists, show invalid session view
-    if (currentSession == null) {
-      setState(() {
-        _isValidSession = false;
-      });
-      
-      ErrorLogger.logInfo(
-        'No session found for password recovery',
-        context: 'PASSWORD_RESET',
-        additionalData: {'session_valid': false},
-      );
-    }
+    // If no valid authentication method found, show invalid session view
+    setState(() {
+      _isValidSession = false;
+    });
+    
+    ErrorLogger.logInfo(
+      'No valid authentication found for password recovery',
+      context: 'PASSWORD_RESET',
+      additionalData: {'session_valid': false},
+    );
   }
 
   String? _validatePassword(String? value) {
@@ -218,7 +259,18 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen>
     });
 
     try {
-      await _authRepository.updatePassword(_passwordController.text);
+      // Check if this is an Azure-based reset
+      final currentUrl = Uri.base;
+      final azureAuthCode = currentUrl.queryParameters['code'];
+      final resetType = currentUrl.queryParameters['type'];
+      
+      if (azureAuthCode != null && (resetType == 'azure_reset' || resetType == 'password_reset')) {
+        // Handle Azure-based password reset
+        await _handleAzurePasswordReset(azureAuthCode);
+      } else {
+        // Handle Supabase-based password reset (existing flow)
+        await _authRepository.updatePassword(_passwordController.text);
+      }
       
       setState(() {
         _passwordResetSuccessful = true;
@@ -228,6 +280,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen>
       ErrorLogger.logInfo(
         'Password reset completed successfully',
         context: 'PASSWORD_RESET_SUCCESS',
+        additionalData: {
+          'reset_type': resetType ?? 'supabase',
+        },
       );
 
       // Clear any guest state that might exist
@@ -260,6 +315,15 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen>
         String errorMessage;
         if (e.statusCode == '422') {
           errorMessage = 'Palavra-passe muito fraca. Por favor, escolha uma palavra-passe mais forte.';
+        } else if (e.message.contains('Código de recuperação inválido ou expirado')) {
+          errorMessage = e.message;
+          // For expired codes, also show option to request new link
+          _showErrorSnackBarWithAction(errorMessage, 'Solicitar Novo Link', () {
+            Navigator.of(context).pushReplacementNamed('/forgot-password');
+          });
+          return;
+        } else if (e.message.contains('Erro no serviço de recuperação')) {
+          errorMessage = e.message;
         } else {
           errorMessage = NetworkErrorHandler.handleAuthError(e);
         }
@@ -274,7 +338,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen>
       );
 
       if (mounted) {
-        _showErrorSnackBar('Erro inesperado. Por favor, tente novamente.');
+        String errorMessage = 'Erro inesperado. Por favor, tente novamente.';
+        if (e.toString().contains('Azure') || e.toString().contains('email service')) {
+          errorMessage = 'Erro no serviço de recuperação. Tente novamente em alguns minutos.';
+        }
+        _showErrorSnackBar(errorMessage);
       }
     } finally {
       if (mounted) {
@@ -282,6 +350,31 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen>
           _isLoading = false;
         });
       }
+    }
+  }
+
+  /// Handles Azure-based password reset using authentication code
+  Future<void> _handleAzurePasswordReset(String authCode) async {
+    try {
+      // Use the integration service to handle Azure-based password reset
+      final success = await _integrationService.handlePasswordReset(authCode, _passwordController.text);
+      if (!success) {
+        throw AuthException('Código de recuperação inválido ou expirado. Solicite um novo link de recuperação.');
+      }
+    } catch (e) {
+      if (e is AuthException) {
+        rethrow;
+      }
+      
+      // Handle specific Azure service errors
+      String errorMessage = 'Falha ao processar recuperação de palavra-passe. Tente novamente.';
+      if (e.toString().contains('Azure') || e.toString().contains('email service')) {
+        errorMessage = 'Erro no serviço de recuperação. Tente novamente em alguns minutos.';
+      } else if (e.toString().contains('expired') || e.toString().contains('invalid')) {
+        errorMessage = 'Código de recuperação inválido ou expirado. Solicite um novo link.';
+      }
+      
+      throw AuthException(errorMessage);
     }
   }
 
@@ -314,6 +407,40 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen>
           label: 'Tentar novamente',
           textColor: Colors.white,
           onPressed: _handlePasswordUpdate,
+        ),
+      ),
+    );
+  }
+
+  void _showErrorSnackBarWithAction(String message, String actionLabel, VoidCallback onAction) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(
+              Icons.error_outline,
+              color: Colors.white,
+              size: 20,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(fontSize: 14),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: AppTheme.authError,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        duration: const Duration(seconds: 7),
+        action: SnackBarAction(
+          label: actionLabel,
+          textColor: Colors.white,
+          onPressed: onAction,
         ),
       ),
     );
@@ -750,6 +877,40 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen>
               desktop: 16,
             ),
             height: 1.5,
+          ),
+        ),
+
+        SizedBox(height: ResponsiveUtils.getResponsiveSpacing(context, mobile: 16)),
+
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppTheme.authCardBackground,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: AppTheme.authInputBorder.withOpacity(0.5),
+            ),
+          ),
+          child: Column(
+            children: [
+              Text(
+                'Possíveis causas:',
+                style: AppTheme.authBodyMedium.copyWith(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '• O link expirou (válido por 5 minutos)\n• O link já foi usado\n• Erro na cópia do link do email',
+                textAlign: TextAlign.left,
+                style: AppTheme.authBodyMedium.copyWith(
+                  fontSize: 11,
+                  color: AppTheme.authTextSecondary,
+                  height: 1.4,
+                ),
+              ),
+            ],
           ),
         ),
 

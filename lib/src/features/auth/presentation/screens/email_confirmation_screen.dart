@@ -4,7 +4,7 @@ import '../widgets/responsive_auth_layout.dart';
 import '../widgets/modern_button.dart';
 import '../widgets/animation_widgets.dart';
 import '../theme/app_theme.dart';
-import '../../services/email_confirmation_service.dart';
+import '../../services/auth_integration_service.dart';
 import '../../../../shared/utils/responsive_utils.dart';
 
 /// Screen for handling email confirmation from redirect URLs
@@ -24,7 +24,7 @@ class EmailConfirmationScreen extends StatefulWidget {
 }
 
 class _EmailConfirmationScreenState extends State<EmailConfirmationScreen> {
-  final EmailConfirmationService _confirmationService = EmailConfirmationService();
+  final AuthIntegrationService _integrationService = AuthIntegrationService();
   
   bool _isLoading = true;
   bool _isConfirmed = false;
@@ -39,7 +39,7 @@ class _EmailConfirmationScreenState extends State<EmailConfirmationScreen> {
 
   @override
   void dispose() {
-    _confirmationService.dispose();
+    _integrationService.dispose();
     super.dispose();
   }
 
@@ -54,10 +54,10 @@ class _EmailConfirmationScreenState extends State<EmailConfirmationScreen> {
     }
 
     try {
-      // Validate the confirmation code
-      final authCode = await _confirmationService.validateConfirmationCode(widget.code!);
+      // Handle email confirmation using Azure integration service
+      final isConfirmed = await _integrationService.handleEmailConfirmation(widget.code!);
       
-      if (authCode == null) {
+      if (!isConfirmed) {
         setState(() {
           _isLoading = false;
           _errorMessage = 'Código de confirmação inválido, expirado ou já utilizado.';
@@ -65,29 +65,11 @@ class _EmailConfirmationScreenState extends State<EmailConfirmationScreen> {
         return;
       }
 
-      // Store the user ID for potential use
-      _userId = authCode.userId;
-
-      // Update the user's email verification status in Supabase Auth
-      // Note: This assumes the user is already signed in or we have their session
-      final currentUser = Supabase.instance.client.auth.currentUser;
-      
-      if (currentUser != null && currentUser.id == authCode.userId) {
-        // User is signed in and matches the confirmation code
-        // The email confirmation is handled automatically by Supabase
-        // when the user clicks the confirmation link
-        setState(() {
-          _isLoading = false;
-          _isConfirmed = true;
-        });
-      } else {
-        // User is not signed in or doesn't match
-        // This is still a successful confirmation, but they need to sign in
-        setState(() {
-          _isLoading = false;
-          _isConfirmed = true;
-        });
-      }
+      // Email confirmation is successful
+      setState(() {
+        _isLoading = false;
+        _isConfirmed = true;
+      });
     } catch (e) {
       setState(() {
         _isLoading = false;
