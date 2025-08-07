@@ -11,6 +11,7 @@ echo "SUPABASE_URL is set: $([ -n "$SUPABASE_URL" ] && echo "YES" || echo "NO")"
 echo "SUPABASE_ANON_KEY is set: $([ -n "$SUPABASE_ANON_KEY" ] && echo "YES" || echo "NO")"
 echo "MAPBOX_ACCESS_TOKEN is set: $([ -n "$MAPBOX_ACCESS_TOKEN" ] && echo "YES" || echo "NO")"
 echo "MAPBOX_DOWNLOADS_TOKEN is set: $([ -n "$MAPBOX_DOWNLOADS_TOKEN" ] && echo "YES" || echo "NO")"
+echo "PYTHON_BACKEND_URL is set: $([ -n "$PYTHON_BACKEND_URL" ] && echo "YES" || echo "NO")"
 
 # Exit if critical environment variables are missing
 if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ] || [ -z "$MAPBOX_ACCESS_TOKEN" ]; then
@@ -27,9 +28,10 @@ if [ -f lib/src/core/config/app_config.template.dart ]; then
   ESCAPED_SUPABASE_ANON_KEY=$(printf '%s' "$SUPABASE_ANON_KEY" | sed "s/'/\\\\'/g")
   ESCAPED_MAPBOX_ACCESS_TOKEN=$(printf '%s' "$MAPBOX_ACCESS_TOKEN" | sed "s/'/\\\\'/g")
   ESCAPED_MAPBOX_DOWNLOADS_TOKEN=$(printf '%s' "$MAPBOX_DOWNLOADS_TOKEN" | sed "s/'/\\\\'/g")
+  ESCAPED_PYTHON_BACKEND_URL=$(printf '%s' "$PYTHON_BACKEND_URL" | sed "s/'/\\\\'/g")
   
   # Use cat with here document and escaped variables
-  cat > lib/src/core/config/app_config.dart << EOF
+  cat > lib/src/core/config/app_config.dart <<EOF
 class AppConfig {
   static const String supabaseUrl = '${ESCAPED_SUPABASE_URL}';
   static const String supabaseAnonKey = '${ESCAPED_SUPABASE_ANON_KEY}';
@@ -37,6 +39,9 @@ class AppConfig {
   static const String mapboxDownloadsToken = '${ESCAPED_MAPBOX_DOWNLOADS_TOKEN}';
   static const String currencySymbol = '€';
   static const bool isDemoMode = false;
+  
+  // Python Backend Service Configuration
+  static const String backendBaseUrl = '${ESCAPED_PYTHON_BACKEND_URL}';
 }
 EOF
   
