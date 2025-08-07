@@ -5,6 +5,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import '../exceptions/email_service_exception.dart';
 import '../../features/auth/data/models/auth_code.dart';
+import 'email_logger.dart';
+import 'email_error_handler.dart';
 
 /// Manages email template loading and processing
 class EmailTemplateManager {
@@ -16,9 +18,28 @@ class EmailTemplateManager {
 
   /// Loads an HTML template from assets
   static Future<String> loadTemplate(String templateName) async {
+    EmailLogger.logTemplateOperation(
+      operation: 'loadTemplate',
+      templateName: templateName,
+    );
+    
     try {
       // Check cache first
       if (_templateCache.containsKey(templateName)) {
+        EmailLogger.debug(
+          'Template loaded from cache',
+          context: {
+            'templateName': templateName,
+            'cacheSize': _templateCache.length,
+          },
+        );
+        
+        EmailLogger.logTemplateOperation(
+          operation: 'loadTemplate',
+          templateName: templateName,
+          success: true,
+        );
+        
         return _templateCache[templateName]!;
       }
 
@@ -33,45 +54,157 @@ class EmailTemplateManager {
           templatePath = _resetTemplatePath;
           break;
         default:
-          throw EmailServiceException(
+          final exception = EmailServiceException(
             'Unknown template name: $templateName',
             EmailServiceErrorType.templateError,
           );
+          
+          EmailLogger.error(
+            'Unknown template name requested',
+            error: exception,
+            context: {
+              'requestedTemplate': templateName,
+              'availableTemplates': ['confirmation', 'password_reset'],
+            },
+          );
+          
+          EmailLogger.logTemplateOperation(
+            operation: 'loadTemplate',
+            templateName: templateName,
+            success: false,
+            errorMessage: 'Unknown template name',
+          );
+          
+          throw exception;
       }
+
+      EmailLogger.debug(
+        'Loading template from assets',
+        context: {
+          'templateName': templateName,
+          'templatePath': templatePath,
+        },
+      );
 
       final templateContent = await rootBundle.loadString(templatePath);
       
       // Cache the template for future use
       _templateCache[templateName] = templateContent;
       
+      EmailLogger.info(
+        'Template loaded and cached successfully',
+        context: {
+          'templateName': templateName,
+          'contentLength': templateContent.length,
+          'cacheSize': _templateCache.length,
+        },
+      );
+      
+      EmailLogger.logTemplateOperation(
+        operation: 'loadTemplate',
+        templateName: templateName,
+        success: true,
+      );
+      
       return templateContent;
     } on FlutterError catch (e) {
-      throw EmailServiceException(
-        'Failed to load template "$templateName": ${e.message}',
+      final exception = EmailServiceException(
+        'Template file not found or inaccessible: "$templateName"',
         EmailServiceErrorType.templateError,
         e,
       );
+      
+      EmailLogger.error(
+        'Flutter error loading template',
+        error: e,
+        context: {
+          'templateName': templateName,
+          'flutterError': e.message,
+        },
+      );
+      
+      EmailLogger.logTemplateOperation(
+        operation: 'loadTemplate',
+        templateName: templateName,
+        success: false,
+        errorMessage: EmailErrorHandler.getUserFriendlyMessage(exception),
+      );
+      
+      throw exception;
     } catch (e) {
-      throw EmailServiceException(
+      final exception = EmailServiceException(
         'Unexpected error loading template "$templateName": $e',
         EmailServiceErrorType.templateError,
         e,
       );
+      
+      EmailLogger.error(
+        'Unexpected error loading template',
+        error: e,
+        context: {
+          'templateName': templateName,
+        },
+      );
+      
+      EmailLogger.logTemplateOperation(
+        operation: 'loadTemplate',
+        templateName: templateName,
+        success: false,
+        errorMessage: EmailErrorHandler.getUserFriendlyMessage(exception),
+      );
+      
+      throw exception;
     }
   }
 
   /// Processes a template by substituting variables with their values
   static String processTemplate(String template, Map<String, String> variables) {
+    EmailLogger.logTemplateOperation(
+      operation: 'processTemplate',
+      templateName: 'dynamic',
+      variables: variables,
+    );
+    
     try {
+      EmailLogger.debug(
+        'Starting template processing',
+        context: {
+          'templateLength': template.length,
+          'variableCount': variables.length,
+          'variables': variables.keys.toList(),
+        },
+      );
+      
       String processedTemplate = template;
       
       // Validate and sanitize variables before substitution
       final sanitizedVariables = _sanitizeVariables(variables);
       
+      EmailLogger.debug(
+        'Variables sanitized successfully',
+        context: {
+          'originalCount': variables.length,
+          'sanitizedCount': sanitizedVariables.length,
+        },
+      );
+      
       // Replace template variables using Go-style template syntax {{ .VariableName }}
       for (final entry in sanitizedVariables.entries) {
         final placeholder = '{{ .${entry.key} }}';
+        final beforeLength = processedTemplate.length;
         processedTemplate = processedTemplate.replaceAll(placeholder, entry.value);
+        final afterLength = processedTemplate.length;
+        
+        if (beforeLength != afterLength) {
+          EmailLogger.debug(
+            'Variable substituted',
+            context: {
+              'variable': entry.key,
+              'placeholder': placeholder,
+              'lengthChange': afterLength - beforeLength,
+            },
+          );
+        }
       }
       
       // Check for any remaining unsubstituted variables
@@ -84,22 +217,77 @@ class EmailTemplateManager {
             .toSet()
             .join(', ');
         
-        throw EmailServiceException(
+        final exception = EmailServiceException(
           'Template contains unsubstituted variables: $unsubstitutedVars',
           EmailServiceErrorType.templateError,
         );
+        
+        EmailLogger.error(
+          'Template processing failed due to unsubstituted variables',
+          error: exception,
+          context: {
+            'unsubstitutedVariables': unsubstitutedVars,
+            'providedVariables': variables.keys.toList(),
+          },
+        );
+        
+        EmailLogger.logTemplateOperation(
+          operation: 'processTemplate',
+          templateName: 'dynamic',
+          success: false,
+          errorMessage: 'Unsubstituted variables found',
+          variables: variables,
+        );
+        
+        throw exception;
       }
+      
+      EmailLogger.info(
+        'Template processed successfully',
+        context: {
+          'originalLength': template.length,
+          'processedLength': processedTemplate.length,
+          'variablesSubstituted': sanitizedVariables.length,
+        },
+      );
+      
+      EmailLogger.logTemplateOperation(
+        operation: 'processTemplate',
+        templateName: 'dynamic',
+        success: true,
+        variables: variables,
+      );
       
       return processedTemplate;
     } catch (e) {
       if (e is EmailServiceException) {
         rethrow;
       }
-      throw EmailServiceException(
+      
+      final exception = EmailServiceException(
         'Failed to process template: $e',
         EmailServiceErrorType.templateError,
         e,
       );
+      
+      EmailLogger.error(
+        'Unexpected error during template processing',
+        error: e,
+        context: {
+          'templateLength': template.length,
+          'variableCount': variables.length,
+        },
+      );
+      
+      EmailLogger.logTemplateOperation(
+        operation: 'processTemplate',
+        templateName: 'dynamic',
+        success: false,
+        errorMessage: EmailErrorHandler.getUserFriendlyMessage(exception),
+        variables: variables,
+      );
+      
+      throw exception;
     }
   }
 
@@ -166,7 +354,10 @@ class EmailTemplateManager {
   static Future<String> buildPasswordResetEmail(String authCode) async {
     try {
       final template = await loadTemplate('password_reset');
-      final resetUrl = generateRedirectUrl(authCode, AuthCodeType.passwordReset);
+      
+      // For password reset, we'll generate a URL that includes the Azure auth code
+      // but redirects to the existing Supabase-compatible reset flow
+      final resetUrl = generatePasswordResetUrl(authCode);
       
       final variables = {
         'ConfirmationURL': resetUrl, // Template uses ConfirmationURL for both types
@@ -179,6 +370,44 @@ class EmailTemplateManager {
       }
       throw EmailServiceException(
         'Failed to build password reset email: $e',
+        EmailServiceErrorType.templateError,
+        e,
+      );
+    }
+  }
+
+  /// Generates a password reset URL that includes the Azure auth code
+  /// This URL will be handled by the reset password screen
+  static String generatePasswordResetUrl(String authCode) {
+    try {
+      final baseUrl = _getAppBaseUrl();
+      final resetPath = '/reset-password';
+      
+      // Validate auth code format
+      if (!_isValidAuthCode(authCode)) {
+        throw EmailServiceException(
+          'Invalid authentication code format',
+          EmailServiceErrorType.authCodeError,
+        );
+      }
+      
+      // Build the URL with the Azure authentication code as a query parameter
+      final uri = Uri.parse('$baseUrl$resetPath');
+      final urlWithCode = uri.replace(
+        queryParameters: {
+          ...uri.queryParameters,
+          'code': authCode,
+          'type': 'azure_reset', // Indicate this is an Azure-based reset
+        },
+      );
+      
+      return urlWithCode.toString();
+    } catch (e) {
+      if (e is EmailServiceException) {
+        rethrow;
+      }
+      throw EmailServiceException(
+        'Failed to generate password reset URL: $e',
         EmailServiceErrorType.templateError,
         e,
       );

@@ -12,6 +12,9 @@ class EmailResponse {
     required this.timestamp,
   });
 
+  /// Gets the message ID (alias for id for backward compatibility)
+  String get messageId => id;
+
   /// Creates an EmailResponse from Azure Communication Services API response
   factory EmailResponse.fromJson(Map<String, dynamic> json) {
     return EmailResponse(

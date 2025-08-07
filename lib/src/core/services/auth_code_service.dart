@@ -1,5 +1,5 @@
-import '../../../features/auth/data/models/auth_code.dart';
-import '../../../features/auth/data/repositories/auth_code_repository.dart';
+import '../../features/auth/data/models/auth_code.dart';
+import '../../features/auth/data/repositories/auth_code_repository.dart';
 import 'secure_code_generator.dart';
 
 /// Service for managing authentication codes with security and validation

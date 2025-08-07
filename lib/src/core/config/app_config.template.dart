@@ -5,4 +5,7 @@ class AppConfig {
   static const String mapboxDownloadsToken = '{{MAPBOX_DOWNLOADS_TOKEN}}';
   static const String currencySymbol = '€';
   static const bool isDemoMode = false;
+  
+  // Python Backend Service Configuration
+  static const String backendBaseUrl = '{{PYTHON_BACKEND_URL}}';
 }

@@ -23,6 +23,9 @@ enum EmailServiceErrorType {
   /// Azure Communication Services API errors
   azureServiceError,
   
+  /// Python backend service errors
+  backendError,
+  
   /// Template processing errors
   templateError,
   

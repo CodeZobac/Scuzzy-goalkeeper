@@ -1,42 +1,43 @@
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'app_config.dart';
 
 /// Configuration class for Azure Communication Services
 class AzureConfig {
   /// Azure Communication Services endpoint URL
   static String get emailServiceEndpoint {
-    final endpoint = dotenv.env['EMAIL_SERVICE'];
-    if (endpoint == null || endpoint.isEmpty) {
-      throw Exception('EMAIL_SERVICE environment variable is not set');
+    if (AppConfig.emailService.isEmpty) {
+      throw Exception('EMAIL_SERVICE configuration is not set');
     }
-    return endpoint;
+    return AppConfig.emailService;
   }
 
   /// Azure authentication key
   static String get azureKey {
-    final key = dotenv.env['AZURE_KEY'];
-    if (key == null || key.isEmpty) {
-      throw Exception('AZURE_KEY environment variable is not set');
+    if (AppConfig.azureKey.isEmpty) {
+      throw Exception('AZURE_KEY configuration is not set');
     }
-    return key;
+    return AppConfig.azureKey;
   }
 
   /// Azure connection string
   static String get connectionString {
-    final connectionString = dotenv.env['AZURE_CONECTION_STRING'];
-    if (connectionString == null || connectionString.isEmpty) {
-      throw Exception('AZURE_CONECTION_STRING environment variable is not set');
+    if (AppConfig.azureConnectionString.isEmpty) {
+      throw Exception('AZURE_CONNECTION_STRING configuration is not set');
     }
-    return connectionString;
+    return AppConfig.azureConnectionString;
   }
 
   /// Email sender address
   static String get fromAddress {
-    return dotenv.env['EMAIL_FROM_ADDRESS'] ?? 'noreply@goalkeeper-finder.com';
+    return AppConfig.emailFromAddress.isNotEmpty 
+        ? AppConfig.emailFromAddress 
+        : 'noreply@goalkeeper-finder.com';
   }
 
   /// Email sender name
   static String get fromName {
-    return dotenv.env['EMAIL_FROM_NAME'] ?? 'Goalkeeper-Finder';
+    return AppConfig.emailFromName.isNotEmpty 
+        ? AppConfig.emailFromName 
+        : 'Goalkeeper-Finder';
   }
 
   /// Validates that all required Azure configuration is present
