@@ -21,12 +21,18 @@ class AuthRepository {
       throw AuthException('Este email já está registado. Tente fazer login ou use outro email.');
     }
 
-    // Sign up the user with Supabase Auth - disable automatic email confirmation
+    // Create user with Supabase Auth without triggering email confirmation
+    // We'll handle email confirmation through our Python backend
     final response = await _supabase.auth.signUp(
       email: email,
       password: password,
-      data: {'full_name': name, 'email_confirm': false},
-      // Explicitly disable Supabase email confirmation
+      data: {
+        'full_name': name, 
+        'email_confirm': false,
+        'custom_email_system': true,  // Flag for our system
+      },
+      // Note: Even with emailRedirectTo: null, Supabase may still send emails
+      // The real fix is disabling email confirmation in Supabase dashboard
       emailRedirectTo: null,
     );
 
