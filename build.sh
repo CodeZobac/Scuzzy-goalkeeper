@@ -28,6 +28,12 @@ if [ -f lib/src/core/config/app_config.template.dart ]; then
   ESCAPED_SUPABASE_ANON_KEY=$(printf '%s' "$SUPABASE_ANON_KEY" | sed "s/'/\\\\'/g")
   ESCAPED_MAPBOX_ACCESS_TOKEN=$(printf '%s' "$MAPBOX_ACCESS_TOKEN" | sed "s/'/\\\\'/g")
   ESCAPED_MAPBOX_DOWNLOADS_TOKEN=$(printf '%s' "$MAPBOX_DOWNLOADS_TOKEN" | sed "s/'/\\\\'/g")
+  
+  # Handle PYTHON_BACKEND_URL with fallback
+  if [ -z "$PYTHON_BACKEND_URL" ]; then
+    echo "WARNING: PYTHON_BACKEND_URL not set, using localhost fallback"
+    PYTHON_BACKEND_URL="http://localhost:8000"
+  fi
   ESCAPED_PYTHON_BACKEND_URL=$(printf '%s' "$PYTHON_BACKEND_URL" | sed "s/'/\\\\'/g")
   
   # Use cat with here document and escaped variables

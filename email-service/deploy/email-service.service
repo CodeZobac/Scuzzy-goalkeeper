@@ -1,0 +1,62 @@
+[Unit]
+Description=Python Email Service API
+Documentation=https://your-domain.com/docs
+After=network.target network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=emailservice
+Group=emailservice
+WorkingDirectory=/opt/email-service
+Environment=PATH=/opt/email-service/.venv/bin
+
+# Load environment variables from file
+EnvironmentFile=/etc/email-service/.env
+
+# Command to start the service
+ExecStart=/opt/email-service/.venv/bin/python -m uvicorn main:app \
+    --host 0.0.0.0 \
+    --port 8000 \
+    --workers 2 \
+    --log-config app/logging_config.json
+
+# Graceful shutdown
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+# Restart policy
+Restart=always
+RestartSec=3
+StartLimitInterval=60s
+StartLimitBurst=3
+
+# Security settings
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/log/email-service /tmp
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+RestrictRealtime=yes
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+SystemCallArchitectures=native
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=email-service
+
+[Install]
+WantedBy=multi-user.target
