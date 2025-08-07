@@ -25,6 +25,7 @@ jobs:
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           MAPBOX_ACCESS_TOKEN: ${{ secrets.MAPBOX_ACCESS_TOKEN }}
           MAPBOX_DOWNLOADS_TOKEN: ${{ secrets.MAPBOX_DOWNLOADS_TOKEN }}
+          PYTHON_BACKEND_URL: ${{ secrets.PYTHON_BACKEND_URL }}
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
