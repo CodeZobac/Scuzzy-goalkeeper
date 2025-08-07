@@ -43,6 +43,56 @@ class EmailValidationService {
     }
   }
 
+  /// Gets user ID by email address
+  /// Returns the user ID if found, null otherwise
+  Future<String?> getUserIdByEmail(String email) async {
+    try {
+      // Use RPC function to get user ID by email
+      final response = await _supabase
+          .rpc('get_user_id_by_email', params: {'email_to_check': email.toLowerCase()});
+      return response as String?;
+    } catch (e) {
+      // Fallback: try to query auth.users directly (may not work due to RLS)
+      try {
+        final response = await _supabase
+            .from('auth.users')
+            .select('id')
+            .eq('email', email.toLowerCase())
+            .maybeSingle();
+        
+        return response?['id'] as String?;
+      } catch (directQueryError) {
+        // If we can't get the user ID, return null
+        return null;
+      }
+    }
+  }
+
+  /// Gets email address by user ID
+  /// Returns the email if found, null otherwise
+  Future<String?> getEmailByUserId(String userId) async {
+    try {
+      // Use RPC function to get email by user ID
+      final response = await _supabase
+          .rpc('get_email_by_user_id', params: {'user_id_to_check': userId});
+      return response as String?;
+    } catch (e) {
+      // Fallback: try to query auth.users directly (may not work due to RLS)
+      try {
+        final response = await _supabase
+            .from('auth.users')
+            .select('email')
+            .eq('id', userId)
+            .maybeSingle();
+        
+        return response?['email'] as String?;
+      } catch (directQueryError) {
+        // If we can't get the email, return null
+        return null;
+      }
+    }
+  }
+
   /// Validates email format
   bool isValidEmailFormat(String email) {
     final emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
