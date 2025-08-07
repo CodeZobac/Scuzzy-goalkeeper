@@ -47,6 +47,29 @@ class _MainScreenState extends State<MainScreen> {
       
       // Check for password reset code in URL
       _checkForPasswordResetCode();
+      
+      // Track initial screen view for guest users
+      final authProvider = context.read<AuthStateProvider>();
+      if (authProvider.isGuest) {
+        String screenName = '';
+        switch (_selectedItem) {
+          case NavbarItem.home:
+            screenName = 'announcements';
+            break;
+          case NavbarItem.map:
+            screenName = 'map';
+            break;
+          case NavbarItem.profile:
+            screenName = 'profile';
+            break;
+          case NavbarItem.notifications:
+            screenName = 'notifications';
+            break;
+        }
+        if (screenName.isNotEmpty) {
+          authProvider.trackGuestContentView('initial_$screenName');
+        }
+      }
     });
   }
 
@@ -128,23 +151,17 @@ class _MainScreenState extends State<MainScreen> {
   Widget _getSelectedScreen() {
     return Consumer<AuthStateProvider>(
       builder: (context, authProvider, child) {
-        // Initialize guest context if user is in guest mode
-        if (authProvider.isGuest) {
-          authProvider.initializeGuestContext();
+        // Initialize guest context if user is in guest mode (only once)
+        if (authProvider.isGuest && authProvider.guestContext == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            authProvider.initializeGuestContext();
+          });
         }
         
         switch (_selectedItem) {
           case NavbarItem.home:
-            // Track guest content viewing for announcements
-            if (authProvider.isGuest) {
-              authProvider.trackGuestContentView('announcements');
-            }
             return const AnnouncementsScreen();
           case NavbarItem.map:
-            // Track guest content viewing for map
-            if (authProvider.isGuest) {
-              authProvider.trackGuestContentView('map');
-            }
             return const MapScreen();
           case NavbarItem.notifications:
             // For guest users, redirect to profile screen with registration prompt
@@ -160,10 +177,6 @@ class _MainScreenState extends State<MainScreen> {
             }
             return const NotificationsScreen();
           case NavbarItem.profile:
-            // Track guest profile access
-            if (authProvider.isGuest) {
-              authProvider.trackGuestContentView('profile');
-            }
             return authProvider.isGuest 
                 ? const GuestProfileScreen()
                 : const EnhancedProfileScreen();
@@ -182,11 +195,15 @@ class _MainScreenState extends State<MainScreen> {
       setState(() {
         _selectedItem = NavbarItem.profile;
       });
+      // Track guest content viewing for profile (only on navigation)
+      if (authProvider.isGuest) {
+        authProvider.trackGuestContentView('profile');
+      }
       return;
     }
     
-    // Track navigation for guest users
-    if (authProvider.isGuest) {
+    // Track navigation for guest users (only when actually navigating)
+    if (authProvider.isGuest && _selectedItem != item) {
       String screenName = '';
       switch (item) {
         case NavbarItem.home:
@@ -202,7 +219,9 @@ class _MainScreenState extends State<MainScreen> {
           screenName = 'profile';
           break;
       }
-      authProvider.trackGuestContentView('navigation_$screenName');
+      if (screenName.isNotEmpty) {
+        authProvider.trackGuestContentView('navigation_$screenName');
+      }
     }
     
     setState(() {

@@ -23,7 +23,10 @@ import 'src/features/auth/presentation/screens/reset_password_screen.dart';
 import 'src/features/auth/presentation/screens/sign_in_screen.dart';
 import 'src/features/auth/presentation/screens/sign_up_screen.dart';
 import 'src/features/auth/presentation/screens/email_confirmation_screen.dart';
+import 'src/features/auth/presentation/screens/email_confirmation_waiting_screen.dart';
 import 'src/features/auth/presentation/theme/app_theme.dart';
+import 'src/features/auth/services/email_confirmation_service.dart';
+import 'src/features/auth/data/auth_repository.dart';
 import 'src/features/goalkeeper_search/data/repositories/goalkeeper_search_repository.dart';
 import 'src/features/goalkeeper_search/presentation/controllers/goalkeeper_search_controller.dart';
 import 'src/features/main/presentation/screens/main_screen.dart';
@@ -42,6 +45,8 @@ import 'src/features/user_profile/presentation/screens/profile_screen.dart';
 import 'src/shared/screens/splash_screen.dart';
 import 'src/shared/screens/deep_link_test_screen.dart';
 import 'src/core/state/password_reset_state.dart';
+import 'src/core/services/http_email_service_initializer.dart';
+import 'src/core/services/http_email_service_providers.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -51,10 +56,9 @@ Future<void> main() async {
 
   late final NotificationService notificationService;
   bool firebaseInitialized = false;
+  bool emailServicesInitialized = false;
 
   try {
-    // No-op: AppConfig is now generated at build time.
-
     // Initialize Firebase (optional - only if configuration files exist)
     firebaseInitialized = await FirebaseConfig.initialize();
 
@@ -78,6 +82,9 @@ Future<void> main() async {
     // Initialize deep link service for password reset handling
     await DeepLinkService.instance.initialize();
 
+    // Initialize HTTP-based email services (communicating with Python backend)
+    emailServicesInitialized = await HttpEmailServiceInitializer.initialize();
+    
     ErrorLogger.logInfo(
       'Application initialized successfully',
       context: 'APP_STARTUP',
@@ -85,6 +92,7 @@ Future<void> main() async {
         'firebase_initialized': firebaseInitialized,
         'supabase_url': AppConfig.supabaseUrl.isNotEmpty ? 'configured' : 'missing',
         'deep_links_enabled': true,
+        'email_services_initialized': emailServicesInitialized,
       },
     );
   } catch (error, stackTrace) {
@@ -134,14 +142,18 @@ Future<void> main() async {
         ChangeNotifierProvider(
           create: (_) => AuthStateProvider(),
         ),
+        // HTTP Email Service Providers - only create if email services were initialized
+        if (emailServicesInitialized) ...HttpEmailServiceProviders.createProviders(),
       ],
-      child: const MyApp(),
+      child: MyApp(emailServicesInitialized: emailServicesInitialized),
     ),
   );
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+  final bool emailServicesInitialized;
+  
+  const MyApp({super.key, required this.emailServicesInitialized});
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -257,9 +269,11 @@ class _MyAppState extends State<MyApp> {
   Widget _buildHomeRoute(BuildContext context) {
     final authProvider = context.read<AuthStateProvider>();
 
-    // Initialize guest context for guest users
+    // Initialize guest context for guest users using post frame callback
     if (authProvider.isGuest) {
-      authProvider.initializeGuestContext();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        authProvider.initializeGuestContext();
+      });
     }
 
     return const MainScreen();
@@ -271,11 +285,12 @@ class _MyAppState extends State<MyApp> {
     if (authProvider.isGuest) {
       // For guest users, redirect to MainScreen with appropriate tab
       // MainScreen will handle guest-specific content and registration prompts
-      // Initialize guest context if not already done
-      authProvider.initializeGuestContext();
-
-      // Track guest route access
-      authProvider.trackGuestContentView('route_$routeName');
+      // Initialize guest context if not already done using post frame callback
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        authProvider.initializeGuestContext();
+        // Track guest route access
+        authProvider.trackGuestContentView('route_$routeName');
+      });
 
       return MainScreen(initialTabIndex: tabIndex);
     }
@@ -463,6 +478,52 @@ class _MyAppState extends State<MyApp> {
             debugPrint('Failed to initialize notification badge controller: $error');
           });
 
+          // Check email confirmation BEFORE profile check
+          // For new signups, always check email confirmation first
+          try {
+            final authRepository = AuthRepository();
+            final hasValidConfirmation = await authRepository.isEmailConfirmed(user.id);
+            
+            if (!hasValidConfirmation) {
+              // Email is not confirmed - redirect to email confirmation waiting screen
+              final navigator = NavigationService.navigator;
+              if (navigator != null && navigator.mounted) {
+                navigator.pushReplacementNamed(
+                  '/email-confirmation-waiting', 
+                  arguments: {
+                    'email': user.email ?? '',
+                    'userId': user.id,
+                  }
+                );
+              }
+              return; // Stop execution here
+            } else {
+              // Update Supabase user's email confirmation status if needed
+              if (user.emailConfirmedAt == null) {
+                try {
+                  await authRepository.updateSupabaseEmailConfirmation(user.id);
+                } catch (e) {
+                  print('Failed to update Supabase email confirmation status: $e');
+                  // Continue anyway if this fails
+                }
+              }
+            }
+          } catch (e) {
+            print('Failed to check email confirmation status: $e');
+            // In case of error, redirect to waiting screen to be safe
+            final navigator = NavigationService.navigator;
+            if (navigator != null && navigator.mounted) {
+              navigator.pushReplacementNamed(
+                '/email-confirmation-waiting',
+                arguments: {
+                  'email': user.email ?? '',
+                  'userId': user.id,
+                }
+              );
+            }
+            return;
+          }
+
           await userProfileController.getUserProfile();
           final profile = userProfileController.userProfile;
           // Use the global navigator key to avoid context issues
@@ -556,6 +617,7 @@ class _MyAppState extends State<MyApp> {
         '/signup': (context) => const SignUpScreen(),
         '/forgot-password': (context) => const ForgotPasswordScreen(),
         '/reset-password': (context) => const ResetPasswordScreen(),
+        '/email-confirmation-waiting': (context) => const EmailConfirmationWaitingScreen(email: 'placeholder@email.com'),
 
         '/deep-link-test': (context) => const DeepLinkTestScreen(),
         '/home': (context) => _buildHomeRoute(context),
@@ -582,6 +644,16 @@ class _MyAppState extends State<MyApp> {
     }
     
     switch (settings.name) {
+      case '/email-confirmation-waiting':
+        // Handle email confirmation waiting screen with arguments
+        final args = settings.arguments as Map<String, dynamic>?;
+        if (args != null) {
+          return _createSlideRoute(EmailConfirmationWaitingScreen(
+            email: args['email'] ?? '',
+            userId: args['userId'],
+          ));
+        }
+        return _createSlideRoute(const EmailConfirmationWaitingScreen(email: 'unknown@email.com'));
       case '/email-confirmed':
         // Handle email confirmation - redirect to main screen after successful confirmation
         return _createSlideRoute(_buildEmailConfirmationScreen());
