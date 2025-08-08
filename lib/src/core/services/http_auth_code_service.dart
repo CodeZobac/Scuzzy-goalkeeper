@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 
 import '../../features/auth/data/models/auth_code.dart';
 import '../exceptions/email_service_exception.dart';
+import '../config/app_config.dart';
 import 'email_logger.dart';
 
 /// HTTP-based authentication code service for communicating with Python backend
@@ -311,9 +312,7 @@ class HttpAuthCodeService {
 
   /// Gets the backend URL from environment configuration
   static String _getBackendUrl() {
-    // This should be configured via environment variables or app config
-    // For now, return a default that can be overridden
-    return 'http://localhost:8000'; // This will be configured properly during deployment
+    return AppConfig.backendBaseUrl;
   }
 
   /// Disposes of the HTTP client
