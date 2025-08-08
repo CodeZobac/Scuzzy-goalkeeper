@@ -111,8 +111,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen>
     final resetType = currentUrl.queryParameters['type'];
     final hasResetPasswordFragment = currentUrl.fragment.contains('reset-password');
     
-    // Check for Supabase-based reset (fallback)
-    final currentSession = Supabase.instance.client.auth.currentSession;
+    // Check for Supabase-based reset (fallback) - DISABLED to avoid PKCE requests
+    // final currentSession = Supabase.instance.client.auth.currentSession;
+    final currentSession = null; // Force null to bypass Supabase auth
     final hasSupabaseAuthCode = currentUrl.fragment.contains('access_token=');
     
     print('=== RESET SCREEN DEBUG ===');
@@ -180,22 +181,22 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen>
       return;
     }
 
-    // Listen for password recovery events (for cases where session is created after this check)
-    Supabase.instance.client.auth.onAuthStateChange.listen((data) {
-      if (data.event == AuthChangeEvent.passwordRecovery) {
-        setState(() {
-          _isValidSession = true;
-        });
-        
-        authProvider.handlePasswordRecoveryMode();
-        
-        ErrorLogger.logInfo(
-          'Password recovery event received',
-          context: 'PASSWORD_RESET',
-          additionalData: {'session_valid': true, 'auth_type': 'supabase'},
-        );
-      }
-    });
+    // Listen for password recovery events (DISABLED to avoid PKCE requests)
+    // Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+    //   if (data.event == AuthChangeEvent.passwordRecovery) {
+    //     setState(() {
+    //       _isValidSession = true;
+    //     });
+    //     
+    //     authProvider.handlePasswordRecoveryMode();
+    //     
+    //     ErrorLogger.logInfo(
+    //       'Password recovery event received',
+    //       context: 'PASSWORD_RESET',
+    //       additionalData: {'session_valid': true, 'auth_type': 'supabase'},
+    //     );
+    //   }
+    // });
 
     // If no valid authentication method found, show invalid session view
     setState(() {
