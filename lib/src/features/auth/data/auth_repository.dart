@@ -8,7 +8,13 @@ class AuthRepository {
   final _supabase = Supabase.instance.client;
   final _emailValidationService = EmailValidationService();
   final HttpEmailConfirmationService _emailConfirmationService = HttpEmailConfirmationService();
-  final HttpPasswordResetService _passwordResetService = HttpPasswordResetService();
+  HttpPasswordResetService? _passwordResetService;
+
+  /// Lazily initialize the HttpPasswordResetService to avoid initialization errors
+  HttpPasswordResetService get passwordResetService {
+    _passwordResetService ??= HttpPasswordResetService();
+    return _passwordResetService!;
+  }
 
   Future<void> signUp({
     required String name,
@@ -119,7 +125,7 @@ class AuthRepository {
 
     try {
       // Send password reset email via Python backend (which handles Azure Communication Services)
-      await _passwordResetService.sendPasswordResetEmail(email, userId);
+      await passwordResetService.sendPasswordResetEmail(email, userId);
     } catch (e) {
       // If Python backend email service fails, throw an error
       // We no longer fall back to Supabase email service
@@ -138,7 +144,7 @@ class AuthRepository {
   Future<void> updatePasswordWithCode(String authCode, String newPassword) async {
     try {
       // Validate the authentication code and get the user ID
-      final authCodeData = await _passwordResetService.validatePasswordResetCode(authCode);
+      final authCodeData = await passwordResetService.validatePasswordResetCode(authCode);
       if (authCodeData == null) {
         throw AuthException('Código de recuperação inválido ou expirado.');
       }
@@ -190,7 +196,7 @@ class AuthRepository {
   /// Returns the user ID if the code is valid, null otherwise
   Future<String?> validatePasswordResetCode(String code) async {
     try {
-      final authCode = await _passwordResetService.validatePasswordResetCode(code);
+      final authCode = await passwordResetService.validatePasswordResetCode(code);
       return authCode?.userId;
     } catch (e) {
       // Log the error but return null to indicate invalid code
@@ -215,7 +221,7 @@ class AuthRepository {
 
     try {
       // Resend password reset email via Python backend (which handles Azure Communication Services)
-      await _passwordResetService.resendPasswordResetEmail(email, userId);
+      await passwordResetService.sendPasswordResetEmail(email, userId);
     } catch (e) {
       throw AuthException('Falha ao reenviar email de recuperação. Tente novamente mais tarde.');
     }
@@ -302,6 +308,6 @@ class AuthRepository {
   /// Disposes of resources used by the repository
   void dispose() {
     _emailConfirmationService.dispose();
-    _passwordResetService.dispose();
+    _passwordResetService?.dispose();
   }
 }
