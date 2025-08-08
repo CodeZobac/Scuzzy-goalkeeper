@@ -1,5 +1,8 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/config/app_config.dart';
 import '../../../core/services/http_service_locator.dart';
 import '../../../core/services/http_email_service.dart';
 import '../../../core/services/http_auth_code_service.dart';
@@ -261,17 +264,14 @@ class HttpPasswordResetService {
         },
       );
 
-      // Validate and consume the authentication code via Python backend
-      // The backend automatically marks valid codes as used for security
-      EmailLogger.debug('Validating and consuming authentication code via Python backend');
-      final authCode = await _httpAuthCodeService.validateAndConsumeAuthCode(
-        code,
-        AuthCodeType.passwordReset,
-      );
+      // Call the backend's reset-password endpoint which handles both
+      // code validation and password update with admin privileges
+      EmailLogger.debug('Calling backend reset-password endpoint');
+      final success = await _callResetPasswordEndpoint(code, newPassword);
 
-      if (authCode == null) {
+      if (!success) {
         EmailLogger.warning(
-          'Password reset failed: Invalid or expired code',
+          'Password reset failed: Backend returned failure',
           context: {
             'codeLength': code.length,
             'backend': 'Python FastAPI',
@@ -282,37 +282,30 @@ class HttpPasswordResetService {
           operation: 'resetPassword',
           codeType: AuthCodeType.passwordReset.value,
           success: false,
-          errorMessage: 'Invalid or expired code',
+          errorMessage: 'Backend reset-password endpoint failed',
         );
 
         return false;
       }
 
       EmailLogger.debug(
-        'Authentication code validated and consumed successfully via Python backend',
+        'Password reset completed successfully via backend endpoint',
         context: {
-          'userId': authCode.userId,
           'backend': 'Python FastAPI',
         },
       );
-
-      // Update user's password in Supabase Auth
-      EmailLogger.debug('Updating user password in Supabase');
-      await _updateUserPassword(authCode.userId, newPassword);
 
       stopwatch.stop();
 
       EmailLogger.logAuthCodeOperation(
         operation: 'resetPassword',
         codeType: AuthCodeType.passwordReset.value,
-        userId: authCode.userId,
         success: true,
       );
 
       EmailLogger.info(
         'Password reset completed successfully via Python backend',
         context: {
-          'userId': authCode.userId,
           'duration': '${stopwatch.elapsedMilliseconds}ms',
           'backend': 'Python FastAPI',
         },
@@ -345,55 +338,80 @@ class HttpPasswordResetService {
     }
   }
 
-  /// Updates the user's password in Supabase Auth
-  Future<void> _updateUserPassword(String userId, String newPassword) async {
+  /// Calls the backend's reset-password endpoint
+  /// 
+  /// This method calls the Python backend's /api/v1/reset-password endpoint
+  /// which validates the code and updates the password using admin privileges.
+  Future<bool> _callResetPasswordEndpoint(String code, String newPassword) async {
     try {
-      // Update the user's password via admin API
-      await _supabase.auth.admin.updateUserById(
-        userId,
-        attributes: AdminUserAttributes(
-          password: newPassword,
-        ),
-      );
-
-      EmailLogger.debug(
-        'User password updated in Supabase via admin API',
-        context: {
-          'userId': userId,
+      final url = Uri.parse('${AppConfig.backendBaseUrl}/api/v1/reset-password');
+      
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
-      );
-    } catch (e) {
-      // If we can't update via admin API, try alternative approach
-      EmailLogger.warning(
-        'Failed to update password via admin API, trying alternative approach',
-        context: {
-          'userId': userId,
-          'error': e.toString(),
-        },
-      );
-
-      // Alternative: Update password for current user if they match
-      final user = await _supabase.auth.getUser();
-      if (user.user?.id == userId) {
-        await _supabase.auth.updateUser(
-          UserAttributes(
-            password: newPassword,
-          ),
-        );
-
-        EmailLogger.debug(
-          'User password updated via user update',
+        body: jsonEncode({
+          'code': code,
+          'new_password': newPassword,
+        }),
+      ).timeout(const Duration(seconds: 30));
+      
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body) as Map<String, dynamic>;
+        final success = responseData['success'] as bool? ?? false;
+        
+        if (success) {
+          final userId = responseData['user_id'] as String?;
+          EmailLogger.debug(
+            'Backend reset-password endpoint succeeded',
+            context: {
+              'userId': userId ?? 'unknown',
+            },
+          );
+          return true;
+        } else {
+          final message = responseData['message'] as String? ?? 'Unknown error';
+          EmailLogger.warning(
+            'Backend reset-password endpoint returned failure',
+            context: {
+              'message': message,
+            },
+          );
+          return false;
+        }
+      } else {
+        EmailLogger.error(
+          'Backend reset-password endpoint returned error status',
           context: {
-            'userId': userId,
+            'statusCode': response.statusCode,
+            'responseBody': response.body,
           },
         );
-      } else {
-        throw EmailServiceException(
-          'Cannot update password: User not authenticated or ID mismatch',
-          EmailServiceErrorType.authenticationError,
-        );
+        return false;
       }
+    } catch (e) {
+      EmailLogger.error(
+        'Failed to call backend reset-password endpoint',
+        error: e,
+      );
+      return false;
     }
+  }
+
+  /// Updates the user's password via the Python backend
+  /// 
+  /// This method calls the backend's reset-password endpoint which handles
+  /// the password update using admin privileges on the server side.
+  Future<void> _updateUserPassword(String userId, String newPassword) async {
+    // This method is no longer used since we call the backend endpoint directly
+    // in the resetPassword method. Keeping it for compatibility but it will
+    // throw an error if called.
+    throw EmailServiceException(
+      'Password update should be handled by backend reset-password endpoint',
+      EmailServiceErrorType.validationError,
+    );
   }
 
   /// Resends a password reset email via the Python backend

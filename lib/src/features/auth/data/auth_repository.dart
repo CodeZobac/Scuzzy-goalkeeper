@@ -158,18 +158,12 @@ class AuthRepository {
         throw AuthException('Não foi possível encontrar o email do utilizador.');
       }
 
-      // Check if the current user matches the auth code user
-      final currentUser = _supabase.auth.currentUser;
-      if (currentUser != null && currentUser.id == authCodeData.userId) {
-        // User is already signed in and matches - update password directly
-        await _supabase.auth.updateUser(
-          UserAttributes(password: newPassword),
-        );
-      } else {
-        // User is not signed in or doesn't match
-        // In a production environment, this would be handled server-side
-        // For now, we'll require the user to use the Supabase reset flow
-        throw AuthException('Por favor, use o link de recuperação enviado por email.');
+      // For password reset, we use the HTTP password reset service
+      // which handles the password update on the backend with proper privileges
+      final success = await passwordResetService.resetPassword(authCode, newPassword);
+      
+      if (!success) {
+        throw AuthException('Falha ao atualizar a palavra-passe. O código pode ter expirado.');
       }
       
     } catch (e) {
