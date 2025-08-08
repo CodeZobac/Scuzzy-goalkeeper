@@ -643,6 +643,37 @@ class _MyAppState extends State<MyApp> {
       return _createSlideRoute(EmailConfirmationScreen(code: code));
     }
     
+    // Handle password reset route with query parameters
+    if (settings.name?.startsWith('/auth/reset') == true) {
+      final uri = Uri.parse(settings.name!);
+      final code = uri.queryParameters['code'];
+      // Store the code in URL for the reset password screen to access
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        // Update the URL to include the code parameter for the reset screen
+        final currentUri = Uri.base;
+        final newUri = currentUri.replace(
+          path: '/reset-password',
+          queryParameters: {
+            'code': code,
+            'type': 'password_reset',
+          },
+        );
+        // Navigate to reset password screen
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          '/reset-password',
+          (route) => false,
+        );
+      });
+      // Return a temporary loading screen while navigating
+      return _createSlideRoute(
+        const Scaffold(
+          body: Center(
+            child: CircularProgressIndicator(),
+          ),
+        ),
+      );
+    }
+    
     switch (settings.name) {
       case '/email-confirmation-waiting':
         // Handle email confirmation waiting screen with arguments
