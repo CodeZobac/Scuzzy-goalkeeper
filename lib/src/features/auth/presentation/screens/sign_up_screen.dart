@@ -33,7 +33,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
   bool _isLoading = false;
   bool _showVerificationMessage = false;
   bool _acceptTerms = false;
-  bool _isValidatingEmail = false;
   String? _nameError;
   String? _emailError;
   String? _passwordError;
@@ -90,10 +89,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
     final emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
     if (!emailRegex.hasMatch(email.trim())) return;
 
-    setState(() {
-      _isValidatingEmail = true;
-    });
-
     try {
       final emailExists = await _authRepository.checkEmailExistsForSignup(email.trim());
       if (mounted) {
@@ -107,12 +102,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
       }
     } catch (e) {
       // Silently handle validation errors - don't show to user during typing
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isValidatingEmail = false;
-        });
-      }
     }
   }
 
@@ -419,8 +408,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Welcome message with responsive font size
-                  Center(
+                    // Welcome message with responsive font size
+                    Center(
                     child: Text(
                       'Criar nova conta',
                       style: AppTheme.authHeadingSmall.copyWith(
@@ -462,7 +451,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   SizedBox(
                     height: ResponsiveUtils.getResponsiveSpacing(
                       context,
-                      mobile: 24,
+                      mobile: 16,
                     ),
                   ),
 
@@ -490,7 +479,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   SizedBox(
                     height: ResponsiveUtils.getResponsiveSpacing(
                       context,
-                      mobile: 20,
+                      mobile: 12,
                     ),
                   ),
 
@@ -524,7 +513,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   SizedBox(
                     height: ResponsiveUtils.getResponsiveSpacing(
                       context,
-                      mobile: 20,
+                      mobile: 12,
                     ),
                   ),
 
@@ -557,7 +546,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   SizedBox(
                     height: ResponsiveUtils.getResponsiveSpacing(
                       context,
-                      mobile: 20,
+                      mobile: 12,
                     ),
                   ),
 
@@ -585,7 +574,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   SizedBox(
                     height: ResponsiveUtils.getResponsiveSpacing(
                       context,
-                      mobile: 20,
+                      mobile: 12,
                     ),
                   ),
 
@@ -742,7 +731,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   SizedBox(
                     height: ResponsiveUtils.getResponsiveSpacing(
                       context,
-                      mobile: 24,
+                      mobile: 18,
                     ),
                   ),
 
@@ -766,7 +755,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   SizedBox(
                     height: ResponsiveUtils.getResponsiveSpacing(
                       context,
-                      mobile: 28,
+                      mobile: 16,
                     ),
                   ),
 
@@ -840,7 +829,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   SizedBox(
                     height: ResponsiveUtils.getResponsiveSpacing(
                       context,
-                      mobile: 28,
+                      mobile: 16,
                     ),
                   ),
 
@@ -862,7 +851,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   SizedBox(
                     height: ResponsiveUtils.getResponsiveSpacing(
                       context,
-                      mobile: 16,
+                      mobile: 8,
                     ),
                   ),
                 ],

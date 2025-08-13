@@ -241,172 +241,241 @@ class _ModernTextFieldState extends State<ModernTextField>
     super.dispose();
   }
 
+  Widget _buildErrorWidget(bool hasError) {
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOutCubic,
+      child: hasError
+          ? Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(top: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppTheme.errorColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+                border: Border.all(
+                  color: AppTheme.errorColor.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.error_outline_rounded,
+                    color: AppTheme.errorColor,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      widget.errorText!,
+                      style: AppTheme.bodyMedium.copyWith(
+                        color: AppTheme.errorColor,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13.5,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : const SizedBox.shrink(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final hasError = widget.errorText != null;
-    final borderColor = hasError 
-        ? AppTheme.errorColor 
-        : (_focusNode.hasFocus ? AppTheme.primaryGreen : AppTheme.borderLight);
     
-    return AnimatedBuilder(
-      animation: Listenable.merge([
-        _focusAnimationController,
-        _validationAnimationController,
-        _shakeAnimationController,
-      ]),
-      builder: (context, child) {
-        return Transform.translate(
-          offset: Offset(
-            _shakeAnimation.value * 10 * (1 - _shakeAnimation.value) * 
-            ((_shakeAnimationController.value * 4) % 2 == 0 ? 1 : -1),
-            0,
-          ),
-          child: Transform.scale(
-            scale: _focusScaleAnimation.value,
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(AppTheme.borderRadiusLarge),
-                boxShadow: [
-                  // Main shadow
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.06),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                  // Focus glow effect
-                  if (_focusNode.hasFocus)
-                    BoxShadow(
-                      color: AppTheme.primaryGreen.withOpacity(0.15 * _focusGlowAnimation.value),
-                      blurRadius: 16 * _focusGlowAnimation.value,
-                      offset: const Offset(0, 4),
-                    ),
-                  // Error glow effect
-                  if (hasError)
-                    BoxShadow(
-                      color: AppTheme.errorColor.withOpacity(0.12),
-                      blurRadius: 12,
-                      offset: const Offset(0, 3),
-                    ),
-                  // Success glow effect
-                  if (_isValid && _showValidation && widget.showValidationIcon && widget.errorText == null)
-                    BoxShadow(
-                      color: AppTheme.successColor.withOpacity(0.1 * _validationIconAnimation.value),
-                      blurRadius: 10 * _validationIconAnimation.value,
-                      offset: const Offset(0, 2),
-                    ),
-                ],
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AnimatedBuilder(
+          animation: Listenable.merge([
+            _focusAnimationController,
+            _validationAnimationController,
+            _shakeAnimationController,
+          ]),
+          builder: (context, child) {
+            return Transform.translate(
+              offset: Offset(
+                _shakeAnimation.value *
+                    10 *
+                    (1 - _shakeAnimation.value) *
+                    ((_shakeAnimationController.value * 4) % 2 == 0 ? 1 : -1),
+                0,
               ),
-              child: TextFormField(
-                controller: widget.controller,
-                obscureText: _isObscured,
-                validator: widget.validator,
-                keyboardType: widget.keyboardType,
-                focusNode: _focusNode,
-                textInputAction: widget.textInputAction,
-                enabled: widget.enabled,
-                maxLength: widget.maxLength,
-                inputFormatters: widget.inputFormatters,
-                onChanged: (value) {
-                  widget.onChanged?.call(value);
-                  if (_showValidation) {
-                    _validateField();
-                  }
-                },
-                onFieldSubmitted: widget.onFieldSubmitted,
-                style: AppTheme.bodyMedium.copyWith(
-                  color: widget.enabled ? AppTheme.textDark : AppTheme.textSecondary,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 16,
-                ),
-                decoration: InputDecoration(
-                  hintText: widget.hintText,
-                  hintStyle: AppTheme.bodyMedium.copyWith(
-                    color: AppTheme.textSecondary.withOpacity(0.7),
-                    fontWeight: FontWeight.w400,
-                    fontSize: 15,
+              child: Transform.scale(
+                scale: _focusScaleAnimation.value,
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius:
+                        BorderRadius.circular(AppTheme.borderRadiusLarge),
+                    boxShadow: [
+                      // Main shadow
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.06),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                      // Focus glow effect
+                      if (_focusNode.hasFocus)
+                        BoxShadow(
+                          color: AppTheme.primaryGreen
+                              .withOpacity(0.15 * _focusGlowAnimation.value),
+                          blurRadius: 16 * _focusGlowAnimation.value,
+                          offset: const Offset(0, 4),
+                        ),
+                      // Error glow effect
+                      if (hasError)
+                        BoxShadow(
+                          color: AppTheme.errorColor.withOpacity(0.12),
+                          blurRadius: 12,
+                          offset: const Offset(0, 3),
+                        ),
+                      // Success glow effect
+                      if (_isValid &&
+                          _showValidation &&
+                          widget.showValidationIcon &&
+                          widget.errorText == null)
+                        BoxShadow(
+                          color: AppTheme.successColor.withOpacity(
+                              0.1 * _validationIconAnimation.value),
+                          blurRadius: 10 * _validationIconAnimation.value,
+                          offset: const Offset(0, 2),
+                        ),
+                    ],
                   ),
-                  prefixIcon: widget.prefixIcon != null
-                      ? Container(
-                          margin: const EdgeInsets.only(left: 16, right: 12),
-                          child: Icon(
-                            widget.prefixIcon, 
-                            color: _focusNode.hasFocus 
-                                ? AppTheme.primaryGreen 
-                                : AppTheme.textSecondary,
-                            size: 22,
-                          ),
-                        )
-                      : null,
-                  suffixIcon: _buildSuffixIcon(),
-                  filled: true,
-                  fillColor: widget.enabled 
-                      ? (_focusNode.hasFocus 
-                          ? AppTheme.surfaceLight 
-                          : AppTheme.surfaceLight.withOpacity(0.8))
-                      : AppTheme.surfaceLight.withOpacity(0.5),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.borderRadiusLarge),
-                    borderSide: BorderSide.none,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.borderRadiusLarge),
-                    borderSide: BorderSide(
-                      color: widget.errorText != null
-                          ? AppTheme.errorColor.withOpacity(0.6)
-                          : (_isValid && _showValidation && widget.showValidationIcon
-                              ? AppTheme.successColor.withOpacity(0.6)
-                              : AppTheme.borderLight),
-                      width: (widget.errorText != null || (_isValid && _showValidation && widget.showValidationIcon)) ? 2 : 1.5,
+                  child: TextFormField(
+                    controller: widget.controller,
+                    obscureText: _isObscured,
+                    validator: widget.validator,
+                    keyboardType: widget.keyboardType,
+                    focusNode: _focusNode,
+                    textInputAction: widget.textInputAction,
+                    enabled: widget.enabled,
+                    maxLength: widget.maxLength,
+                    inputFormatters: widget.inputFormatters,
+                    onChanged: (value) {
+                      widget.onChanged?.call(value);
+                      if (_showValidation) {
+                        _validateField();
+                      }
+                    },
+                    onFieldSubmitted: widget.onFieldSubmitted,
+                    style: AppTheme.bodyMedium.copyWith(
+                      color: widget.enabled
+                          ? AppTheme.textDark
+                          : AppTheme.textSecondary,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 16,
                     ),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.borderRadiusLarge),
-                    borderSide: BorderSide(
-                      color: hasError ? AppTheme.errorColor : AppTheme.primaryGreen,
-                      width: 2.5,
+                    decoration: InputDecoration(
+                      hintText: widget.hintText,
+                      hintStyle: AppTheme.bodyMedium.copyWith(
+                        color: AppTheme.textSecondary.withOpacity(0.7),
+                        fontWeight: FontWeight.w400,
+                        fontSize: 15,
+                      ),
+                      prefixIcon: widget.prefixIcon != null
+                          ? Container(
+                              margin:
+                                  const EdgeInsets.only(left: 16, right: 12),
+                              child: Icon(
+                                widget.prefixIcon,
+                                color: _focusNode.hasFocus
+                                    ? AppTheme.primaryGreen
+                                    : AppTheme.textSecondary,
+                                size: 22,
+                              ),
+                            )
+                          : null,
+                      suffixIcon: _buildSuffixIcon(),
+                      filled: true,
+                      fillColor: widget.enabled
+                          ? (_focusNode.hasFocus
+                              ? AppTheme.surfaceLight
+                              : AppTheme.surfaceLight.withOpacity(0.8))
+                          : AppTheme.surfaceLight.withOpacity(0.5),
+                      border: OutlineInputBorder(
+                        borderRadius:
+                            BorderRadius.circular(AppTheme.borderRadiusLarge),
+                        borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius:
+                            BorderRadius.circular(AppTheme.borderRadiusLarge),
+                        borderSide: BorderSide(
+                          color: widget.errorText != null
+                              ? AppTheme.errorColor.withOpacity(0.6)
+                              : (_isValid &&
+                                      _showValidation &&
+                                      widget.showValidationIcon
+                                  ? AppTheme.successColor.withOpacity(0.6)
+                                  : AppTheme.borderLight),
+                          width: (widget.errorText != null ||
+                                  (_isValid &&
+                                      _showValidation &&
+                                      widget.showValidationIcon))
+                              ? 2
+                              : 1.5,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius:
+                            BorderRadius.circular(AppTheme.borderRadiusLarge),
+                        borderSide: BorderSide(
+                          color:
+                              hasError ? AppTheme.errorColor : AppTheme.primaryGreen,
+                          width: 2.5,
+                        ),
+                      ),
+                      errorBorder: OutlineInputBorder(
+                        borderRadius:
+                            BorderRadius.circular(AppTheme.borderRadiusLarge),
+                        borderSide: const BorderSide(
+                          color: AppTheme.errorColor,
+                          width: 2,
+                        ),
+                      ),
+                      focusedErrorBorder: OutlineInputBorder(
+                        borderRadius:
+                            BorderRadius.circular(AppTheme.borderRadiusLarge),
+                        borderSide: const BorderSide(
+                          color: AppTheme.errorColor,
+                          width: 2.5,
+                        ),
+                      ),
+                      disabledBorder: OutlineInputBorder(
+                        borderRadius:
+                            BorderRadius.circular(AppTheme.borderRadiusLarge),
+                        borderSide: BorderSide(
+                          color: AppTheme.borderLight.withOpacity(0.5),
+                          width: 1,
+                        ),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 18,
+                      ),
+                      errorStyle: const TextStyle(height: 0, fontSize: 0),
+                      errorText: null, // Use custom error widget instead
+                      counterStyle: AppTheme.bodySmall.copyWith(
+                        color: AppTheme.textSecondary.withOpacity(0.6),
+                        fontSize: 12,
+                      ),
                     ),
-                  ),
-                  errorBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.borderRadiusLarge),
-                    borderSide: const BorderSide(
-                      color: AppTheme.errorColor,
-                      width: 2,
-                    ),
-                  ),
-                  focusedErrorBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.borderRadiusLarge),
-                    borderSide: const BorderSide(
-                      color: AppTheme.errorColor,
-                      width: 2.5,
-                    ),
-                  ),
-                  disabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.borderRadiusLarge),
-                    borderSide: BorderSide(
-                      color: AppTheme.borderLight.withOpacity(0.5),
-                      width: 1,
-                    ),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 18,
-                  ),
-                  errorStyle: AppTheme.bodySmall.copyWith(
-                    color: AppTheme.errorColor,
-                    fontWeight: FontWeight.w500,
-                    fontSize: 13,
-                  ),
-                  errorText: widget.errorText,
-                  counterStyle: AppTheme.bodySmall.copyWith(
-                    color: AppTheme.textSecondary.withOpacity(0.6),
-                    fontSize: 12,
                   ),
                 ),
               ),
-            ),
-          ),
-        );
-      },
+            );
+          },
+        ),
+        _buildErrorWidget(hasError),
+      ],
     );
   }
 
