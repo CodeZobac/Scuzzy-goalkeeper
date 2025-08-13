@@ -148,7 +148,24 @@ class _SignUpScreenState extends State<SignUpScreen> {
       _confirmPasswordError = null;
     });
 
-    // Validar formulário
+    // Validar campos individuais e capturar erros
+    final nameError = _validateName(_nameController.text);
+    final emailError = _validateEmail(_emailController.text);
+    final passwordError = _validatePassword(_passwordController.text);
+    final confirmPasswordError = _validateConfirmPassword(_confirmPasswordController.text);
+
+    // Se houver erros, definir estados e retornar
+    if (nameError != null || emailError != null || passwordError != null || confirmPasswordError != null) {
+      setState(() {
+        _nameError = nameError;
+        _emailError = emailError;
+        _passwordError = passwordError;
+        _confirmPasswordError = confirmPasswordError;
+      });
+      return;
+    }
+
+    // Validar formulário (dupla verificação)
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -427,7 +444,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   SizedBox(
                     height: ResponsiveUtils.getResponsiveSpacing(
                       context,
-                      mobile: 16,
+                      mobile: 12,
                     ),
                   ),
 
@@ -451,7 +468,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   SizedBox(
                     height: ResponsiveUtils.getResponsiveSpacing(
                       context,
-                      mobile: 16,
+                      mobile: 12,
                     ),
                   ),
 
@@ -479,7 +496,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   SizedBox(
                     height: ResponsiveUtils.getResponsiveSpacing(
                       context,
-                      mobile: 12,
+                      mobile: 8,
                     ),
                   ),
 
@@ -513,7 +530,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   SizedBox(
                     height: ResponsiveUtils.getResponsiveSpacing(
                       context,
-                      mobile: 12,
+                      mobile: 8,
                     ),
                   ),
 
@@ -529,14 +546,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     errorText: _passwordError,
                     showValidationIcon: true,
                     onChanged: (value) {
-                      if (_passwordError != null) {
+                      // Real-time password validation
+                      final passwordError = _validatePassword(value);
+                      if (_passwordError != passwordError) {
                         setState(() {
-                          _passwordError = null;
+                          _passwordError = passwordError;
                         });
                       }
+                      
                       // Revalidar confirmação de senha se ela já foi preenchida
                       if (_confirmPasswordController.text.isNotEmpty) {
-                        _formKey.currentState?.validate();
+                        final confirmError = _validateConfirmPassword(_confirmPasswordController.text);
+                        if (_confirmPasswordError != confirmError) {
+                          setState(() {
+                            _confirmPasswordError = confirmError;
+                          });
+                        }
                       }
                     },
                     onFieldSubmitted: (_) =>
@@ -546,7 +571,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   SizedBox(
                     height: ResponsiveUtils.getResponsiveSpacing(
                       context,
-                      mobile: 12,
+                      mobile: 8,
                     ),
                   ),
 
@@ -562,9 +587,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     errorText: _confirmPasswordError,
                     showValidationIcon: true,
                     onChanged: (value) {
-                      if (_confirmPasswordError != null) {
+                      // Real-time confirm password validation
+                      final confirmError = _validateConfirmPassword(value);
+                      if (_confirmPasswordError != confirmError) {
                         setState(() {
-                          _confirmPasswordError = null;
+                          _confirmPasswordError = confirmError;
                         });
                       }
                     },
@@ -574,7 +601,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   SizedBox(
                     height: ResponsiveUtils.getResponsiveSpacing(
                       context,
-                      mobile: 12,
+                      mobile: 8,
                     ),
                   ),
 
@@ -731,7 +758,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   SizedBox(
                     height: ResponsiveUtils.getResponsiveSpacing(
                       context,
-                      mobile: 18,
+                      mobile: 14,
                     ),
                   ),
 
@@ -755,7 +782,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   SizedBox(
                     height: ResponsiveUtils.getResponsiveSpacing(
                       context,
-                      mobile: 16,
+                      mobile: 12,
                     ),
                   ),
 
@@ -829,7 +856,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   SizedBox(
                     height: ResponsiveUtils.getResponsiveSpacing(
                       context,
-                      mobile: 16,
+                      mobile: 12,
                     ),
                   ),
 
@@ -851,7 +878,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   SizedBox(
                     height: ResponsiveUtils.getResponsiveSpacing(
                       context,
-                      mobile: 8,
+                      mobile: 4,
                     ),
                   ),
                 ],
