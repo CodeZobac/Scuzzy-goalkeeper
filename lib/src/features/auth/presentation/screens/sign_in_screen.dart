@@ -426,10 +426,11 @@ class _SignInScreenState extends State<SignInScreen> with ErrorHandlingMixin {
                 SizedBox(height: ResponsiveUtils.getResponsiveSpacing(context, mobile: 28)),
 
                 // Link para Registo
-                Center(
-                  child: RichText(
-                    text: TextSpan(
-                      text: 'Ainda não tem conta? ',
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Ainda não tem conta? ',
                       style: AppTheme.authBodyMedium.copyWith(
                         fontSize: ResponsiveUtils.getResponsiveFontSize(
                           context,
@@ -438,29 +439,25 @@ class _SignInScreenState extends State<SignInScreen> with ErrorHandlingMixin {
                           desktop: 16,
                         ),
                       ),
-                      children: [
-                        WidgetSpan(
-                          child: GestureDetector(
-                            onTap: _navigateToSignUp,
-                            child: Text(
-                              'Crie uma aqui',
-                              style: AppTheme.authLinkText.copyWith(
-                                fontWeight: FontWeight.w700,
-                                decoration: TextDecoration.underline,
-                                decorationColor: AppTheme.authPrimaryGreen,
-                                fontSize: ResponsiveUtils.getResponsiveFontSize(
-                                  context,
-                                  mobile: 14,
-                                  tablet: 15,
-                                  desktop: 16,
-                                ),
-                              ),
-                            ),
+                    ),
+                    GestureDetector(
+                      onTap: _navigateToSignUp,
+                      child: Text(
+                        'Crie uma aqui',
+                        style: AppTheme.authLinkText.copyWith(
+                          fontWeight: FontWeight.w700,
+                          decoration: TextDecoration.underline,
+                          decorationColor: AppTheme.authPrimaryGreen,
+                          fontSize: ResponsiveUtils.getResponsiveFontSize(
+                            context,
+                            mobile: 14,
+                            tablet: 15,
+                            desktop: 16,
                           ),
                         ),
-                      ],
+                      ),
                     ),
-                  ),
+                  ],
                 ),
 
                 SizedBox(height: ResponsiveUtils.getResponsiveSpacing(context, mobile: 16)),

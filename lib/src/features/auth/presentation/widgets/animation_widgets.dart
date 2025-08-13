@@ -231,6 +231,7 @@ class SmoothStaggeredAnimation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: children.asMap().entries.map((entry) {
         final index = entry.key;
         final child = entry.value;

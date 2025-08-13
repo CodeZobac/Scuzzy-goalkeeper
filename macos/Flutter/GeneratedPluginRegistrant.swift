@@ -11,7 +11,7 @@ import firebase_messaging
 import geolocator_apple
 import path_provider_foundation
 import shared_preferences_foundation
-import sqflite_darwin
+import sqflite
 import url_launcher_macos
 
 func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
